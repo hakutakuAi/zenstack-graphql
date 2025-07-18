@@ -1,15 +1,8 @@
-import { SchemaComposer, ScalarTypeComposer } from 'graphql-compose'
+import { ScalarTypeComposer } from 'graphql-compose'
 import { GraphQLScalarType, GraphQLError } from 'graphql'
 import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
-import { ErrorHandler } from '@utils/error-handler'
-import { NormalizedOptions } from '@utils/options-validator'
-
-export interface ScalarGeneratorContext {
-	schemaComposer: SchemaComposer
-	options: NormalizedOptions
-	errorHandler: ErrorHandler
-}
+import { TypedGeneratorContext } from '@types'
 
 export interface ScalarConfig {
 	name: string
@@ -20,8 +13,8 @@ export interface ScalarConfig {
 }
 
 export class ScalarGenerator extends BaseGenerator<ScalarTypeComposer<any>> {
-	constructor(context: ScalarGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler)
+	constructor(context: TypedGeneratorContext) {
+		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
 	}
 
 	generate(): void {
@@ -37,11 +30,7 @@ export class ScalarGenerator extends BaseGenerator<ScalarTypeComposer<any>> {
 		}
 	}
 
-	generateScalars(): void {
-		this.generate()
-	}
-
-	getRegisteredScalars(): string[] {
+	getGeneratedScalars(): string[] {
 		return this.getGeneratedItems()
 	}
 

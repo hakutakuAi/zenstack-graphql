@@ -1,8 +1,9 @@
 import { DMMF } from '@zenstackhq/sdk/prisma'
 import { asDataModel } from '@types'
+import { AttributeProcessor } from './attribute-processor'
 
 export class ValidationUtils {
-	static shouldGenerateModel(model: DMMF.Model, attributeProcessor: any): boolean {
+	static shouldGenerateModel(model: DMMF.Model, attributeProcessor: AttributeProcessor): boolean {
 		try {
 			return !attributeProcessor.hasModelIgnoreAttr(asDataModel(model))
 		} catch (error) {
@@ -10,7 +11,7 @@ export class ValidationUtils {
 		}
 	}
 
-	static shouldIncludeField(model: DMMF.Model, field: DMMF.Field, attributeProcessor: any, includeRelations: boolean): boolean {
+	static shouldIncludeField(model: DMMF.Model, field: DMMF.Field, attributeProcessor: AttributeProcessor, includeRelations: boolean): boolean {
 		try {
 			if (attributeProcessor.hasFieldIgnoreAttr(asDataModel(model), field.name)) {
 				return false
@@ -26,7 +27,7 @@ export class ValidationUtils {
 		}
 	}
 
-	static getModelName(model: DMMF.Model, attributeProcessor: any): string | undefined {
+	static getModelName(model: DMMF.Model, attributeProcessor: AttributeProcessor): string | undefined {
 		try {
 			return attributeProcessor.getModelName(asDataModel(model))
 		} catch (error) {
@@ -34,7 +35,7 @@ export class ValidationUtils {
 		}
 	}
 
-	static getFieldName(model: DMMF.Model, fieldName: string, attributeProcessor: any): string | undefined {
+	static getFieldName(model: DMMF.Model, fieldName: string, attributeProcessor: AttributeProcessor): string | undefined {
 		try {
 			return attributeProcessor.getFieldName(asDataModel(model), fieldName)
 		} catch (error) {
@@ -42,7 +43,7 @@ export class ValidationUtils {
 		}
 	}
 
-	static getModelDescription(model: DMMF.Model, attributeProcessor: any): string | undefined {
+	static getModelDescription(model: DMMF.Model, attributeProcessor: AttributeProcessor): string | undefined {
 		try {
 			return attributeProcessor.getModelDescription(asDataModel(model)) || model.documentation
 		} catch (error) {

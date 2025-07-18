@@ -13,7 +13,7 @@ export abstract class BaseGenerator<T extends ComposerType = ComposerType> {
 		protected readonly schemaComposer: SchemaComposer<unknown>,
 		protected readonly options: NormalizedOptions,
 		protected readonly errorHandler: ErrorHandler,
-		protected readonly attributeProcessor?: AttributeProcessor,
+		protected readonly attributeProcessor: AttributeProcessor,
 		protected readonly typeMapper?: TypeMapper
 	) {}
 
@@ -46,10 +46,19 @@ export abstract class BaseGenerator<T extends ComposerType = ComposerType> {
 			suggestions = [`Check input data for ${operation}`, 'Verify schema definitions are correct', 'Ensure all required dependencies are available']
 		}
 
-		throw this.errorHandler.createGenerationError(
-			`Error in ${operationContext}: ${error instanceof Error ? error.message : String(error)}`,
-			{ operation: operationContext, originalError: error },
-			suggestions
-		)
+		const errorMessage = `Error in ${operationContext}: ${error instanceof Error ? error.message : String(error)}`
+		const context = { operation: operationContext, originalError: error }
+
+		if (error instanceof Error) {
+			if (error.message.toLowerCase().includes('validation') || error.message.toLowerCase().includes('invalid')) {
+				throw this.errorHandler.createValidationError(errorMessage, context, suggestions)
+			} else if (error.message.toLowerCase().includes('schema') || operation.toLowerCase().includes('schema')) {
+				throw this.errorHandler.createSchemaError(errorMessage, context, suggestions)
+			} else if (error.message.toLowerCase().includes('file') || operation.toLowerCase().includes('file')) {
+				throw this.errorHandler.createFileError(errorMessage, context, suggestions)
+			}
+		}
+
+		throw this.errorHandler.createGenerationError(errorMessage, context, suggestions)
 	}
 }

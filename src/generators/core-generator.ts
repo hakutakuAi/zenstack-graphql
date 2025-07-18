@@ -1,13 +1,15 @@
 import { SchemaComposer } from 'graphql-compose'
-import type { Model } from '@zenstackhq/sdk/ast'
-import type { DMMF } from '@zenstackhq/sdk/prisma'
 import { ErrorHandler, GenerationError } from '@utils/error-handler'
 import { AttributeProcessor } from '@utils/attribute-processor'
 import { TypeMapper } from '@utils/type-mapper'
 import { SchemaBuilder } from '@utils/schema-builder'
+import { CoreGeneratorContext, DMMF } from '@types'
 import { NormalizedOptions } from '@utils/options-validator'
-import { EnumGenerator } from '@generators/enum-generator'
+import { GeneratorFactory } from '@utils/generator-factory'
+import { TypeRegistry, TypeKind, TypeInfo } from '@utils/type-registry'
+import { match } from 'ts-pattern'
 import { ScalarGenerator } from '@generators/scalar-generator'
+import { EnumGenerator } from '@generators/enum-generator'
 import { ObjectTypeGenerator } from '@generators/object-type-generator'
 import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
@@ -26,29 +28,19 @@ export interface GenerationResult {
 	stats: GenerationStats
 }
 
-export interface CoreGeneratorContext {
-	model: Model
-	options: NormalizedOptions
-	dmmf: DMMF.Document
-	errorHandler?: ErrorHandler
-	attributeProcessor?: AttributeProcessor
-	typeMapper?: TypeMapper
-	schemaComposer?: SchemaComposer<unknown>
-}
-
 export class CoreGenerator {
 	private schemaComposer: SchemaComposer<unknown>
 	private errorHandler: ErrorHandler
 	private attributeProcessor: AttributeProcessor
 	private typeMapper: TypeMapper
 	private options: NormalizedOptions
-	private model: Model
 	private dmmf: DMMF.Document
 	private schemaBuilder: SchemaBuilder
 	private warnings: string[] = []
+	private generatorFactory: GeneratorFactory
+	private typeRegistry: TypeRegistry
 
 	constructor(context: CoreGeneratorContext) {
-		this.model = context.model
 		this.options = context.options
 		this.dmmf = context.dmmf
 		this.errorHandler = context.errorHandler || ErrorHandler.getInstance()
@@ -56,6 +48,17 @@ export class CoreGenerator {
 		this.typeMapper = context.typeMapper || TypeMapper.createFromDMMF(context.dmmf)
 		this.schemaComposer = context.schemaComposer || new SchemaComposer()
 		this.schemaBuilder = new SchemaBuilder(this.schemaComposer, this.errorHandler)
+		this.typeRegistry = new TypeRegistry(this.schemaComposer, this.errorHandler)
+
+		this.generatorFactory = new GeneratorFactory({
+			schemaComposer: this.schemaComposer,
+			options: this.options,
+			errorHandler: this.errorHandler,
+			attributeProcessor: this.attributeProcessor,
+			typeMapper: this.typeMapper,
+			dmmfModels: this.dmmf.datamodel.models,
+			dmmfEnums: this.dmmf.datamodel.enums,
+		})
 	}
 
 	generateSchema(): GenerationResult {
@@ -66,31 +69,69 @@ export class CoreGenerator {
 
 			const scalarGenerator = this.createScalarGenerator()
 			scalarGenerator.generate()
-			const scalarTypes = scalarGenerator.getRegisteredScalars()
+			const scalarTypes = scalarGenerator.getGeneratedScalars()
+
+			scalarTypes.forEach((typeName) => {
+				const composer = this.schemaComposer.getSTC(typeName)
+				if (composer) {
+					this.typeRegistry.registerType(typeName, TypeKind.SCALAR, composer, true)
+				}
+			})
 
 			const enumGenerator = this.createEnumGenerator()
 			enumGenerator.generate()
 			const enumTypes = enumGenerator.getGeneratedEnums()
 
+			enumTypes.forEach((typeName) => {
+				const composer = this.schemaComposer.getETC(typeName)
+				if (composer) {
+					this.typeRegistry.registerType(typeName, TypeKind.ENUM, composer, true)
+				}
+			})
+
 			const objectGenerator = this.createObjectTypeGenerator()
 			objectGenerator.generate()
-			const objectTypes = objectGenerator.getGeneratedTypes()
+			const objectTypes = objectGenerator.getGeneratedObjectTypes()
+
+			objectTypes.forEach((typeName) => {
+				const composer = this.schemaComposer.getOTC(typeName)
+				if (composer) {
+					this.typeRegistry.registerType(typeName, TypeKind.OBJECT, composer, true)
+				}
+			})
 
 			const relationGenerator = this.createRelationGenerator()
 			relationGenerator.generate()
-			const relationFields = relationGenerator.getProcessedRelations()
+			const relationFields = relationGenerator.getGeneratedRelations()
 
 			let connectionTypes: string[] = []
 			if (this.options.connectionTypes) {
 				const connectionGenerator = this.createConnectionGenerator()
 				connectionGenerator.generate()
 				connectionTypes = connectionGenerator.getGeneratedConnectionTypes()
+
+				connectionTypes.forEach((typeName) => {
+					const composer = this.schemaComposer.getOTC(typeName)
+					if (composer) {
+						this.typeRegistry.registerType(typeName, TypeKind.CONNECTION, composer, true)
+					}
+				})
+
+				const edgeTypes = connectionGenerator.getGeneratedEdgeTypes()
+				edgeTypes.forEach((typeName) => {
+					const composer = this.schemaComposer.getOTC(typeName)
+					if (composer) {
+						this.typeRegistry.registerType(typeName, TypeKind.EDGE, composer, true)
+					}
+				})
 			}
 
 			const validationErrors = this.schemaBuilder.validateSchema()
 			if (validationErrors.length > 0) {
 				this.warnings.push(...validationErrors)
 			}
+
+			this.validateTypesWithRegistry()
 
 			const sdl = this.schemaBuilder.generateSDL()
 
@@ -119,54 +160,23 @@ export class CoreGenerator {
 	}
 
 	private createScalarGenerator(): ScalarGenerator {
-		return new ScalarGenerator({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-		})
+		return this.generatorFactory.createScalarGenerator()
 	}
 
 	private createEnumGenerator(): EnumGenerator {
-		return new EnumGenerator({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
-			dmmfEnums: this.dmmf.datamodel.enums,
-		})
+		return this.generatorFactory.createEnumGenerator()
 	}
 
 	private createObjectTypeGenerator(): ObjectTypeGenerator {
-		return new ObjectTypeGenerator({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
-			typeMapper: this.typeMapper,
-			dmmfModels: this.dmmf.datamodel.models,
-		})
+		return this.generatorFactory.createObjectTypeGenerator()
 	}
 
 	private createRelationGenerator(): RelationGenerator {
-		return new RelationGenerator({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
-			typeMapper: this.typeMapper,
-			dmmfModels: this.dmmf.datamodel.models,
-		})
+		return this.generatorFactory.createRelationGenerator()
 	}
 
 	private createConnectionGenerator(): ConnectionGenerator {
-		return new ConnectionGenerator({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
-			typeMapper: this.typeMapper,
-			dmmfModels: this.dmmf.datamodel.models,
-		})
+		return this.generatorFactory.createConnectionGenerator()
 	}
 
 	addWarning(message: string): void {
@@ -175,5 +185,69 @@ export class CoreGenerator {
 
 	getWarnings(): string[] {
 		return this.warnings
+	}
+
+	private validateTypesWithRegistry(): void {
+		try {
+			const objectTypes = this.typeRegistry.getObjectTypes()
+			const referencedTypes = new Set<string>()
+
+			objectTypes.forEach((typeName) => {
+				const typeComposer = this.schemaComposer.getOTC(typeName)
+				if (typeComposer) {
+					const fieldNames = typeComposer.getFieldNames()
+					fieldNames.forEach((fieldName) => {
+						const fieldType = typeComposer.getFieldType(fieldName)
+						const fieldTypeName = fieldType.toString().replace(/[\[\]!]/g, '')
+						if (this.schemaComposer.has(fieldTypeName)) {
+							referencedTypes.add(fieldTypeName)
+						}
+					})
+				}
+			})
+
+			objectTypes.forEach((typeName) => {
+				if (!referencedTypes.has(typeName) && !typeName.includes('Query') && !typeName.includes('Mutation')) {
+					this.warnings.push(`Potentially orphaned type detected: ${typeName} is not referenced by any other type`)
+				}
+			})
+		} catch (error) {
+			this.warnings.push(`Type validation warning: ${error instanceof Error ? error.message : String(error)}`)
+		}
+	}
+
+	getTypeInfo(typeName: string): TypeInfo | undefined {
+		const composer = this.typeRegistry.getTypeComposer(typeName)
+		if (!composer) return undefined
+
+		const kind = match<string, TypeKind>(typeName)
+			.when(
+				(name) => this.typeRegistry.isTypeOfKind(name, TypeKind.OBJECT),
+				() => TypeKind.OBJECT
+			)
+			.when(
+				(name) => this.typeRegistry.isTypeOfKind(name, TypeKind.SCALAR),
+				() => TypeKind.SCALAR
+			)
+			.when(
+				(name) => this.typeRegistry.isTypeOfKind(name, TypeKind.ENUM),
+				() => TypeKind.ENUM
+			)
+			.when(
+				(name) => this.typeRegistry.isTypeOfKind(name, TypeKind.CONNECTION),
+				() => TypeKind.CONNECTION
+			)
+			.when(
+				(name) => this.typeRegistry.isTypeOfKind(name, TypeKind.EDGE),
+				() => TypeKind.EDGE
+			)
+			.otherwise(() => TypeKind.UNKNOWN)
+
+		return {
+			name: typeName,
+			kind,
+			composer,
+			isGenerated: true,
+		}
 	}
 }

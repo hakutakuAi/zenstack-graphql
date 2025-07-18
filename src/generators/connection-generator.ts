@@ -1,20 +1,6 @@
-import { SchemaComposer, ObjectTypeComposer } from 'graphql-compose'
-import type { DMMF } from '@zenstackhq/sdk/prisma'
-import { ErrorHandler } from '@utils/error-handler'
-import { AttributeProcessor } from '@utils/attribute-processor'
-import { TypeMapper } from '@utils/type-mapper'
-import type { NormalizedOptions } from '@utils/options-validator'
-import { ValidationUtils } from '@utils/validation'
+import { ObjectTypeComposer } from 'graphql-compose'
+import { ModelBasedGeneratorContext, DMMF, asDataModel } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
-
-export interface ConnectionGeneratorContext {
-	schemaComposer: SchemaComposer
-	options: NormalizedOptions
-	errorHandler: ErrorHandler
-	attributeProcessor: AttributeProcessor
-	typeMapper: TypeMapper
-	dmmfModels: readonly DMMF.Model[]
-}
 
 export interface ConnectionConfig {
 	name: string
@@ -28,7 +14,7 @@ export class ConnectionGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 	private dmmfModels: readonly DMMF.Model[]
 	private generatedEdges: Set<string> = new Set()
 
-	constructor(context: ConnectionGeneratorContext) {
+	constructor(context: ModelBasedGeneratorContext) {
 		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
 		this.dmmfModels = context.dmmfModels
 	}
@@ -47,13 +33,28 @@ export class ConnectionGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 				}
 			}
 		} catch (error) {
-			console.error('Original error in generate:', error)
 			this.handleError('generate', error, ['Check model definitions in your schema', 'Ensure connection type options are properly configured', 'Verify Relay specification compliance'])
 		}
 	}
 
 	private shouldGenerateConnection(dmmfModel: DMMF.Model): boolean {
-		return ValidationUtils.shouldGenerateModel(dmmfModel, this.attributeProcessor)
+		try {
+			return !this.attributeProcessor.hasModelIgnoreAttr(asDataModel(dmmfModel))
+		} catch (error) {
+			return true
+		}
+	}
+
+	private shouldIncludeField(dmmfModel: DMMF.Model, field: DMMF.Field): boolean {
+		try {
+			if (this.attributeProcessor.hasFieldIgnoreAttr(asDataModel(dmmfModel), field.name)) {
+				return false
+			}
+
+			return true
+		} catch (error) {
+			return true
+		}
 	}
 
 	private createCommonTypes(): void {
@@ -286,7 +287,7 @@ export class ConnectionGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 			const fields: Record<string, { type: string; description: string }> = {}
 
 			for (const field of dmmfModel.fields) {
-				if (field.kind !== 'object' && ValidationUtils.shouldIncludeField(dmmfModel, field, this.attributeProcessor, true)) {
+				if (field.kind !== 'object' && this.shouldIncludeField(dmmfModel, field)) {
 					const fieldName = this.formatFieldName(field.name)
 					fields[fieldName] = {
 						type: 'SortDirection',
@@ -310,11 +311,18 @@ export class ConnectionGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 	}
 
 	private getObjectTypeName(dmmfModel: DMMF.Model): string {
-		const customName = ValidationUtils.getModelName(dmmfModel, this.attributeProcessor)
-		if (customName && customName !== dmmfModel.name) {
-			return this.formatTypeName(customName)
+		let name = dmmfModel.name
+
+		try {
+			const customName = this.attributeProcessor.getModelName(asDataModel(dmmfModel))
+			if (customName && customName !== dmmfModel.name) {
+				name = customName
+			}
+		} catch (error) {
+			// Fallback to DMMF model name if attribute processing fails
 		}
-		return this.formatTypeName(dmmfModel.name)
+
+		return this.formatTypeName(name)
 	}
 
 	getGeneratedConnectionTypes(): string[] {

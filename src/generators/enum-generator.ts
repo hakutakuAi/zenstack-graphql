@@ -1,18 +1,7 @@
-import { SchemaComposer, EnumTypeComposer } from 'graphql-compose'
-import type { DMMF } from '@zenstackhq/sdk/prisma'
+import { EnumTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { AttributeProcessor } from '@utils/attribute-processor'
-import { ErrorHandler } from '@utils/error-handler'
-import { NormalizedOptions } from '@utils/options-validator'
 import { formatEnumValueName } from '@utils/string-utils'
-
-export interface EnumGeneratorContext {
-	schemaComposer: SchemaComposer
-	options: NormalizedOptions
-	errorHandler: ErrorHandler
-	attributeProcessor: AttributeProcessor
-	dmmfEnums: readonly DMMF.DatamodelEnum[]
-}
+import { EnumGeneratorContext, DMMF } from '@types'
 
 export interface EnumValueConfig {
 	value: string

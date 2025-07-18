@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import { dirname, resolve, isAbsolute } from 'path'
-import { ErrorHandler, FileError } from './error-handler'
+import { ErrorHandler } from './error-handler'
 
 export interface WriteOptions {
 	createDirectories?: boolean
@@ -196,7 +196,6 @@ export class FileWriter {
 	}
 
 	private generateFallbackPaths(originalPath: string): string[] {
-		const dir = dirname(originalPath)
 		const ext = originalPath.split('.').pop() || ''
 		const baseName = originalPath.replace(`.${ext}`, '')
 		const timestamp = Date.now()

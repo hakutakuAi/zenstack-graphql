@@ -1,19 +1,6 @@
 import type { DMMF } from '@zenstackhq/sdk/prisma'
 import { match } from 'ts-pattern'
-
-type ScalarTypeKey = 'String' | 'Int' | 'BigInt' | 'Float' | 'Boolean' | 'DateTime' | 'Json' | 'Decimal' | 'Bytes'
-
-const SCALAR_TYPES: Record<ScalarTypeKey, string> = {
-	String: 'String',
-	Int: 'Int',
-	BigInt: 'Int',
-	Float: 'Float',
-	Boolean: 'Boolean',
-	DateTime: 'DateTime',
-	Json: 'JSON',
-	Decimal: 'Decimal',
-	Bytes: 'String',
-}
+import { ScalarTypeKey, SCALAR_TYPES } from './constants'
 
 type GraphQLTypeModifiers = {
 	isRequired?: boolean

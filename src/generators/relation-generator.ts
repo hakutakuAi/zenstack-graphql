@@ -1,20 +1,9 @@
-import { SchemaComposer, ObjectTypeComposer } from 'graphql-compose'
+import { ObjectTypeComposer } from 'graphql-compose'
 import type { DMMF } from '@zenstackhq/sdk/prisma'
 import { BaseGenerator } from '@generators/base-generator'
-import { AttributeProcessor } from '@utils/attribute-processor'
-import { ErrorHandler, ErrorCategory } from '@utils/error-handler'
-import { TypeMapper } from '@utils/type-mapper'
-import { NormalizedOptions } from '@utils/options-validator'
+import { ErrorCategory } from '@utils/error-handler'
+import { ModelBasedGeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/validation'
-
-export interface RelationGeneratorContext {
-	schemaComposer: SchemaComposer
-	options: NormalizedOptions
-	errorHandler: ErrorHandler
-	attributeProcessor: AttributeProcessor
-	typeMapper: TypeMapper
-	dmmfModels: readonly DMMF.Model[]
-}
 
 export interface RelationField {
 	modelName: string
@@ -29,16 +18,12 @@ export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any
 	private dmmfModels: readonly DMMF.Model[]
 	private processedRelations: Set<string> = new Set()
 
-	constructor(context: RelationGeneratorContext) {
+	constructor(context: ModelBasedGeneratorContext) {
 		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
 		this.dmmfModels = context.dmmfModels
 	}
 
 	generate(): void {
-		this.generateRelations()
-	}
-
-	generateRelations(): void {
 		if (!this.options.includeRelations) {
 			return
 		}
@@ -50,11 +35,11 @@ export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any
 				this.processRelation(relation)
 			}
 		} catch (error) {
-			this.handleError('generateRelations', error, ['Check model relationships in your schema', 'Ensure relation fields are properly defined', 'Verify model types exist in the schema'])
+			this.handleError('generate', error, ['Check model relationships in your schema', 'Ensure relation fields are properly defined', 'Verify model types exist in the schema'])
 		}
 	}
 
-	getProcessedRelations(): string[] {
+	getGeneratedRelations(): string[] {
 		return Array.from(this.processedRelations)
 	}
 

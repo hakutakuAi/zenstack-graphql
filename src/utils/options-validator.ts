@@ -1,10 +1,9 @@
 import { z } from 'zod'
 import { ErrorHandler } from '@utils/error-handler'
+import { VALID_SCALAR_VALUES, scalarTypesSchema } from './constants'
 
 export type FieldNaming = 'camelCase' | 'snake_case' | 'preserve'
 export type TypeNaming = 'PascalCase' | 'camelCase' | 'preserve'
-
-const VALID_SCALARS = ['String', 'Int', 'Float', 'Boolean', 'ID', 'DateTime', 'JSON', 'Decimal']
 
 const DEFAULT_OPTIONS = {
 	output: './schema.graphql',
@@ -49,10 +48,6 @@ export type NormalizedOptions = {
 
 const fieldNamingSchema = z.enum(['camelCase', 'snake_case', 'preserve'])
 const typeNamingSchema = z.enum(['PascalCase', 'camelCase', 'preserve'])
-
-const scalarTypesSchema = z.record(z.string(), z.string()).refine((types) => Object.values(types).every((type) => VALID_SCALARS.includes(type)), {
-	message: `Invalid scalar type mapping. Valid types: ${VALID_SCALARS.join(', ')}`,
-})
 
 const optionsSchema = z.object({
 	output: z.string().min(1, 'Output path cannot be empty').optional(),
@@ -125,7 +120,7 @@ function generateSuggestions(issues: z.ZodIssue[]): string[] {
 				break
 			case 'custom':
 				if (path.includes('scalarTypes')) {
-					return `Use valid GraphQL scalar types: ${VALID_SCALARS.join(', ')}`
+					return `Use valid GraphQL scalar types: ${VALID_SCALAR_VALUES.join(', ')}`
 				}
 				break
 		}
