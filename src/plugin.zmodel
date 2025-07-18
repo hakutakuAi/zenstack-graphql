@@ -1,0 +1,116 @@
+/**
+ * Ignore a model in GraphQL schema generation
+ *
+ * @example
+ * model InternalEntity {
+ *   id Int @id
+ *   secretData String
+ *
+ *   @@graphql.ignore
+ * }
+ */
+attribute @@graphql.ignore()
+
+/**
+ * Set custom name for a model in GraphQL schema
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *
+ *   @@graphql.name(name: "Member")
+ * }
+ */
+attribute @@graphql.name(name: String)
+
+/**
+ * Set description for a model in GraphQL schema
+ *
+ * @example
+ * model Post {
+ *   id Int @id
+ *
+ *   @@graphql.description(description: "Blog post content")
+ * }
+ */
+attribute @@graphql.description(description: String)
+
+/**
+ * Configure connection options for this model
+ *
+ * @example
+ * model Post {
+ *   id Int @id
+ *
+ *   @@graphql.connection(relay: true, pageSize: 10)
+ * }
+ */
+attribute @@graphql.connection(relay: Boolean?, pageSize: Int?)
+
+/// FIELD ATTRIBUTES
+
+/**
+ * Ignore a field in GraphQL schema generation
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *   password String @graphql.ignore
+ * }
+ */
+attribute @graphql.ignore()
+
+/**
+ * Set custom name for a field in GraphQL schema
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *   emailAddress String @graphql.name(name: "email")
+ * }
+ */
+attribute @graphql.name(name: String)
+
+/**
+ * Set description for a field in GraphQL schema
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *   fullName String @graphql.description(description: "User's full name")
+ * }
+ */
+attribute @graphql.description(description: String)
+
+/**
+ * Mark a field as non-sortable in connection queries
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *   randomValue Float @graphql.nonSortable
+ * }
+ */
+attribute @graphql.nonSortable()
+
+/**
+ * Mark a field as non-filterable in queries
+ *
+ * @example
+ * model User {
+ *   id Int @id
+ *   sensitiveData String @graphql.nonFilterable
+ * }
+ */
+attribute @graphql.nonFilterable()
+
+/**
+ * Customize a field's input type name
+ *
+ * @example
+ * model Post {
+ *   id Int @id
+ *   content String @graphql.inputType(name: "PostContentInput")
+ * }
+ */
+attribute @graphql.inputType(name: String)

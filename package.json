@@ -1,0 +1,31 @@
+{
+	"name": "zenstack-graphql",
+	"module": "src/index.ts",
+	"scripts": {
+		"build": "rm -rf dist && tsc && tsc-alias",
+		"generate-example": "zenstack generate --schema ./example/schema.zmodel"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.18",
+		"@types/node": "^24.0.14",
+		"@typescript-eslint/eslint-plugin": "^8.37.0",
+		"@typescript-eslint/parser": "^8.37.0",
+		"eslint": "^9.31.0",
+		"prettier": "^3.6.2",
+		"prisma": "^6.12.0",
+		"tsc-alias": "^1.8.16",
+		"typescript": "^5.8.3",
+		"zenstack": "2.16.1"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.12.0",
+		"@zenstackhq/runtime": "2.16.1",
+		"@zenstackhq/sdk": "^2.16.1",
+		"graphql-compose": "^9.1.0",
+		"ts-pattern": "^5.7.1",
+		"zod": "3.25.76"
+	}
+}

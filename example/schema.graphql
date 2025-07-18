@@ -1,0 +1,482 @@
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+enum SpaceUserRole {
+  USER
+  ADMIN
+  GUEST
+}
+
+type Space {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  slug: String!
+  members: [SpaceUser!]!
+  lists: [List!]!
+}
+
+type SpaceUser {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  space: Space!
+  spaceId: String!
+  user: User!
+  userId: String!
+  role: SpaceUserRole!
+  invitedBy: String
+}
+
+type User {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  email: String!
+  emailVerified: DateTime
+  password: String
+  name: String
+  spaces: [SpaceUser!]!
+  image: String
+  lists: [List!]!
+  todos: [Todo!]!
+  lastSeen: DateTime
+  preferences: JSON
+}
+
+type List {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  space: Space!
+  spaceId: String!
+  owner: User!
+  ownerId: String!
+  title: String!
+  private: Boolean!
+  todos: [Todo!]!
+  color: String
+}
+
+type Todo {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  owner: User!
+  ownerId: String!
+  list: List!
+  listId: String!
+  title: String!
+  completedAt: DateTime
+  description: String
+  priority: Int!
+  dueDate: DateTime
+}
+
+type ActivityLog {
+  id: String!
+  createdAt: DateTime!
+  userId: String!
+  action: String!
+  entityId: String!
+  entityType: String!
+  metadata: JSON
+}
+
+type Tag {
+  id: String!
+  name: String!
+  color: String
+}
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""Pagination input for forward pagination"""
+input ForwardPaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+}
+
+"""Pagination input for backward pagination"""
+input BackwardPaginationInput {
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Combined pagination input"""
+input PaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""An edge in a Space connection."""
+type SpaceEdge {
+  """The Space at the end of the edge."""
+  node: Space!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Space items."""
+type SpaceConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Space edges."""
+  edges: [SpaceEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for Space connections"""
+input SpaceSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by name"""
+  name: SortDirection
+
+  """Sort by slug"""
+  slug: SortDirection
+}
+
+"""An edge in a SpaceUser connection."""
+type SpaceUserEdge {
+  """The SpaceUser at the end of the edge."""
+  node: SpaceUser!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of SpaceUser items."""
+type SpaceUserConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of SpaceUser edges."""
+  edges: [SpaceUserEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for SpaceUser connections"""
+input SpaceUserSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by spaceId"""
+  spaceId: SortDirection
+
+  """Sort by userId"""
+  userId: SortDirection
+
+  """Sort by role"""
+  role: SortDirection
+
+  """Sort by invitedBy"""
+  invitedBy: SortDirection
+}
+
+"""An edge in a User connection."""
+type UserEdge {
+  """The User at the end of the edge."""
+  node: User!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of User items."""
+type UserConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of User edges."""
+  edges: [UserEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for User connections"""
+input UserSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by email"""
+  email: SortDirection
+
+  """Sort by emailVerified"""
+  emailVerified: SortDirection
+
+  """Sort by password"""
+  password: SortDirection
+
+  """Sort by name"""
+  name: SortDirection
+
+  """Sort by image"""
+  image: SortDirection
+
+  """Sort by lastSeen"""
+  lastSeen: SortDirection
+
+  """Sort by preferences"""
+  preferences: SortDirection
+}
+
+"""An edge in a List connection."""
+type ListEdge {
+  """The List at the end of the edge."""
+  node: List!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of List items."""
+type ListConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of List edges."""
+  edges: [ListEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for List connections"""
+input ListSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by spaceId"""
+  spaceId: SortDirection
+
+  """Sort by ownerId"""
+  ownerId: SortDirection
+
+  """Sort by title"""
+  title: SortDirection
+
+  """Sort by private"""
+  private: SortDirection
+
+  """Sort by color"""
+  color: SortDirection
+}
+
+"""An edge in a Todo connection."""
+type TodoEdge {
+  """The Todo at the end of the edge."""
+  node: Todo!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Todo items."""
+type TodoConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Todo edges."""
+  edges: [TodoEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for Todo connections"""
+input TodoSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by ownerId"""
+  ownerId: SortDirection
+
+  """Sort by listId"""
+  listId: SortDirection
+
+  """Sort by title"""
+  title: SortDirection
+
+  """Sort by completedAt"""
+  completedAt: SortDirection
+
+  """Sort by description"""
+  description: SortDirection
+
+  """Sort by priority"""
+  priority: SortDirection
+
+  """Sort by dueDate"""
+  dueDate: SortDirection
+}
+
+"""An edge in a ActivityLog connection."""
+type ActivityLogEdge {
+  """The ActivityLog at the end of the edge."""
+  node: ActivityLog!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of ActivityLog items."""
+type ActivityLogConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of ActivityLog edges."""
+  edges: [ActivityLogEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for ActivityLog connections"""
+input ActivityLogSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by userId"""
+  userId: SortDirection
+
+  """Sort by action"""
+  action: SortDirection
+
+  """Sort by entityId"""
+  entityId: SortDirection
+
+  """Sort by entityType"""
+  entityType: SortDirection
+
+  """Sort by metadata"""
+  metadata: SortDirection
+}
+
+"""An edge in a Tag connection."""
+type TagEdge {
+  """The Tag at the end of the edge."""
+  node: Tag!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Tag items."""
+type TagConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Tag edges."""
+  edges: [TagEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort input for Tag connections"""
+input TagSortInput {
+  """Sort by id"""
+  id: SortDirection
+
+  """Sort by name"""
+  name: SortDirection
+
+  """Sort by color"""
+  color: SortDirection
+}
