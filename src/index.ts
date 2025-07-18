@@ -7,9 +7,10 @@ import type { Model } from '@zenstackhq/sdk/ast'
 import { SchemaComposer } from 'graphql-compose'
 
 import { CoreGenerator } from '@generators'
-import { ErrorHandler, GenerationError, ValidationError, validateOptions, PluginOptions, AttributeProcessor, TypeMapper } from '@utils'
+import { ErrorHandler, PluginError, ErrorCategory, ErrorSeverity, validateOptions, PluginOptions, AttributeProcessor, TypeMapper } from '@utils'
+import { TypeFormatter } from '@utils/schema'
 
-import fileWriter from '@utils/file-writer'
+import fileWriter from './utils/io/file-writer'
 
 export const name = 'ZenStack GraphQL'
 export const description = 'Generates GraphQL schemas'
@@ -22,6 +23,7 @@ export default async function run(model: Model, options: SdkPluginOptions, dmmf:
 		const schemaComposer = new SchemaComposer()
 		const attributeProcessor = new AttributeProcessor()
 		const typeMapper = TypeMapper.createFromDMMF(dmmf)
+		const typeFormatter = TypeFormatter.fromOptions(normalizedOptions.typeNaming, normalizedOptions.fieldNaming)
 
 		const coreGenerator = new CoreGenerator({
 			model,
@@ -30,6 +32,7 @@ export default async function run(model: Model, options: SdkPluginOptions, dmmf:
 			errorHandler,
 			attributeProcessor,
 			typeMapper,
+			typeFormatter,
 			schemaComposer,
 		})
 
@@ -51,15 +54,15 @@ export default async function run(model: Model, options: SdkPluginOptions, dmmf:
 			},
 		}
 	} catch (error) {
-		if (error instanceof ValidationError) {
-			throw errorHandler.createValidationError('Invalid plugin options', { originalError: error })
-		}
-
-		if (error instanceof GenerationError) {
+		if (error instanceof PluginError) {
 			throw error
 		}
 
-		throw errorHandler.createGenerationError('GraphQL schema generation failed', { originalError: error }, [
+		if (error instanceof Error && error.message.includes('validation')) {
+			throw errorHandler.createError('Invalid plugin options', ErrorCategory.VALIDATION, ErrorSeverity.ERROR, { originalError: error })
+		}
+
+		throw errorHandler.createError('GraphQL schema generation failed', ErrorCategory.GENERATION, ErrorSeverity.ERROR, { originalError: error }, [
 			'Check your ZModel schema for errors',
 			'Verify plugin configuration options',
 			'Ensure all required models and fields are properly defined',

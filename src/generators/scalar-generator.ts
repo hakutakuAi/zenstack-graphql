@@ -1,8 +1,10 @@
-import { ScalarTypeComposer } from 'graphql-compose'
+import { ScalarTypeComposer, SchemaComposer } from 'graphql-compose'
 import { GraphQLScalarType, GraphQLError } from 'graphql'
 import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
-import { TypedGeneratorContext } from '@types'
+import { GeneratorContext } from '@types'
+import { TypeKind } from '@utils/registry/unified-registry'
+import { Generate, SchemaOp } from '@utils/error'
 
 export interface ScalarConfig {
 	name: string
@@ -12,56 +14,54 @@ export interface ScalarConfig {
 	parseLiteral: (ast: unknown) => unknown
 }
 
-export class ScalarGenerator extends BaseGenerator<ScalarTypeComposer<any>> {
-	constructor(context: TypedGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
+export class ScalarGenerator extends BaseGenerator {
+	constructor(context: GeneratorContext) {
+		super(context)
+		if (!context.typeMapper) {
+			throw new Error('TypeMapper is required for ScalarGenerator')
+		}
 	}
 
+	protected override skipGeneration(): boolean {
+		return !this.options.generateScalars
+	}
+
+	@Generate({
+		suggestions: ['Check scalar type configurations', 'Ensure all scalar types are properly defined', 'Verify GraphQL scalar type compatibility'],
+	})
 	generate(): void {
-		if (!this.options.generateScalars) {
+		if (this.skipGeneration()) {
 			return
 		}
 
-		try {
-			this.registerBuiltInScalars()
-			this.registerCustomScalars()
-		} catch (error) {
-			this.handleError('generate', error, ['Check scalar type configurations', 'Ensure all scalar types are properly defined', 'Verify GraphQL scalar type compatibility'])
-		}
+		this.registerBuiltInScalars()
+		this.registerCustomScalars()
 	}
 
 	getGeneratedScalars(): string[] {
-		return this.getGeneratedItems()
+		return this.registry.getScalarTypes()
 	}
 
 	hasScalar(name: string): boolean {
-		return this.hasItem(name)
+		return this.registry.isTypeOfKind(name, TypeKind.SCALAR)
 	}
 
 	getScalarComposer(name: string): ScalarTypeComposer | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
-
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof ScalarTypeComposer ? composer : undefined
+		return this.registry.getScalarComposer(name)
 	}
 
 	private registerBuiltInScalars(): void {
 		const builtInScalars = [this.createDateTimeScalar(), this.createJSONScalar(), this.createDecimalScalar()]
-
-		for (const scalar of builtInScalars) {
-			this.registerScalar(scalar)
-		}
+		builtInScalars.forEach((scalar) => this.registerScalar(scalar))
 	}
 
 	private registerCustomScalars(): void {
-		for (const [prismaType, graphqlType] of Object.entries(this.options.scalarTypes)) {
-			if (!this.isBuiltInScalar(graphqlType) && !this.hasItem(graphqlType)) {
+		Object.entries(this.options.scalarTypes).forEach(([prismaType, graphqlType]) => {
+			if (!this.isBuiltInScalar(graphqlType) && !this.hasScalar(graphqlType)) {
 				const customScalar = this.createCustomScalar(graphqlType, prismaType)
 				this.registerScalar(customScalar)
 			}
-		}
+		})
 	}
 
 	private createDateTimeScalar(): ScalarConfig {
@@ -250,26 +250,25 @@ export class ScalarGenerator extends BaseGenerator<ScalarTypeComposer<any>> {
 		}
 	}
 
+	@SchemaOp({
+		suggestions: ['Check scalar type definition', 'Ensure serialize, parseValue, and parseLiteral functions are valid', 'Verify scalar name is unique'],
+	})
 	private registerScalar(config: ScalarConfig): void {
-		try {
-			const scalarType = new GraphQLScalarType({
-				name: config.name,
-				description: config.description,
-				serialize: config.serialize,
-				parseValue: config.parseValue,
-				parseLiteral: config.parseLiteral as any,
-			})
+		const scalarType = new GraphQLScalarType({
+			name: config.name,
+			description: config.description,
+			serialize: config.serialize,
+			parseValue: config.parseValue,
+			parseLiteral: config.parseLiteral as any,
+		})
 
-			const scalarComposer = ScalarTypeComposer.createTemp(scalarType)
-			this.schemaComposer.set(config.name, scalarComposer)
-			this.registerItem(config.name)
-		} catch (error) {
-			this.handleError('registerScalar', error, ['Check scalar type definition', 'Ensure serialize, parseValue, and parseLiteral functions are valid', 'Verify scalar name is unique'])
-		}
+		const scalarComposer = ScalarTypeComposer.createTemp(scalarType)
+		this.schemaComposer.set(config.name, scalarComposer)
+
+		this.registry.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
 	}
 
 	private isBuiltInScalar(typeName: string): boolean {
-		const builtInScalars = ['String', 'Int', 'Float', 'Boolean', 'ID']
-		return builtInScalars.includes(typeName)
+		return this.registry.isBuiltInScalar(typeName)
 	}
 }

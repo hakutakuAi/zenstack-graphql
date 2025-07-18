@@ -3,7 +3,7 @@
 	"module": "src/index.ts",
 	"scripts": {
 		"build": "rm -rf dist && tsc && tsc-alias",
-		"generate-example": "zenstack generate --schema ./example/schema.zmodel"
+		"generate-example": "bun run build && zenstack generate --schema ./example/schema.zmodel"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.18",

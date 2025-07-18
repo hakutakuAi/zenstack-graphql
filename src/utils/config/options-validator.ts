@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ErrorHandler } from '@utils/error-handler'
+import { ErrorHandler, ErrorCategory, ErrorSeverity } from '@utils/error/error-handler'
 import { VALID_SCALAR_VALUES, scalarTypesSchema } from './constants'
 
 export type FieldNaming = 'camelCase' | 'snake_case' | 'preserve'
@@ -91,8 +91,10 @@ export function validateOptions(options: PluginOptions = {}, errorHandler = Erro
 
 			const suggestions = generateSuggestions(error.issues)
 
-			throw errorHandler.createValidationError(
+			throw errorHandler.createError(
 				`Invalid plugin options:\n${errorMessages}`,
+				ErrorCategory.VALIDATION,
+				ErrorSeverity.ERROR,
 				{
 					originalOptions: options,
 					validationErrors: error.issues,
@@ -102,7 +104,9 @@ export function validateOptions(options: PluginOptions = {}, errorHandler = Erro
 			)
 		}
 
-		throw errorHandler.wrapError(error, 'options validation')
+		throw errorHandler.createError(`Error during options validation: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.VALIDATION, ErrorSeverity.ERROR, {
+			originalError: error,
+		})
 	}
 }
 

@@ -1,6 +1,9 @@
 import { ObjectTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { ModelBasedGeneratorContext, DMMF, asDataModel } from '@types'
+import { GeneratorContext, DMMF } from '@types'
+import { ValidationUtils } from '@utils/schema/validation'
+import { TypeKind } from '@utils/registry/unified-registry'
+import { Generate, SchemaOp, Validate } from '@utils/error'
 
 export interface FieldConfig {
 	type: string
@@ -8,148 +11,96 @@ export interface FieldConfig {
 	resolve?: any
 }
 
-export class ObjectTypeGenerator extends BaseGenerator<ObjectTypeComposer<any, any>> {
+export class ObjectTypeGenerator extends BaseGenerator {
 	private readonly dmmfModels: readonly DMMF.Model[]
 
-	constructor(context: ModelBasedGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
+	constructor(context: GeneratorContext) {
+		super(context)
+		if (!context.dmmfModels) {
+			throw new Error('DMMF models are required for ObjectTypeGenerator')
+		}
 		this.dmmfModels = context.dmmfModels
 	}
 
+	@Generate({
+		suggestions: ['Check model definitions in your schema', 'Ensure field types are valid GraphQL types', 'Verify model attributes are properly configured'],
+	})
 	generate(): void {
-		try {
-			for (const dmmfModel of this.dmmfModels) {
-				if (this.shouldGenerateModel(dmmfModel)) {
-					this.generateObjectType(dmmfModel)
-				}
-			}
-		} catch (error) {
-			this.handleError('generate', error, ['Check model definitions in your schema', 'Ensure field types are valid GraphQL types', 'Verify model attributes are properly configured'])
-		}
+		this.dmmfModels.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateObjectType(model))
 	}
 
 	getGeneratedObjectTypes(): string[] {
-		return this.getGeneratedItems()
+		return this.registry.getObjectTypes()
 	}
 
 	hasObjectType(name: string): boolean {
-		return this.hasItem(name)
+		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
 	}
 
 	getObjectComposer(name: string): ObjectTypeComposer | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
-
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof ObjectTypeComposer ? composer : undefined
+		return this.registry.getObjectComposer(name)
 	}
 
 	getObjectTypeFields(typeName: string): string[] {
-		const objectComposer = this.getObjectComposer(typeName)
-		return objectComposer ? Object.keys(objectComposer.getFields()) : []
+		return this.registry.getObjectTypeFields(typeName)
 	}
 
 	hasField(typeName: string, fieldName: string): boolean {
-		return this.getObjectTypeFields(typeName).includes(fieldName)
+		return this.registry.hasField(typeName, fieldName)
 	}
 
 	getFieldType(typeName: string, fieldName: string): string | undefined {
-		const objectComposer = this.getObjectComposer(typeName)
-		if (!objectComposer) {
-			return undefined
-		}
-
-		const field = objectComposer.getField(fieldName)
-		return field?.type?.toString()
+		return this.registry.getFieldType(typeName, fieldName)
 	}
 
-	private shouldGenerateModel(dmmfModel: DMMF.Model): boolean {
-		try {
-			return !this.attributeProcessor.hasModelIgnoreAttr(asDataModel(dmmfModel))
-		} catch (error) {
-			return true
-		}
-	}
-
+	@SchemaOp({
+		suggestions: ['Check model definition structure and content', 'Ensure model name is a valid GraphQL identifier', 'Verify all field types are supported'],
+	})
 	private generateObjectType(dmmfModel: DMMF.Model): void {
-		try {
-			const typeName = this.getObjectTypeName(dmmfModel)
+		const typeName = this.getObjectTypeName(dmmfModel)
 
-			if (this.hasItem(typeName)) {
-				return
-			}
-
-			const fields = this.createObjectFields(dmmfModel)
-			const description = this.getObjectTypeDescription(dmmfModel)
-
-			const objectComposer = this.schemaComposer.createObjectTC({
-				name: typeName,
-				description,
-				fields,
-			})
-
-			this.schemaComposer.set(typeName, objectComposer)
-			this.registerItem(typeName)
-		} catch (error) {
-			this.handleError('generateObjectType', error, [`Check model definition for "${dmmfModel.name}"`, 'Ensure model name is a valid GraphQL identifier', 'Verify all field types are supported'])
+		if (this.hasObjectType(typeName)) {
+			return
 		}
+
+		const fields = this.createObjectFields(dmmfModel)
+		const description = this.getObjectTypeDescription(dmmfModel)
+
+		const objectComposer = this.schemaComposer.createObjectTC({
+			name: typeName,
+			description,
+			fields,
+		})
+
+		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
 	}
 
 	private getObjectTypeName(dmmfModel: DMMF.Model): string {
-		try {
-			const customName = this.attributeProcessor.getModelName(asDataModel(dmmfModel))
-			return this.formatTypeName(customName || dmmfModel.name)
-		} catch (error) {
-			return this.formatTypeName(dmmfModel.name)
-		}
+		const customName = ValidationUtils.getModelName(dmmfModel, this.attributeProcessor)
+		return this.typeFormatter.formatTypeName(customName || dmmfModel.name)
 	}
 
 	private getObjectTypeDescription(dmmfModel: DMMF.Model): string | undefined {
-		try {
-			return this.attributeProcessor.getModelDescription(asDataModel(dmmfModel)) || dmmfModel.documentation
-		} catch (error) {
-			return dmmfModel.documentation
-		}
+		return ValidationUtils.getModelDescription(dmmfModel, this.attributeProcessor)
 	}
 
 	private createObjectFields(dmmfModel: DMMF.Model): Record<string, FieldConfig> {
-		const fields: Record<string, FieldConfig> = {}
-
-		for (const field of dmmfModel.fields) {
-			if (this.shouldIncludeField(dmmfModel, field)) {
+		return dmmfModel.fields
+			.filter((field) => this.shouldIncludeField(dmmfModel, field))
+			.reduce((fields, field) => {
 				const fieldName = this.getFieldName(dmmfModel, field)
 				const fieldConfig = this.createFieldConfig(field)
-				fields[fieldName] = fieldConfig
-			}
-		}
-
-		return fields
+				return { ...fields, [fieldName]: fieldConfig }
+			}, {})
 	}
 
 	private shouldIncludeField(dmmfModel: DMMF.Model, field: DMMF.Field): boolean {
-		try {
-			if (this.attributeProcessor.hasFieldIgnoreAttr(asDataModel(dmmfModel), field.name)) {
-				return false
-			}
-
-			if (field.relationName && !this.options.includeRelations) {
-				return false
-			}
-
-			return true
-		} catch (error) {
-			return true
-		}
+		return ValidationUtils.shouldIncludeField(dmmfModel, field, this.attributeProcessor, this.options.includeRelations)
 	}
 
 	private getFieldName(dmmfModel: DMMF.Model, field: DMMF.Field): string {
-		try {
-			const customName = this.attributeProcessor.getFieldName(asDataModel(dmmfModel), field.name)
-			return this.formatFieldName(customName || field.name)
-		} catch (error) {
-			return this.formatFieldName(field.name)
-		}
+		const customName = ValidationUtils.getFieldName(dmmfModel, field.name, this.attributeProcessor)
+		return this.typeFormatter.formatFieldName(customName || field.name)
 	}
 
 	private createFieldConfig(field: DMMF.Field): FieldConfig {
@@ -162,9 +113,12 @@ export class ObjectTypeGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 		}
 	}
 
+	@Validate({
+		suggestions: ['Check if the field type is supported', 'Add custom scalar mapping in options', 'Consider using a different field type'],
+	})
 	private mapFieldType(field: DMMF.Field): string {
 		if (!this.typeMapper) {
-			throw this.handleError('mapFieldType', 'TypeMapper is not initialized')
+			throw new Error('TypeMapper is not initialized')
 		}
 
 		if (this.typeMapper.isRelationField(field)) {
@@ -173,11 +127,7 @@ export class ObjectTypeGenerator extends BaseGenerator<ObjectTypeComposer<any, a
 
 		const mappedType = this.typeMapper.mapFieldType(field)
 		if (!mappedType) {
-			throw this.handleError('mapFieldType', `Unsupported field type: ${field.type}`, [
-				'Check if the field type is supported',
-				'Add custom scalar mapping in options',
-				'Consider using a different field type',
-			])
+			throw new Error(`Unsupported field type: ${field.type}`)
 		}
 
 		return mappedType

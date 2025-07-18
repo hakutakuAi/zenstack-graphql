@@ -1,10 +1,12 @@
 import { SchemaComposer } from 'graphql-compose'
-import { BaseGeneratorContext, ModelBasedGeneratorContext, EnumGeneratorContext, TypedGeneratorContext } from '@types'
-import { AttributeProcessor } from '@utils/attribute-processor'
-import { TypeMapper } from '@utils/type-mapper'
-import { ErrorHandler } from '@utils/error-handler'
-import { NormalizedOptions } from '@utils/options-validator'
+import { GeneratorContext } from '@types'
+import { AttributeProcessor } from '@utils/schema/attribute-processor'
+import { TypeMapper } from '@utils/schema/type-mapper'
+import { ErrorHandler } from '@utils/error/error-handler'
+import { NormalizedOptions } from '@utils/config/options-validator'
+import { TypeFormatter } from '@utils/schema/type-formatter'
 import { DMMF } from '@zenstackhq/sdk/prisma'
+import { UnifiedRegistry } from '@utils/registry/unified-registry'
 
 import { ObjectTypeGenerator } from '@generators/object-type-generator'
 import { EnumGenerator } from '@generators/enum-generator'
@@ -13,13 +15,7 @@ import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
 
 export class GeneratorFactory {
-	private readonly schemaComposer: SchemaComposer<unknown>
-	private readonly options: NormalizedOptions
-	private readonly errorHandler: ErrorHandler
-	private readonly attributeProcessor: AttributeProcessor
-	private readonly typeMapper?: TypeMapper
-	private readonly dmmfModels?: readonly DMMF.Model[]
-	private readonly dmmfEnums?: readonly DMMF.DatamodelEnum[]
+	private readonly context: GeneratorContext
 
 	constructor(params: {
 		schemaComposer: SchemaComposer<unknown>
@@ -29,75 +25,52 @@ export class GeneratorFactory {
 		typeMapper?: TypeMapper
 		dmmfModels?: readonly DMMF.Model[]
 		dmmfEnums?: readonly DMMF.DatamodelEnum[]
+		typeFormatter?: TypeFormatter
+		registry?: UnifiedRegistry
 	}) {
-		this.schemaComposer = params.schemaComposer
-		this.options = params.options
-		this.errorHandler = params.errorHandler
-		this.attributeProcessor = params.attributeProcessor
-		this.typeMapper = params.typeMapper
-		this.dmmfModels = params.dmmfModels
-		this.dmmfEnums = params.dmmfEnums
-	}
-
-	private createBaseContext(): BaseGeneratorContext {
-		return {
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
+		this.context = {
+			schemaComposer: params.schemaComposer,
+			options: params.options,
+			errorHandler: params.errorHandler,
+			attributeProcessor: params.attributeProcessor,
+			typeFormatter: params.typeFormatter || TypeFormatter.fromOptions(params.options.typeNaming, params.options.fieldNaming),
+			typeMapper: params.typeMapper,
+			dmmfModels: params.dmmfModels,
+			dmmfEnums: params.dmmfEnums,
+			registry: params.registry
 		}
 	}
 
-	private createTypedContext(): TypedGeneratorContext {
-		if (!this.typeMapper) {
-			throw new Error('TypeMapper is required for creating typed generators')
-		}
-
-		return {
-			...this.createBaseContext(),
-			typeMapper: this.typeMapper,
-		}
-	}
-
-	private createModelBasedContext(): ModelBasedGeneratorContext {
-		if (!this.dmmfModels) {
-			throw new Error('DMMF models are required for creating model-based generators')
-		}
-
-		return {
-			...this.createTypedContext(),
-			dmmfModels: this.dmmfModels,
-		}
-	}
-
-	private createEnumContext(): EnumGeneratorContext {
-		if (!this.dmmfEnums) {
-			throw new Error('DMMF enums are required for creating enum generators')
-		}
-
-		return {
-			...this.createBaseContext(),
-			dmmfEnums: this.dmmfEnums,
+	private validateContext(requiredProps: Array<keyof GeneratorContext>): void {
+		for (const prop of requiredProps) {
+			if (this.context[prop] === undefined) {
+				throw new Error(`${String(prop)} is required for this generator but was not provided`)
+			}
 		}
 	}
 
 	createObjectTypeGenerator(): ObjectTypeGenerator {
-		return new ObjectTypeGenerator(this.createModelBasedContext())
+		this.validateContext(['typeMapper', 'dmmfModels'])
+		return new ObjectTypeGenerator(this.context)
 	}
 
 	createScalarGenerator(): ScalarGenerator {
-		return new ScalarGenerator(this.createTypedContext())
+		this.validateContext(['typeMapper'])
+		return new ScalarGenerator(this.context)
 	}
 
 	createEnumGenerator(): EnumGenerator {
-		return new EnumGenerator(this.createEnumContext())
+		this.validateContext(['dmmfEnums'])
+		return new EnumGenerator(this.context)
 	}
 
 	createRelationGenerator(): RelationGenerator {
-		return new RelationGenerator(this.createModelBasedContext())
+		this.validateContext(['typeMapper', 'dmmfModels'])
+		return new RelationGenerator(this.context)
 	}
 
 	createConnectionGenerator(): ConnectionGenerator {
-		return new ConnectionGenerator(this.createModelBasedContext())
+		this.validateContext(['typeMapper', 'dmmfModels'])
+		return new ConnectionGenerator(this.context)
 	}
 }

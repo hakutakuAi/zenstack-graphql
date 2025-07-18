@@ -1,87 +1,86 @@
-import { EnumTypeComposer } from 'graphql-compose'
+import { EnumTypeComposer, SchemaComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { formatEnumValueName } from '@utils/string-utils'
-import { EnumGeneratorContext, DMMF } from '@types'
+import { GeneratorContext, DMMF } from '@types'
+import { ValidationUtils } from '@utils/schema/validation'
+import { TypeKind } from '@utils/registry/unified-registry'
+import { Generate, SchemaOp, Validate } from '@utils/error'
 
 export interface EnumValueConfig {
 	value: string
 	description?: string
 }
 
-export class EnumGenerator extends BaseGenerator<EnumTypeComposer<any>> {
+export class EnumGenerator extends BaseGenerator {
 	private readonly dmmfEnums: readonly DMMF.DatamodelEnum[]
 
-	constructor(context: EnumGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor)
+	constructor(context: GeneratorContext) {
+		super(context)
+		if (!context.dmmfEnums) {
+			throw new Error('DMMF enums are required for EnumGenerator')
+		}
 		this.dmmfEnums = context.dmmfEnums
 	}
 
+	protected override skipGeneration(): boolean {
+		return !this.options.generateEnums
+	}
+
+	@Generate({
+		suggestions: ['Check enum definitions in your schema', 'Ensure enum values are valid GraphQL identifiers', 'Verify enum attributes are properly configured'],
+	})
 	generate(): void {
-		if (!this.options.generateEnums) {
+		if (this.skipGeneration()) {
 			return
 		}
 
-		try {
-			for (const dmmfEnum of this.dmmfEnums) {
-				this.generateEnum(dmmfEnum)
-			}
-		} catch (error) {
-			this.handleError('generate', error, ['Check enum definitions in your schema', 'Ensure enum values are valid GraphQL identifiers', 'Verify enum attributes are properly configured'])
-		}
+		this.dmmfEnums.forEach((dmmfEnum) => this.generateEnum(dmmfEnum))
 	}
 
 	getGeneratedEnums(): string[] {
-		return this.getGeneratedItems()
+		return this.registry.getEnumTypes()
 	}
 
 	hasEnum(name: string): boolean {
-		return this.hasItem(name)
+		return this.registry.isTypeOfKind(name, TypeKind.ENUM)
 	}
 
 	getEnumComposer(name: string): EnumTypeComposer | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
-
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof EnumTypeComposer ? composer : undefined
+		return this.registry.getEnumComposer(name)
 	}
 
 	getEnumValues(enumName: string): string[] {
-		const enumComposer = this.getEnumComposer(enumName)
-		return enumComposer ? Object.keys(enumComposer.getFields()) : []
+		return this.registry.getEnumValues(enumName)
 	}
 
 	isValidEnumValue(enumName: string, value: string): boolean {
-		return this.getEnumValues(enumName).includes(value)
+		return this.registry.isValidEnumValue(enumName, value)
 	}
 
+	@SchemaOp({
+		suggestions: ['Check enum definition for name and configuration', 'Ensure enum name is a valid GraphQL identifier', 'Verify enum values are properly defined'],
+	})
 	private generateEnum(dmmfEnum: DMMF.DatamodelEnum): void {
-		try {
-			const enumName = this.getEnumName(dmmfEnum)
+		const enumName = this.getEnumName(dmmfEnum)
 
-			if (this.hasItem(enumName)) {
-				return
-			}
-
-			const enumValues = this.createEnumValues(dmmfEnum)
-			const enumDescription = this.getEnumDescription(dmmfEnum)
-
-			const enumComposer = this.schemaComposer.createEnumTC({
-				name: enumName,
-				description: enumDescription,
-				values: enumValues,
-			})
-
-			this.schemaComposer.set(enumName, enumComposer)
-			this.registerItem(enumName)
-		} catch (error) {
-			this.handleError('generateEnum', error, [`Check enum definition for "${dmmfEnum.name}"`, 'Ensure enum name is a valid GraphQL identifier', 'Verify enum values are properly defined'])
+		if (this.hasEnum(enumName)) {
+			return
 		}
+
+		const enumValues = this.createEnumValues(dmmfEnum)
+		const enumDescription = this.getEnumDescription(dmmfEnum)
+
+		const enumComposer = this.schemaComposer.createEnumTC({
+			name: enumName,
+			description: enumDescription,
+			values: enumValues,
+		})
+
+		this.schemaComposer.set(enumName, enumComposer)
+		this.registry.registerType(enumName, TypeKind.ENUM, enumComposer, true)
 	}
 
 	private getEnumName(dmmfEnum: DMMF.DatamodelEnum): string {
-		return this.formatTypeName(dmmfEnum.name)
+		return this.typeFormatter.formatTypeName(dmmfEnum.name)
 	}
 
 	private getEnumDescription(dmmfEnum: DMMF.DatamodelEnum): string | undefined {
@@ -103,6 +102,6 @@ export class EnumGenerator extends BaseGenerator<EnumTypeComposer<any>> {
 	}
 
 	private getEnumValueName(enumValue: DMMF.EnumValue): string {
-		return formatEnumValueName(enumValue.name)
+		return this.typeFormatter.formatEnumValueName(enumValue.name)
 	}
 }

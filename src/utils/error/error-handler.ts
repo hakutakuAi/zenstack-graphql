@@ -1,5 +1,3 @@
-import { match } from 'ts-pattern'
-
 export enum ErrorSeverity {
 	FATAL = 'FATAL',
 	ERROR = 'ERROR',
@@ -51,34 +49,6 @@ export class PluginError extends Error {
 	}
 }
 
-export class ValidationError extends PluginError {
-	constructor(message: string, context?: Record<string, unknown>, suggestions?: string[]) {
-		super(message, ErrorCategory.VALIDATION, ErrorSeverity.ERROR, context, suggestions)
-		this.name = 'ValidationError'
-	}
-}
-
-export class SchemaError extends PluginError {
-	constructor(message: string, context?: Record<string, unknown>, suggestions?: string[]) {
-		super(message, ErrorCategory.SCHEMA, ErrorSeverity.ERROR, context, suggestions)
-		this.name = 'SchemaError'
-	}
-}
-
-export class FileError extends PluginError {
-	constructor(message: string, context?: Record<string, unknown>, suggestions?: string[]) {
-		super(message, ErrorCategory.FILE, ErrorSeverity.ERROR, context, suggestions)
-		this.name = 'FileError'
-	}
-}
-
-export class GenerationError extends PluginError {
-	constructor(message: string, context?: Record<string, unknown>, suggestions?: string[]) {
-		super(message, ErrorCategory.GENERATION, ErrorSeverity.ERROR, context, suggestions)
-		this.name = 'GenerationError'
-	}
-}
-
 export class ErrorHandler {
 	handleError(error: unknown, context: string, suggestions?: string[]): never {
 		const pluginError = this.wrapError(error, context, suggestions)
@@ -107,7 +77,7 @@ export class ErrorHandler {
 		const errorMessage = error instanceof Error ? error.message : String(error)
 		const errorStack = error instanceof Error ? error.stack : undefined
 
-		return new PluginError(
+		return this.createError(
 			errorMessage,
 			ErrorCategory.PLUGIN,
 			ErrorSeverity.ERROR,
@@ -119,43 +89,14 @@ export class ErrorHandler {
 		)
 	}
 
-	createValidationError(message: string, context?: Record<string, unknown>, suggestions?: string[]): ValidationError {
-		return new ValidationError(message, context, suggestions)
-	}
-
-	createSchemaError(message: string, context?: Record<string, unknown>, suggestions?: string[]): SchemaError {
-		return new SchemaError(message, context, suggestions)
-	}
-
-	createFileError(message: string, context?: Record<string, unknown>, suggestions?: string[]): FileError {
-		return new FileError(message, context, suggestions)
-	}
-
-	createGenerationError(message: string, context?: Record<string, unknown>, suggestions?: string[]): GenerationError {
-		return new GenerationError(message, context, suggestions)
-	}
-
-	categorizeError(error: unknown, context: string): PluginError {
-		const errorMessage = error instanceof Error ? error.message : String(error)
-
-		return match(errorMessage.toLowerCase())
-			.when(
-				(msg) => msg.includes('option') || msg.includes('parameter') || msg.includes('config'),
-				() => this.createValidationError(errorMessage, { operationContext: context })
-			)
-			.when(
-				(msg) => msg.includes('schema') || msg.includes('model') || msg.includes('dmmf'),
-				() => this.createSchemaError(errorMessage, { operationContext: context })
-			)
-			.when(
-				(msg) => msg.includes('file') || msg.includes('directory') || msg.includes('path'),
-				() => this.createFileError(errorMessage, { operationContext: context })
-			)
-			.when(
-				(msg) => msg.includes('graphql') || msg.includes('type') || msg.includes('field'),
-				() => this.createGenerationError(errorMessage, { operationContext: context })
-			)
-			.otherwise(() => this.wrapError(error, context))
+	createError(
+		message: string,
+		category: ErrorCategory,
+		severity: ErrorSeverity = ErrorSeverity.ERROR,
+		context?: Record<string, unknown>,
+		suggestions?: string[]
+	): PluginError {
+		return new PluginError(message, category, severity, context, suggestions)
 	}
 
 	logWarning(message: string, category: ErrorCategory, context?: Record<string, unknown>): void {

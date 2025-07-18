@@ -1,350 +1,138 @@
 import { ObjectTypeComposer } from 'graphql-compose'
-import { ModelBasedGeneratorContext, DMMF, asDataModel } from '@types'
+import { GeneratorContext, DMMF } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
+import { ValidationUtils } from '@utils/schema/validation'
+import { TypeKind } from '@utils/registry/unified-registry'
+import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
+import { Generate, SchemaOp, Validate } from '@utils/error'
 
-export interface ConnectionConfig {
-	name: string
-	nodeType: string
-	description?: string
-	edgeFields?: Record<string, unknown>
-	connectionFields?: Record<string, unknown>
-}
-
-export class ConnectionGenerator extends BaseGenerator<ObjectTypeComposer<any, any>> {
+export class ConnectionGenerator extends BaseGenerator {
 	private dmmfModels: readonly DMMF.Model[]
-	private generatedEdges: Set<string> = new Set()
+	private typeFactories: GraphQLTypeFactories
 
-	constructor(context: ModelBasedGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
+	constructor(context: GeneratorContext) {
+		super(context)
+		if (!context.dmmfModels) {
+			throw new Error('DMMF models are required for ConnectionGenerator')
+		}
+		if (!context.typeMapper) {
+			throw new Error('TypeMapper is required for ConnectionGenerator')
+		}
 		this.dmmfModels = context.dmmfModels
+		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.errorHandler, this.typeFormatter)
 	}
 
+	@Generate({
+		suggestions: ['Check model definitions in your schema', 'Ensure connection type options are properly configured', 'Verify Relay specification compliance'],
+	})
 	generate(): void {
 		if (!this.options.connectionTypes) {
 			return
 		}
 
-		try {
-			this.createCommonTypes()
-
-			for (const dmmfModel of this.dmmfModels) {
-				if (this.shouldGenerateConnection(dmmfModel)) {
-					this.generateConnectionType(dmmfModel)
-				}
-			}
-		} catch (error) {
-			this.handleError('generate', error, ['Check model definitions in your schema', 'Ensure connection type options are properly configured', 'Verify Relay specification compliance'])
-		}
+		this.createCommonTypes()
+		this.dmmfModels.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateConnectionType(model))
 	}
 
-	private shouldGenerateConnection(dmmfModel: DMMF.Model): boolean {
-		try {
-			return !this.attributeProcessor.hasModelIgnoreAttr(asDataModel(dmmfModel))
-		} catch (error) {
-			return true
-		}
-	}
-
+	@Validate()
 	private shouldIncludeField(dmmfModel: DMMF.Model, field: DMMF.Field): boolean {
-		try {
-			if (this.attributeProcessor.hasFieldIgnoreAttr(asDataModel(dmmfModel), field.name)) {
-				return false
-			}
-
-			return true
-		} catch (error) {
-			return true
-		}
+		return ValidationUtils.shouldIncludeField(dmmfModel, field, this.attributeProcessor, true)
 	}
 
+	@SchemaOp()
 	private createCommonTypes(): void {
-		this.createPageInfoType()
-		this.createPaginationInputTypes()
-		this.createSortDirectionEnum()
+		const pageInfoTC = this.typeFactories.createPageInfoType()
+		this.registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC, true)
+
+		const paginationInputTypes = this.typeFactories.createPaginationInputTypes()
+		paginationInputTypes.forEach((inputTC) => {
+			this.registry.registerType(inputTC.getTypeName(), TypeKind.INPUT, inputTC, true)
+		})
+
+		const sortDirectionTC = this.typeFactories.createSortDirectionEnum()
+		this.registry.registerType('SortDirection', TypeKind.ENUM, sortDirectionTC, true)
 	}
 
-	private createPageInfoType(): void {
-		if (this.schemaComposer.has('PageInfo')) {
-			return
-		}
-
-		try {
-			const pageInfoTC = this.schemaComposer.createObjectTC({
-				name: 'PageInfo',
-				description: 'Information about pagination in a connection.',
-				fields: {
-					hasNextPage: {
-						type: 'Boolean!',
-						description: 'When paginating forwards, are there more items?',
-					},
-					hasPreviousPage: {
-						type: 'Boolean!',
-						description: 'When paginating backwards, are there more items?',
-					},
-					startCursor: {
-						type: 'String',
-						description: 'When paginating backwards, the cursor to continue.',
-					},
-					endCursor: {
-						type: 'String',
-						description: 'When paginating forwards, the cursor to continue.',
-					},
-				},
-			})
-
-			this.schemaComposer.set('PageInfo', pageInfoTC)
-		} catch (error) {
-			this.handleError('createPageInfoType', error, ['Check GraphQL type naming conflicts', 'Ensure PageInfo fields are valid GraphQL types'])
-		}
-	}
-
-	private createPaginationInputTypes(): void {
-		try {
-			if (!this.schemaComposer.has('ForwardPaginationInput')) {
-				const forwardPaginationInputTC = this.schemaComposer.createInputTC({
-					name: 'ForwardPaginationInput',
-					description: 'Pagination input for forward pagination',
-					fields: {
-						first: {
-							type: 'Int',
-							description: 'Returns the first n elements from the list.',
-						},
-						after: {
-							type: 'String',
-							description: 'Returns the elements in the list that come after the specified cursor.',
-						},
-					},
-				})
-
-				this.schemaComposer.set('ForwardPaginationInput', forwardPaginationInputTC)
-			}
-
-			if (!this.schemaComposer.has('BackwardPaginationInput')) {
-				const backwardPaginationInputTC = this.schemaComposer.createInputTC({
-					name: 'BackwardPaginationInput',
-					description: 'Pagination input for backward pagination',
-					fields: {
-						last: {
-							type: 'Int',
-							description: 'Returns the last n elements from the list.',
-						},
-						before: {
-							type: 'String',
-							description: 'Returns the elements in the list that come before the specified cursor.',
-						},
-					},
-				})
-
-				this.schemaComposer.set('BackwardPaginationInput', backwardPaginationInputTC)
-			}
-
-			if (!this.schemaComposer.has('PaginationInput')) {
-				const paginationInputTC = this.schemaComposer.createInputTC({
-					name: 'PaginationInput',
-					description: 'Combined pagination input',
-					fields: {
-						first: {
-							type: 'Int',
-							description: 'Returns the first n elements from the list.',
-						},
-						after: {
-							type: 'String',
-							description: 'Returns the elements in the list that come after the specified cursor.',
-						},
-						last: {
-							type: 'Int',
-							description: 'Returns the last n elements from the list.',
-						},
-						before: {
-							type: 'String',
-							description: 'Returns the elements in the list that come before the specified cursor.',
-						},
-					},
-				})
-
-				this.schemaComposer.set('PaginationInput', paginationInputTC)
-			}
-		} catch (error) {
-			this.handleError('createPaginationInputTypes', error, ['Check GraphQL input type naming conflicts', 'Ensure input fields are valid GraphQL types'])
-		}
-	}
-
-	private createSortDirectionEnum(): void {
-		if (this.schemaComposer.has('SortDirection')) {
-			return
-		}
-
-		try {
-			const sortDirectionTC = this.schemaComposer.createEnumTC({
-				name: 'SortDirection',
-				description: 'Sort direction for ordering results',
-				values: {
-					ASC: {
-						value: 'ASC',
-						description: 'Ascending order',
-					},
-					DESC: {
-						value: 'DESC',
-						description: 'Descending order',
-					},
-				},
-			})
-
-			this.schemaComposer.set('SortDirection', sortDirectionTC)
-		} catch (error) {
-			this.handleError('createSortDirectionEnum', error, ['Check GraphQL enum naming conflicts'])
-		}
-	}
-
+	@Generate({
+		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types'],
+	})
 	private generateConnectionType(dmmfModel: DMMF.Model): void {
-		try {
-			const typeName = this.getObjectTypeName(dmmfModel)
-			const connectionName = `${typeName}Connection`
-			const edgeName = `${typeName}Edge`
+		const typeName = this.getObjectTypeName(dmmfModel)
+		const connectionName = this.typeFormatter.formatConnectionTypeName(typeName)
 
-			if (this.hasItem(connectionName)) {
-				return
-			}
-
-			if (!this.schemaComposer.has(typeName)) {
-				console.warn(`Base type ${typeName} does not exist in SchemaComposer. Creating a placeholder for connection generation.`)
-
-				this.schemaComposer.createObjectTC({
-					name: typeName,
-					fields: {
-						id: 'ID!',
-					},
-				})
-			}
-
-			this.createEdgeType(typeName, edgeName, dmmfModel)
-
-			const connectionTC = this.schemaComposer.createObjectTC({
-				name: connectionName,
-				description: `A connection to a list of ${typeName} items.`,
-				fields: {
-					pageInfo: {
-						type: 'PageInfo!',
-						description: 'Information to aid in pagination.',
-					},
-					edges: {
-						type: `[${edgeName}!]!`,
-						description: `A list of ${typeName} edges.`,
-					},
-					totalCount: {
-						type: 'Int!',
-						description: 'The total count of items in the connection.',
-					},
-				},
-			})
-
-			this.schemaComposer.set(connectionName, connectionTC)
-			this.registerItem(connectionName)
-
-			this.createSortInputType(dmmfModel)
-		} catch (error) {
-			this.handleError('generateConnectionType', error, ['Check model definition in schema', 'Verify all field types are supported for connection types'])
-		}
-	}
-
-	private createEdgeType(typeName: string, edgeName: string, dmmfModel: DMMF.Model): void {
-		if (this.generatedEdges.has(edgeName)) {
+		if (this.registry.isTypeOfKind(connectionName, TypeKind.CONNECTION)) {
 			return
 		}
 
-		try {
-			const edgeTC = this.schemaComposer.createObjectTC({
-				name: edgeName,
-				description: `An edge in a ${typeName} connection.`,
+		if (!this.schemaComposer.has(typeName)) {
+			console.warn(`Base type ${typeName} does not exist in SchemaComposer. Creating a placeholder for connection generation.`)
+
+			this.schemaComposer.createObjectTC({
+				name: typeName,
 				fields: {
-					node: {
-						type: `${typeName}!`,
-						description: `The ${typeName} at the end of the edge.`,
-					},
-					cursor: {
-						type: 'String!',
-						description: 'A cursor for use in pagination.',
-					},
+					id: 'ID!',
 				},
 			})
-
-			this.schemaComposer.set(edgeName, edgeTC)
-			this.generatedEdges.add(edgeName)
-		} catch (error) {
-			this.handleError('createEdgeType', error, ['Check for naming conflicts', 'Ensure node type is defined in the schema'])
 		}
+
+		const edgeName = this.typeFormatter.formatEdgeTypeName(typeName)
+		const edgeTC = this.typeFactories.createEdgeType(typeName)
+		this.registry.registerEdgeType(edgeName, edgeTC)
+
+		const connectionTC = this.typeFactories.createConnectionType(typeName)
+		this.registry.registerType(connectionName, TypeKind.CONNECTION, connectionTC, true)
+
+		this.createSortInputType(dmmfModel)
 	}
 
+	@SchemaOp({
+		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting'],
+	})
 	private createSortInputType(dmmfModel: DMMF.Model): void {
 		const typeName = this.getObjectTypeName(dmmfModel)
-		const sortInputName = `${typeName}SortInput`
+		const sortInputName = this.typeFormatter.formatSortInputTypeName(typeName)
 
 		if (this.schemaComposer.has(sortInputName)) {
 			return
 		}
 
-		try {
-			const fields: Record<string, { type: string; description: string }> = {}
+		const fields = dmmfModel.fields
+			.filter((field) => field.kind !== 'object' && this.shouldIncludeField(dmmfModel, field))
+			.reduce(
+				(acc, field) => {
+					const fieldName = this.typeFormatter.formatFieldName(field.name)
+					acc[fieldName] = { description: `Sort by ${fieldName}` }
+					return acc
+				},
+				{} as Record<string, { description: string }>
+			)
 
-			for (const field of dmmfModel.fields) {
-				if (field.kind !== 'object' && this.shouldIncludeField(dmmfModel, field)) {
-					const fieldName = this.formatFieldName(field.name)
-					fields[fieldName] = {
-						type: 'SortDirection',
-						description: `Sort by ${fieldName}`,
-					}
-				}
-			}
-
-			if (Object.keys(fields).length > 0) {
-				const sortInputTC = this.schemaComposer.createInputTC({
-					name: sortInputName,
-					description: `Sort input for ${typeName} connections`,
-					fields,
-				})
-
-				this.schemaComposer.set(sortInputName, sortInputTC)
-			}
-		} catch (error) {
-			this.handleError('createSortInputType', error, ['Check field definitions in the model', 'Ensure fields are valid for sorting'])
-		}
+		const sortInputTC = this.typeFactories.createSortInputType(typeName, fields)
+		this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
 	}
 
 	private getObjectTypeName(dmmfModel: DMMF.Model): string {
-		let name = dmmfModel.name
-
-		try {
-			const customName = this.attributeProcessor.getModelName(asDataModel(dmmfModel))
-			if (customName && customName !== dmmfModel.name) {
-				name = customName
-			}
-		} catch (error) {
-			// Fallback to DMMF model name if attribute processing fails
-		}
-
-		return this.formatTypeName(name)
+		const customName = ValidationUtils.getModelName(dmmfModel, this.attributeProcessor)
+		return this.typeFormatter.formatTypeName(customName || dmmfModel.name)
 	}
 
 	getGeneratedConnectionTypes(): string[] {
-		return this.getGeneratedItems()
+		return this.registry.getConnectionTypes()
 	}
 
 	getGeneratedEdgeTypes(): string[] {
-		return Array.from(this.generatedEdges)
+		return this.registry.getEdgeTypes()
 	}
 
 	hasConnectionType(name: string): boolean {
-		return this.hasItem(name)
+		return this.registry.isTypeOfKind(name, TypeKind.CONNECTION)
 	}
 
 	hasEdgeType(name: string): boolean {
-		return this.generatedEdges.has(name) || this.schemaComposer.has(name)
+		return this.registry.hasEdgeType(name)
 	}
 
 	getConnectionTypeForModel(modelName: string): string | undefined {
-		const formattedName = this.formatTypeName(modelName)
-		const connectionName = `${formattedName}Connection`
-
-		return this.hasConnectionType(connectionName) ? connectionName : undefined
+		return this.registry.getConnectionTypeForModel(modelName, this.typeFormatter)
 	}
 }

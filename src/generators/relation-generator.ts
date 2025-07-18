@@ -1,9 +1,10 @@
-import { ObjectTypeComposer } from 'graphql-compose'
+import { ObjectTypeComposer, SchemaComposer } from 'graphql-compose'
 import type { DMMF } from '@zenstackhq/sdk/prisma'
 import { BaseGenerator } from '@generators/base-generator'
-import { ErrorCategory } from '@utils/error-handler'
-import { ModelBasedGeneratorContext } from '@types'
-import { ValidationUtils } from '@utils/validation'
+import { ErrorCategory } from '@utils/error/error-handler'
+import { GeneratorContext } from '@types'
+import { ValidationUtils } from '@utils/schema/validation'
+import { Generate, SchemaOp } from '@utils/error'
 
 export interface RelationField {
 	modelName: string
@@ -14,33 +15,38 @@ export interface RelationField {
 	isRequired: boolean
 }
 
-export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any>> {
+export class RelationGenerator extends BaseGenerator {
 	private dmmfModels: readonly DMMF.Model[]
-	private processedRelations: Set<string> = new Set()
 
-	constructor(context: ModelBasedGeneratorContext) {
-		super(context.schemaComposer, context.options, context.errorHandler, context.attributeProcessor, context.typeMapper)
+	constructor(context: GeneratorContext) {
+		super(context)
+		if (!context.dmmfModels) {
+			throw new Error('DMMF models are required for RelationGenerator')
+		}
+		if (!context.typeMapper) {
+			throw new Error('TypeMapper is required for RelationGenerator')
+		}
 		this.dmmfModels = context.dmmfModels
 	}
 
+	protected override skipGeneration(): boolean {
+		return !this.options.includeRelations
+	}
+
+	@Generate({
+		suggestions: ['Check model relationships in your schema', 'Ensure relation fields are properly defined', 'Verify model types exist in the schema'],
+	})
 	generate(): void {
-		if (!this.options.includeRelations) {
+		if (this.skipGeneration()) {
 			return
 		}
 
-		try {
-			const relations = this.extractRelations()
-
-			for (const relation of relations) {
-				this.processRelation(relation)
-			}
-		} catch (error) {
-			this.handleError('generate', error, ['Check model relationships in your schema', 'Ensure relation fields are properly defined', 'Verify model types exist in the schema'])
-		}
+		const relations = this.extractRelations()
+		relations.forEach((relation) => this.processRelation(relation))
 	}
 
 	getGeneratedRelations(): string[] {
-		return Array.from(this.processedRelations)
+		return this.registry.getProcessedRelations()
 	}
 
 	private extractRelations(): RelationField[] {
@@ -85,51 +91,50 @@ export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any
 		return relations
 	}
 
+	@SchemaOp({
+		suggestions: ['Check relation field definitions', 'Ensure both source and target models exist', 'Verify relation names are consistent'],
+	})
 	private processRelation(relation: RelationField): void {
 		const relationKey = this.getRelationKey(relation)
 
-		if (this.processedRelations.has(relationKey)) {
+		if (this.registry.hasProcessedRelation(relationKey)) {
 			return
 		}
 
-		try {
-			const sourceType = this.getObjectTypeComposer(relation.modelName)
-			const targetType = this.getObjectTypeComposer(relation.targetModelName)
+		const sourceType = this.getObjectTypeComposer(relation.modelName)
+		const targetType = this.getObjectTypeComposer(relation.targetModelName)
 
-			if (!sourceType || !targetType) {
-				this.errorHandler.logWarning(`Cannot process relation ${relationKey}: object types not found`, ErrorCategory.SCHEMA, { relation })
-				return
-			}
-
-			if (!sourceType.hasField(relation.fieldName)) {
-				const fieldType = this.getRelationFieldType(relation)
-				const fieldDescription = this.getRelationFieldDescription(relation)
-
-				sourceType.addFields({
-					[relation.fieldName]: {
-						type: fieldType,
-						description: fieldDescription,
-					},
-				})
-			}
-
-			if (relation.targetFieldName && !targetType.hasField(relation.targetFieldName)) {
-				const backReferenceRelation = this.createBackReferenceRelation(relation)
-				const fieldType = this.getRelationFieldType(backReferenceRelation)
-				const fieldDescription = this.getRelationFieldDescription(backReferenceRelation)
-
-				targetType.addFields({
-					[relation.targetFieldName]: {
-						type: fieldType,
-						description: fieldDescription,
-					},
-				})
-			}
-
-			this.processedRelations.add(relationKey)
-		} catch (error) {
-			this.handleError('processRelation', error, ['Check relation field definitions', 'Ensure both source and target models exist', 'Verify relation names are consistent'])
+		if (!sourceType || !targetType) {
+			this.errorHandler.logWarning(`Cannot process relation ${relationKey}: object types not found`, ErrorCategory.SCHEMA, { relation })
+			return
 		}
+
+		if (!sourceType.hasField(relation.fieldName)) {
+			const fieldType = this.getRelationFieldType(relation)
+			const fieldDescription = this.getRelationFieldDescription(relation)
+
+			sourceType.addFields({
+				[relation.fieldName]: {
+					type: fieldType,
+					description: fieldDescription,
+				},
+			})
+		}
+
+		if (relation.targetFieldName && !targetType.hasField(relation.targetFieldName)) {
+			const backReferenceRelation = this.createBackReferenceRelation(relation)
+			const fieldType = this.getRelationFieldType(backReferenceRelation)
+			const fieldDescription = this.getRelationFieldDescription(backReferenceRelation)
+
+			targetType.addFields({
+				[relation.targetFieldName]: {
+					type: fieldType,
+					description: fieldDescription,
+				},
+			})
+		}
+
+		this.registry.addProcessedRelation(relationKey)
 	}
 
 	private getRelationKey(relation: RelationField): string {
@@ -137,7 +142,7 @@ export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any
 	}
 
 	private getRelationFieldType(relation: RelationField): string {
-		const typeName = this.formatTypeName(relation.targetModelName)
+		const typeName = this.typeFormatter.formatTypeName(relation.targetModelName)
 
 		if (relation.isList) {
 			return `[${typeName}!]!`
@@ -182,7 +187,7 @@ export class RelationGenerator extends BaseGenerator<ObjectTypeComposer<any, any
 	}
 
 	private getObjectTypeComposer(modelName: string): ObjectTypeComposer | undefined {
-		const typeName = this.formatTypeName(modelName)
+		const typeName = this.typeFormatter.formatTypeName(modelName)
 
 		if (this.schemaComposer.has(typeName)) {
 			const composer = this.schemaComposer.get(typeName)

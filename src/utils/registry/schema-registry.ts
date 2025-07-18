@@ -1,5 +1,7 @@
 import { SchemaComposer, ObjectTypeComposer, ScalarTypeComposer, EnumTypeComposer } from 'graphql-compose'
-import { ErrorHandler, ErrorCategory } from './error-handler'
+import { printSchema, GraphQLSchema } from 'graphql'
+import { ErrorHandler, ErrorCategory } from '@utils/error/error-handler'
+import { SchemaOp, Generate } from '@utils/error'
 
 export enum TypeKind {
 	OBJECT = 'object',
@@ -8,7 +10,7 @@ export enum TypeKind {
 	INTERFACE = 'interface',
 	UNION = 'union',
 	INPUT = 'input',
-	CONNECTION = 'conne	ction',
+	CONNECTION = 'connection',
 	EDGE = 'edge',
 	UNKNOWN = 'unknown',
 }
@@ -21,17 +23,18 @@ export interface TypeInfo {
 	isGenerated: boolean
 }
 
-export class TypeRegistry {
+export class SchemaRegistry {
 	private types: Map<string, TypeInfo> = new Map()
 	private readonly schemaComposer: SchemaComposer<unknown>
 	private readonly errorHandler: ErrorHandler
 
-	constructor(schemaComposer: SchemaComposer<unknown>, errorHandler: ErrorHandler) {
+	constructor(schemaComposer: SchemaComposer<unknown>, errorHandler: ErrorHandler = new ErrorHandler()) {
 		this.schemaComposer = schemaComposer
 		this.errorHandler = errorHandler
 		this.syncFromSchemaComposer()
 	}
 
+	@SchemaOp()
 	private syncFromSchemaComposer(): void {
 		for (const typeName of this.schemaComposer.types.keys()) {
 			const composer = this.schemaComposer.get(typeName)
@@ -52,30 +55,29 @@ export class TypeRegistry {
 		}
 	}
 
+	@SchemaOp()
 	registerType(typeName: string, kind: TypeKind, composer: any, isGenerated = true): void {
-		try {
-			if (this.types.has(typeName)) {
-				const existing = this.types.get(typeName)!
-				if (existing.kind !== kind) {
-					this.errorHandler.logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
-						typeName,
-						existingKind: existing.kind,
-						newKind: kind,
-					})
-				}
-				return
+		if (this.types.has(typeName)) {
+			const existing = this.types.get(typeName)!
+			if (existing.kind !== kind) {
+				this.errorHandler.logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
+					typeName,
+					existingKind: existing.kind,
+					newKind: kind,
+				})
 			}
-
-			this.types.set(typeName, {
-				name: typeName,
-				kind,
-				description: composer.getDescription(),
-				composer,
-				isGenerated,
-			})
-		} catch (error) {
-			this.errorHandler.logWarning(`Failed to register type ${typeName}`, ErrorCategory.SCHEMA, { typeName, kind, error })
+			return
 		}
+
+		this.types.set(typeName, {
+			name: typeName,
+			kind,
+			description: composer.getDescription(),
+			composer,
+			isGenerated,
+		})
+
+		this.schemaComposer.set(typeName, composer)
 	}
 
 	hasType(typeName: string): boolean {
@@ -87,6 +89,7 @@ export class TypeRegistry {
 		return typeInfo ? typeInfo.kind === kind : false
 	}
 
+	@SchemaOp()
 	getTypeComposer<T = any>(typeName: string): T | undefined {
 		const typeInfo = this.types.get(typeName)
 		if (!typeInfo) {
@@ -128,5 +131,46 @@ export class TypeRegistry {
 
 	getEdgeTypes(): string[] {
 		return this.getTypesByKind(TypeKind.EDGE)
+	}
+
+	@SchemaOp()
+	validateSchema(): string[] {
+		try {
+			this.schemaComposer.buildSchema()
+			return []
+		} catch (error) {
+			return [`Schema validation failed: ${error instanceof Error ? error.message : String(error)}`]
+		}
+	}
+
+	@SchemaOp()
+	buildSchema(): GraphQLSchema {
+		return this.schemaComposer.buildSchema({ keepUnusedTypes: true })
+	}
+
+	@Generate()
+	generateSDL(): string {
+		const schema = this.buildSchema()
+		return printSchema(schema)
+	}
+
+	@SchemaOp()
+	addRelayRequirements(): void {
+		if (this.schemaComposer.has('Node')) {
+			return
+		}
+
+		const nodeInterface = this.schemaComposer.createInterfaceTC({
+			name: 'Node',
+			description: 'An object with a unique identifier',
+			fields: {
+				id: {
+					type: 'ID!',
+					description: 'The unique identifier for this object',
+				},
+			},
+		})
+
+		this.registerType('Node', TypeKind.INTERFACE, nodeInterface, true)
 	}
 }
