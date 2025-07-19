@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
 import { dirname, resolve, isAbsolute } from 'path'
 import { ErrorHandler, ErrorCategory, ErrorSeverity } from '@utils/error/error-handler'
-import { FileOp } from '@utils/error'
 
 export interface WriteOptions {
 	createDirectories?: boolean
@@ -24,7 +23,6 @@ export class FileWriter {
 		this.errorHandler = errorHandler
 	}
 
-	@FileOp()
 	async writeSchema(content: string, outputPath: string, options: WriteOptions = {}): Promise<WriteResult> {
 		const resolvedPath = this.resolvePath(outputPath)
 		const finalOptions = this.normalizeOptions(options)
@@ -51,7 +49,6 @@ export class FileWriter {
 		}
 	}
 
-	@FileOp()
 	async writeMultipleFiles(files: Array<{ path: string; content: string }>, options: WriteOptions = {}): Promise<WriteResult[]> {
 		const results: WriteResult[] = []
 		const finalOptions = this.normalizeOptions(options)
@@ -69,7 +66,6 @@ export class FileWriter {
 		return results
 	}
 
-	@FileOp()
 	async ensureDirectoryExists(dirPath: string): Promise<void> {
 		const directoryExists = await this.directoryExistsInternal(dirPath)
 		if (!directoryExists) {
@@ -86,7 +82,6 @@ export class FileWriter {
 		}
 	}
 
-	@FileOp()
 	async fileExists(filePath: string): Promise<boolean> {
 		try {
 			await fs.access(filePath)
@@ -96,7 +91,6 @@ export class FileWriter {
 		}
 	}
 
-	@FileOp()
 	async createBackup(filePath: string): Promise<string> {
 		const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
 		const backupPath = `${filePath}.backup.${timestamp}`
@@ -105,7 +99,6 @@ export class FileWriter {
 		return backupPath
 	}
 
-	@FileOp()
 	private resolvePath(outputPath: string): string {
 		if (!outputPath || outputPath.trim() === '') {
 			throw new Error('Output path cannot be empty')
@@ -123,7 +116,6 @@ export class FileWriter {
 		}
 	}
 
-	@FileOp()
 	private async validateWriteOperation(filePath: string, options: Required<WriteOptions>): Promise<void> {
 		const fileExists = await this.fileExists(filePath)
 
@@ -149,7 +141,6 @@ export class FileWriter {
 		}
 	}
 
-	@FileOp()
 	private async attemptFallbackWrite(originalPath: string, content: string, options: Required<WriteOptions>): Promise<WriteResult> {
 		const fallbackPaths = this.generateFallbackPaths(originalPath)
 
@@ -163,7 +154,6 @@ export class FileWriter {
 		return this.createFailedResult(originalPath, new Error('All fallback attempts failed'))
 	}
 
-	@FileOp()
 	private async tryWriteToPath(filePath: string, content: string, options: Required<WriteOptions>): Promise<WriteResult> {
 		try {
 			if (options.createDirectories) {

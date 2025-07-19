@@ -50,52 +50,7 @@ export class PluginError extends Error {
 }
 
 export class ErrorHandler {
-	handleError(error: unknown, context: string, suggestions?: string[]): never {
-		const pluginError = this.wrapError(error, context, suggestions)
-		console.error(pluginError.formatMessage())
-
-		if (pluginError.severity === ErrorSeverity.FATAL) {
-			console.error('Fatal error encountered. Plugin execution will terminate.')
-		}
-
-		throw pluginError
-	}
-
-	wrapError(error: unknown, context: string, suggestions?: string[]): PluginError {
-		if (error instanceof PluginError) {
-			if (context && (!error.context || !error.context.operationContext)) {
-				error.context = { ...error.context, operationContext: context }
-			}
-
-			if (suggestions && (!error.suggestions || error.suggestions.length === 0)) {
-				error.suggestions = suggestions
-			}
-
-			return error
-		}
-
-		const errorMessage = error instanceof Error ? error.message : String(error)
-		const errorStack = error instanceof Error ? error.stack : undefined
-
-		return this.createError(
-			errorMessage,
-			ErrorCategory.PLUGIN,
-			ErrorSeverity.ERROR,
-			{
-				operationContext: context,
-				originalStack: errorStack,
-			},
-			suggestions
-		)
-	}
-
-	createError(
-		message: string,
-		category: ErrorCategory,
-		severity: ErrorSeverity = ErrorSeverity.ERROR,
-		context?: Record<string, unknown>,
-		suggestions?: string[]
-	): PluginError {
+	createError(message: string, category: ErrorCategory, severity: ErrorSeverity = ErrorSeverity.ERROR, context?: Record<string, unknown>, suggestions?: string[]): PluginError {
 		return new PluginError(message, category, severity, context, suggestions)
 	}
 

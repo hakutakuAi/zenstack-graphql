@@ -3,7 +3,6 @@ import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Generate, SchemaOp } from '@utils/error'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
 export class ConnectionGenerator extends BaseGenerator {
@@ -21,9 +20,6 @@ export class ConnectionGenerator extends BaseGenerator {
 		return !this.options.connectionTypes
 	}
 
-	@Generate({
-		suggestions: ['Check model definitions in your schema', 'Ensure connection type options are properly configured', 'Verify Relay specification compliance'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -33,7 +29,6 @@ export class ConnectionGenerator extends BaseGenerator {
 		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateConnectionType(model))
 	}
 
-	@SchemaOp()
 	private createCommonTypes(): void {
 		const pageInfoTC = this.typeFactories.createPageInfoType()
 		this.registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC, true)
@@ -44,9 +39,6 @@ export class ConnectionGenerator extends BaseGenerator {
 		})
 	}
 
-	@Generate({
-		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types'],
-	})
 	private generateConnectionType(model: DataModel): void {
 		const typeName = this.getObjectTypeName(model)
 		const connectionName = this.typeFormatter.formatConnectionTypeName(typeName)

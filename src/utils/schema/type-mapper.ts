@@ -1,18 +1,19 @@
 import { SCALAR_TYPES } from '@utils/config/constants'
 import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
 
-type GraphQLTypeModifiers = {
-	isRequired?: boolean
-	isList?: boolean
+export enum FieldTypeCategory {
+	SCALAR = 'scalar',
+	ENUM = 'enum',
+	OBJECT = 'object',
 }
 
 export class TypeMapper {
-	private readonly models: ReadonlyMap<string, DataModel>
-	private readonly enums: ReadonlyMap<string, Enum>
+	private readonly modelMap: ReadonlyMap<string, DataModel>
+	private readonly enumMap: ReadonlyMap<string, Enum>
 
 	constructor(models: DataModel[], enums: Enum[]) {
-		this.models = new Map(models.map((model) => [model.name, model]))
-		this.enums = new Map(enums.map((enum_) => [enum_.name, enum_]))
+		this.modelMap = new Map(models.map((model) => [model.name, model]))
+		this.enumMap = new Map(enums.map((enum_) => [enum_.name, enum_]))
 	}
 
 	static createFromModelsAndEnums(models: DataModel[], enums: Enum[]): TypeMapper {
@@ -20,27 +21,15 @@ export class TypeMapper {
 	}
 
 	mapFieldType(field: DataModelField): string | null {
-		return field.type.array ? this.mapListType(field) : this.mapSingleType(field)
+		const baseType = this.resolveBaseType(field)
+		if (!baseType) return null
+
+		return this.formatGraphQLType(baseType, field.type.array, !field.type.optional)
 	}
 
-	private mapListType(field: DataModelField): string | null {
-		const typeStr = this.getTypeString(field)
-		return typeStr ? this.applyModifiers(typeStr, { isList: true, isRequired: !field.type.optional }) : null
-	}
-
-	private mapSingleType(field: DataModelField): string | null {
-		const typeStr = this.getTypeString(field)
-		if (!typeStr) return null
-
-		return this.applyModifiers(typeStr, { isRequired: !field.type.optional })
-	}
-
-	private getTypeString(field: DataModelField): string | null {
-		if (field.type.type) {
-			if (field.type.type in SCALAR_TYPES) {
-				return SCALAR_TYPES[field.type.type]
-			}
-			return null
+	private resolveBaseType(field: DataModelField): string | null {
+		if (field.type.type && field.type.type in SCALAR_TYPES) {
+			return SCALAR_TYPES[field.type.type]
 		}
 
 		if (field.type.reference) {
@@ -68,41 +57,44 @@ export class TypeMapper {
 
 	getRelationFieldType(field: DataModelField): string {
 		const typeStr = field.type.reference?.ref?.name || ''
-		return this.applyModifiers(typeStr, {
-			isList: field.type.array,
-			isRequired: !field.type.optional,
-		})
+		return this.formatGraphQLType(typeStr, field.type.array, !field.type.optional)
+	}
+
+	private formatGraphQLType(baseType: string, isList: boolean, isRequired: boolean): string {
+		if (!baseType) return ''
+
+		if (isList) {
+			return `[${baseType}!]${isRequired ? '!' : ''}`
+		}
+
+		return isRequired ? `${baseType}!` : baseType
 	}
 
 	isScalarType(type: string): boolean {
-		return type in SCALAR_TYPES
+		return Object.values(SCALAR_TYPES).includes(type)
 	}
 
 	isEnumType(type: string): boolean {
-		return this.enums.has(type)
+		return this.enumMap.has(type)
 	}
 
 	isModelType(type: string): boolean {
-		return this.models.has(type)
+		return this.modelMap.has(type)
 	}
 
 	isRelationField(field: DataModelField): boolean {
 		return !!field.type.reference && this.isModelType(field.type.reference.ref?.name || '')
 	}
 
-	getFieldKind(field: DataModelField): 'scalar' | 'object' | 'enum' {
-		if (this.isRelationField(field)) return 'object'
-
-		if (field.type.reference && this.isEnumType(field.type.reference.ref?.name || '')) {
-			return 'enum'
+	getFieldTypeCategory(field: DataModelField): FieldTypeCategory {
+		if (this.isRelationField(field)) {
+			return FieldTypeCategory.OBJECT
 		}
 
-		return 'scalar'
-	}
+		if (field.type.reference && this.isEnumType(field.type.reference.ref?.name || '')) {
+			return FieldTypeCategory.ENUM
+		}
 
-	private applyModifiers(baseType: string, modifiers: GraphQLTypeModifiers): string {
-		if (!baseType) return ''
-
-		return modifiers.isList ? `[${baseType}!]${modifiers.isRequired ? '!' : ''}` : modifiers.isRequired ? `${baseType}!` : baseType
+		return FieldTypeCategory.SCALAR
 	}
 }

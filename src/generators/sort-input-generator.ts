@@ -3,7 +3,6 @@ import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Generate, SchemaOp, Validate } from '@utils/error'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export class SortInputGenerator extends BaseGenerator {
@@ -21,9 +20,6 @@ export class SortInputGenerator extends BaseGenerator {
 		return !this.options.connectionTypes
 	}
 
-	@Generate({
-		suggestions: ['Check model definitions in your schema', 'Ensure sort input types are properly configured'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -33,7 +29,6 @@ export class SortInputGenerator extends BaseGenerator {
 		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateSortInputType(model))
 	}
 
-	@SchemaOp()
 	private createSortDirectionEnum(): void {
 		if (this.registry.isTypeOfKind('SortDirection', TypeKind.ENUM)) {
 			return
@@ -43,9 +38,6 @@ export class SortInputGenerator extends BaseGenerator {
 		this.registry.registerType('SortDirection', TypeKind.ENUM, sortDirectionTC, true)
 	}
 
-	@SchemaOp({
-		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting'],
-	})
 	private generateSortInputType(model: DataModel): void {
 		const typeName = this.getObjectTypeName(model)
 		const sortInputName = this.typeFormatter.formatSortInputTypeName(typeName)
@@ -69,7 +61,6 @@ export class SortInputGenerator extends BaseGenerator {
 		this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
 	}
 
-	@Validate()
 	private isSortableField(model: DataModel, field: DataModelField): boolean {
 		const isAttrSortable = ValidationUtils.isFieldSortable(model, field.name, this.attributeProcessor)
 		const isTypeSortable = ValidationUtils.isSortableFieldType(field)

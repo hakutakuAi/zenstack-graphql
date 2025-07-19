@@ -1,5 +1,4 @@
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
-import { HandleErrors } from '@utils/error/error-decorators'
 
 type AttributeArg = {
 	name: string
@@ -158,81 +157,66 @@ export class AttributeProcessor {
 		return `${prefix}:${model.name}:${suffix}`
 	}
 
-	@HandleErrors()
 	private modelHasAttribute(model: DataModel, attrName: string): boolean {
 		return !!model.attributes?.some((attr) => attr.decl.ref?.name === attrName)
 	}
 
-	@HandleErrors()
 	private fieldHasAttribute(field: DataModelField, attrName: string): boolean {
 		return !!field.attributes?.some((attr) => attr.decl.ref?.name === attrName)
 	}
 
-	@HandleErrors()
 	private findModelAttribute(model: DataModel, attrName: string): any | undefined {
 		return model.attributes?.find((attr) => attr.decl.ref?.name === attrName)
 	}
 
-	@HandleErrors()
 	private findFieldAttribute(field: DataModelField, attrName: string): any | undefined {
 		return field.attributes?.find((attr) => attr.decl.ref?.name === attrName)
 	}
 
-	@HandleErrors()
 	private findField(model: DataModel, fieldName: string): DataModelField | undefined {
 		return model.fields?.find((f) => f.name === fieldName)
 	}
 
-	@HandleErrors()
 	private getAttributeArg(attr: any, argName: string): AttributeArg | undefined {
 		if (!attr?.args?.length) return undefined
 		return attr.args.find((arg: any) => arg.name === argName)
 	}
 
-	@HandleErrors()
 	private getStringAttributeArg(attr: any, argName: string): string | undefined {
 		const arg = this.getAttributeArg(attr, argName)
 		return arg && typeof arg.value === 'string' ? arg.value : undefined
 	}
 
-	@HandleErrors()
 	private getBooleanAttributeArg(attr: any, argName: string): boolean | undefined {
 		const arg = this.getAttributeArg(attr, argName)
 		return arg && typeof arg.value === 'boolean' ? arg.value : undefined
 	}
 
-	@HandleErrors()
 	private getNumberAttributeArg(attr: any, argName: string): number | undefined {
 		const arg = this.getAttributeArg(attr, argName)
 		return arg && typeof arg.value === 'number' ? arg.value : undefined
 	}
 
-	@HandleErrors()
 	private getModelStringArg(model: DataModel, attrName: string, argName: string): string | undefined {
 		return this.getStringAttributeArg(this.findModelAttribute(model, attrName), argName)
 	}
 
-	@HandleErrors()
 	private getModelBooleanArg(model: DataModel, attrName: string, argName: string): boolean | undefined {
 		return this.getBooleanAttributeArg(this.findModelAttribute(model, attrName), argName)
 	}
 
-	@HandleErrors()
 	private getModelNumberArg(model: DataModel, attrName: string, argName: string): number | undefined {
 		return this.getNumberAttributeArg(this.findModelAttribute(model, attrName), argName)
 	}
 
-	@HandleErrors()
 	private getFieldStringArg(field: DataModelField, attrName: string, argName: string): string | undefined {
 		return this.getStringAttributeArg(this.findFieldAttribute(field, attrName), argName)
 	}
 
-	@HandleErrors()
 	private getFieldBooleanArg(field: DataModelField, attrName: string, argName: string): boolean | undefined {
 		return this.getBooleanAttributeArg(this.findFieldAttribute(field, attrName), argName)
 	}
 
-	@HandleErrors()
 	private getFieldNumberArg(field: DataModelField, attrName: string, argName: string): number | undefined {
 		return this.getNumberAttributeArg(this.findFieldAttribute(field, attrName), argName)
 	}

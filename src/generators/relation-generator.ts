@@ -3,7 +3,6 @@ import { BaseGenerator } from '@generators/base-generator'
 import { ErrorCategory } from '@utils/error/error-handler'
 import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
-import { Generate, SchemaOp } from '@utils/error'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface RelationField {
@@ -28,9 +27,6 @@ export class RelationGenerator extends BaseGenerator {
 		return !this.options.includeRelations
 	}
 
-	@Generate({
-		suggestions: ['Check model relationships in your schema', 'Ensure relation fields are properly defined', 'Verify model types exist in the schema'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -87,9 +83,6 @@ export class RelationGenerator extends BaseGenerator {
 		return relations
 	}
 
-	@SchemaOp({
-		suggestions: ['Check relation field definitions', 'Ensure both source and target models exist', 'Verify relation names are consistent'],
-	})
 	private processRelation(relation: RelationField): void {
 		const relationKey = this.getRelationKey(relation)
 

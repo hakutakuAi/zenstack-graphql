@@ -2,7 +2,6 @@ import { EnumTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
 import { TypeKind } from '@utils/registry/unified-registry'
-import { Generate, SchemaOp } from '@utils/error'
 import { Enum } from '@zenstackhq/sdk/ast'
 
 export interface EnumValueConfig {
@@ -25,9 +24,6 @@ export class EnumGenerator extends BaseGenerator {
 		return !this.options.generateEnums
 	}
 
-	@Generate({
-		suggestions: ['Check enum definitions in your schema', 'Ensure enum values are valid GraphQL identifiers', 'Verify enum attributes are properly configured'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -56,9 +52,6 @@ export class EnumGenerator extends BaseGenerator {
 		return this.registry.isValidEnumValue(enumName, value)
 	}
 
-	@SchemaOp({
-		suggestions: ['Check enum definition for name and configuration', 'Ensure enum name is a valid GraphQL identifier', 'Verify enum values are properly defined'],
-	})
 	private generateEnum(enumObj: Enum): void {
 		const enumName = this.getEnumName(enumObj)
 

@@ -1,7 +1,6 @@
-import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer, ScalarTypeComposer, InputTypeComposer } from 'graphql-compose'
+import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer, ScalarTypeComposer, InputTypeComposer, InterfaceTypeComposer, UnionTypeComposer } from 'graphql-compose'
 import { printSchema, GraphQLSchema } from 'graphql'
 import { ErrorHandler, ErrorCategory } from '@utils/error/error-handler'
-import { HandleErrors, SchemaOp, Generate } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export enum TypeKind {
@@ -14,6 +13,18 @@ export enum TypeKind {
 	CONNECTION = 'connection',
 	EDGE = 'edge',
 	UNKNOWN = 'unknown',
+}
+
+type ComposerTypeMap = {
+	[TypeKind.OBJECT]: ObjectTypeComposer<any, any>
+	[TypeKind.SCALAR]: ScalarTypeComposer<any>
+	[TypeKind.ENUM]: EnumTypeComposer<any>
+	[TypeKind.INTERFACE]: InterfaceTypeComposer<any>
+	[TypeKind.UNION]: UnionTypeComposer<any>
+	[TypeKind.INPUT]: InputTypeComposer<any>
+	[TypeKind.CONNECTION]: ObjectTypeComposer<any, any>
+	[TypeKind.EDGE]: ObjectTypeComposer<any, any>
+	[TypeKind.UNKNOWN]: any
 }
 
 export interface TypeInfo {
@@ -37,7 +48,6 @@ export class UnifiedRegistry {
 		this.syncFromSchemaComposer()
 	}
 
-	@SchemaOp()
 	private syncFromSchemaComposer(): void {
 		for (const typeName of this.schemaComposer.types.keys()) {
 			const composer = this.schemaComposer.get(typeName)
@@ -47,6 +57,9 @@ export class UnifiedRegistry {
 			if (composer instanceof ObjectTypeComposer) kind = TypeKind.OBJECT
 			if (composer instanceof ScalarTypeComposer) kind = TypeKind.SCALAR
 			if (composer instanceof EnumTypeComposer) kind = TypeKind.ENUM
+			if (composer instanceof InterfaceTypeComposer) kind = TypeKind.INTERFACE
+			if (composer instanceof InputTypeComposer) kind = TypeKind.INPUT
+			if (composer instanceof UnionTypeComposer) kind = TypeKind.UNION
 
 			this.types.set(typeName, {
 				name: typeName,
@@ -58,8 +71,35 @@ export class UnifiedRegistry {
 		}
 	}
 
-	@SchemaOp()
+	registerObjectType(typeName: string, composer: ObjectTypeComposer<any, any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.OBJECT, composer, isGenerated)
+	}
+
+	registerScalarType(typeName: string, composer: ScalarTypeComposer<any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.SCALAR, composer, isGenerated)
+	}
+
+	registerEnumType(typeName: string, composer: EnumTypeComposer<any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.ENUM, composer, isGenerated)
+	}
+
+	registerInputType(typeName: string, composer: InputTypeComposer<any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.INPUT, composer, isGenerated)
+	}
+
+	registerInterfaceType(typeName: string, composer: InterfaceTypeComposer<any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.INTERFACE, composer, isGenerated)
+	}
+
+	registerConnectionType(typeName: string, composer: ObjectTypeComposer<any, any>, isGenerated = true): void {
+		this.registerTypeSafely(typeName, TypeKind.CONNECTION, composer, isGenerated)
+	}
+
 	registerType(typeName: string, kind: TypeKind, composer: any, isGenerated = true): void {
+		this.registerTypeSafely(typeName, kind, composer, isGenerated)
+	}
+
+	private registerTypeSafely<K extends keyof ComposerTypeMap>(typeName: string, kind: K, composer: ComposerTypeMap[K], isGenerated: boolean): void {
 		if (this.types.has(typeName)) {
 			const existing = this.types.get(typeName)!
 			if (existing.kind !== kind) {
@@ -67,6 +107,7 @@ export class UnifiedRegistry {
 					typeName,
 					existingKind: existing.kind,
 					newKind: kind,
+					conflictType: 'TypeKindMismatch',
 				})
 			}
 			return
@@ -96,16 +137,72 @@ export class UnifiedRegistry {
 		return typeInfo ? typeInfo.kind === kind : false
 	}
 
-	@SchemaOp()
-	getTypeComposer<T = any>(typeName: string): T | undefined {
+	getTypeComposer<K extends keyof ComposerTypeMap>(typeName: string, kind: K): ComposerTypeMap[K] | undefined {
 		const typeInfo = this.types.get(typeName)
+
 		if (!typeInfo) {
 			if (this.schemaComposer.has(typeName)) {
-				return this.schemaComposer.get(typeName) as T
+				const composer = this.schemaComposer.get(typeName)
+				if (this.isComposerOfKind(composer, kind)) {
+					return composer as ComposerTypeMap[K]
+				} else {
+					const actualKind = this.determineComposerKind(composer)
+					this.errorHandler.logWarning(`Type ${typeName} exists but is of kind ${actualKind}, not ${kind}`, ErrorCategory.SCHEMA, {
+						typeName,
+						requestedKind: kind,
+						actualKind,
+						errorType: 'TypeKindMismatch',
+					})
+				}
 			}
 			return undefined
 		}
-		return typeInfo.composer as T
+
+		if (typeInfo.kind !== kind) {
+			this.errorHandler.logWarning(`Type ${typeName} is registered with kind ${typeInfo.kind}, not ${kind}`, ErrorCategory.SCHEMA, {
+				typeName,
+				requestedKind: kind,
+				actualKind: typeInfo.kind,
+				errorType: 'RegisteredTypeMismatch',
+			})
+			return undefined
+		}
+
+		return typeInfo.composer as ComposerTypeMap[K]
+	}
+
+	private determineComposerKind(composer: any): TypeKind {
+		if (composer instanceof ObjectTypeComposer) return TypeKind.OBJECT
+		if (composer instanceof ScalarTypeComposer) return TypeKind.SCALAR
+		if (composer instanceof EnumTypeComposer) return TypeKind.ENUM
+		if (composer instanceof InterfaceTypeComposer) return TypeKind.INTERFACE
+		if (composer instanceof InputTypeComposer) return TypeKind.INPUT
+		if (composer instanceof UnionTypeComposer) return TypeKind.UNION
+		return TypeKind.UNKNOWN
+	}
+
+	private isComposerOfKind(composer: any, kind: TypeKind): boolean {
+		if (!composer) return false
+
+		switch (kind) {
+			case TypeKind.OBJECT:
+				return composer instanceof ObjectTypeComposer
+			case TypeKind.SCALAR:
+				return composer instanceof ScalarTypeComposer
+			case TypeKind.ENUM:
+				return composer instanceof EnumTypeComposer
+			case TypeKind.INTERFACE:
+				return composer instanceof InterfaceTypeComposer
+			case TypeKind.INPUT:
+				return composer instanceof InputTypeComposer
+			case TypeKind.UNION:
+				return composer instanceof UnionTypeComposer
+			case TypeKind.CONNECTION:
+			case TypeKind.EDGE:
+				return composer instanceof ObjectTypeComposer
+			default:
+				return true
+		}
 	}
 
 	getTypesByKind(kind: TypeKind): string[] {
@@ -121,12 +218,7 @@ export class UnifiedRegistry {
 	}
 
 	getObjectComposer(name: string): ObjectTypeComposer<any, any> | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
-
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof ObjectTypeComposer ? composer : undefined
+		return this.getTypeComposer(name, TypeKind.OBJECT)
 	}
 
 	getObjectTypeFields(typeName: string): string[] {
@@ -149,12 +241,7 @@ export class UnifiedRegistry {
 	}
 
 	getEnumComposer(name: string): EnumTypeComposer<any> | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
-
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof EnumTypeComposer ? composer : undefined
+		return this.getTypeComposer(name, TypeKind.ENUM)
 	}
 
 	getEnumValues(enumName: string): string[] {
@@ -167,12 +254,15 @@ export class UnifiedRegistry {
 	}
 
 	getScalarComposer(name: string): ScalarTypeComposer<any> | undefined {
-		if (!this.schemaComposer.has(name)) {
-			return undefined
-		}
+		return this.getTypeComposer(name, TypeKind.SCALAR)
+	}
 
-		const composer = this.schemaComposer.get(name)
-		return composer instanceof ScalarTypeComposer ? composer : undefined
+	getInputComposer(name: string): InputTypeComposer<any> | undefined {
+		return this.getTypeComposer(name, TypeKind.INPUT)
+	}
+
+	getInterfaceComposer(name: string): InterfaceTypeComposer<any> | undefined {
+		return this.getTypeComposer(name, TypeKind.INTERFACE)
 	}
 
 	isBuiltInScalar(typeName: string): boolean {
@@ -180,9 +270,9 @@ export class UnifiedRegistry {
 		return builtInScalars.includes(typeName)
 	}
 
-	registerEdgeType(name: string, composer: any): void {
+	registerEdgeType(name: string, composer: ObjectTypeComposer<any, any>): void {
 		this.edgeTypes.add(name)
-		this.registerType(name, TypeKind.EDGE, composer, true)
+		this.registerTypeSafely(name, TypeKind.EDGE, composer, true)
 	}
 
 	hasEdgeType(name: string): boolean {
@@ -226,28 +316,35 @@ export class UnifiedRegistry {
 		return this.getTypesByKind(TypeKind.CONNECTION)
 	}
 
-	@SchemaOp()
+	getInputTypes(): string[] {
+		return this.getTypesByKind(TypeKind.INPUT)
+	}
+
 	validateSchema(): string[] {
 		try {
 			this.schemaComposer.buildSchema()
 			return []
 		} catch (error) {
-			return [`Schema validation failed: ${error instanceof Error ? error.message : String(error)}`]
+			const errorMessage = `Schema validation failed: ${error instanceof Error ? error.message : String(error)}`
+
+			this.errorHandler.logWarning(errorMessage, ErrorCategory.SCHEMA, {
+				validationError: error,
+				errorType: 'SchemaValidation',
+			})
+
+			return [errorMessage]
 		}
 	}
 
-	@SchemaOp()
 	buildSchema(): GraphQLSchema {
 		return this.schemaComposer.buildSchema({ keepUnusedTypes: true })
 	}
 
-	@Generate()
 	generateSDL(): string {
 		const schema = this.buildSchema()
 		return printSchema(schema)
 	}
 
-	@SchemaOp()
 	addRelayRequirements(): void {
 		if (this.schemaComposer.has('Node')) {
 			return
@@ -264,6 +361,6 @@ export class UnifiedRegistry {
 			},
 		})
 
-		this.registerType('Node', TypeKind.INTERFACE, nodeInterface, true)
+		this.registerInterfaceType('Node', nodeInterface, true)
 	}
 }

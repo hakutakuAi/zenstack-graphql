@@ -1,5 +1,4 @@
 import { SchemaComposer, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from 'graphql-compose'
-import { SchemaOp } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export class GraphQLTypeFactories {
@@ -11,9 +10,6 @@ export class GraphQLTypeFactories {
 		this.typeFormatter = typeFormatter
 	}
 
-	@SchemaOp({
-		suggestions: ['Check GraphQL type naming conflicts', 'Ensure PageInfo fields are valid GraphQL types'],
-	})
 	createPageInfoType(): ObjectTypeComposer<any, any> {
 		if (this.schemaComposer.has('PageInfo')) {
 			return this.schemaComposer.getOTC('PageInfo')
@@ -46,9 +42,6 @@ export class GraphQLTypeFactories {
 		return pageInfoTC
 	}
 
-	@SchemaOp({
-		suggestions: ['Check GraphQL input type naming conflicts', 'Ensure input fields are valid GraphQL types'],
-	})
 	createPaginationInputTypes(): InputTypeComposer<any>[] {
 		const createdTypesTC = []
 
@@ -129,9 +122,6 @@ export class GraphQLTypeFactories {
 		return createdTypesTC
 	}
 
-	@SchemaOp({
-		suggestions: ['Check GraphQL enum naming conflicts'],
-	})
 	createSortDirectionEnum(): EnumTypeComposer<any> {
 		if (this.schemaComposer.has('SortDirection')) {
 			return this.schemaComposer.getETC('SortDirection')
@@ -156,9 +146,6 @@ export class GraphQLTypeFactories {
 		return sortDirectionTC
 	}
 
-	@SchemaOp({
-		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types'],
-	})
 	createConnectionType(modelType: string, description?: string): ObjectTypeComposer<any, any> {
 		const connectionName = this.typeFormatter.formatConnectionTypeName(modelType)
 		const edgeName = this.typeFormatter.formatEdgeTypeName(modelType)
@@ -192,9 +179,6 @@ export class GraphQLTypeFactories {
 		return connectionTC
 	}
 
-	@SchemaOp({
-		suggestions: ['Check for naming conflicts', 'Ensure node type is defined in the schema'],
-	})
 	createEdgeType(modelType: string): ObjectTypeComposer<any, any> {
 		const edgeName = this.typeFormatter.formatEdgeTypeName(modelType)
 
@@ -221,9 +205,6 @@ export class GraphQLTypeFactories {
 		return edgeTC
 	}
 
-	@SchemaOp({
-		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting'],
-	})
 	createSortInputType(modelType: string, fields: Record<string, { description: string }>): InputTypeComposer<any> {
 		this.createSortDirectionEnum()
 

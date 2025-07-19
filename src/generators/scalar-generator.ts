@@ -4,7 +4,6 @@ import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
 import { TypeKind } from '@utils/registry/unified-registry'
-import { Generate, SchemaOp } from '@utils/error'
 
 export interface ScalarConfig {
 	name: string
@@ -26,9 +25,6 @@ export class ScalarGenerator extends BaseGenerator {
 		return !this.options.generateScalars
 	}
 
-	@Generate({
-		suggestions: ['Check scalar type configurations', 'Ensure all scalar types are properly defined', 'Verify GraphQL scalar type compatibility'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -250,9 +246,6 @@ export class ScalarGenerator extends BaseGenerator {
 		}
 	}
 
-	@SchemaOp({
-		suggestions: ['Check scalar type definition', 'Ensure serialize, parseValue, and parseLiteral functions are valid', 'Verify scalar name is unique'],
-	})
 	private registerScalar(config: ScalarConfig): void {
 		const scalarType = new GraphQLScalarType({
 			name: config.name,

@@ -4,7 +4,6 @@ import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Generate, SchemaOp, Validate } from '@utils/error'
 
 export class FilterInputGenerator extends BaseGenerator {
 	private models: DataModel[]
@@ -26,9 +25,6 @@ export class FilterInputGenerator extends BaseGenerator {
 		return !this.options.connectionTypes
 	}
 
-	@Generate({
-		suggestions: ['Check model definitions in your schema', 'Ensure filter input types are properly configured'],
-	})
 	generate(): void {
 		if (this.skipGeneration()) {
 			return
@@ -39,7 +35,6 @@ export class FilterInputGenerator extends BaseGenerator {
 		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateFilterInputType(model))
 	}
 
-	@SchemaOp()
 	private createCommonFilterTypes(): void {
 		if (!this.schemaComposer.has('NumericFilterInput')) {
 			const numericFilterTC = this.schemaComposer.createInputTC({
@@ -150,9 +145,6 @@ export class FilterInputGenerator extends BaseGenerator {
 		}
 	}
 
-	@SchemaOp({
-		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for filtering'],
-	})
 	private generateFilterInputType(model: DataModel): void {
 		const typeName = this.getObjectTypeName(model)
 		const filterInputName = this.typeFormatter.formatTypeName(`${typeName}FilterInput`)
@@ -213,7 +205,6 @@ export class FilterInputGenerator extends BaseGenerator {
 		this.registry.registerType(filterInputName, TypeKind.INPUT, filterInputTC, true)
 	}
 
-	@Validate()
 	private isFilterableField(model: DataModel, field: DataModelField): boolean {
 		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
 	}

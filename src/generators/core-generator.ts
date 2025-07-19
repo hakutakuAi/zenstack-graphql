@@ -14,7 +14,6 @@ import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
 import { SortInputGenerator } from '@generators/sort-input-generator'
 import { FilterInputGenerator } from '@generators/filter-input-generator'
-import { Generate } from '@utils/error'
 
 export interface GenerationStats {
 	objectTypes: number
@@ -65,9 +64,6 @@ export class CoreGenerator {
 		})
 	}
 
-	@Generate({
-		suggestions: ['Check for errors in your ZModel schema', 'Verify that all referenced models and fields exist', 'Ensure proper configuration of plugin options'],
-	})
 	generateSchema(): GenerationResult {
 		if (this.options.relayCompliant) {
 			this.registry.addRelayRequirements()

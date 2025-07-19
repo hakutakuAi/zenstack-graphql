@@ -3,7 +3,6 @@ import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
-import { Generate, SchemaOp, Validate } from '@utils/error'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface FieldConfig {
@@ -19,9 +18,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		this.models = context.models
 	}
 
-	@Generate({
-		suggestions: ['Check model definitions in your schema', 'Ensure field types are valid GraphQL types', 'Verify model attributes are properly configured'],
-	})
 	generate(): void {
 		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateObjectType(model))
 	}
@@ -50,9 +46,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		return this.registry.getFieldType(typeName, fieldName)
 	}
 
-	@SchemaOp({
-		suggestions: ['Check model definition structure and content', 'Ensure model name is a valid GraphQL identifier', 'Verify all field types are supported'],
-	})
 	private generateObjectType(model: DataModel): void {
 		const typeName = this.getObjectTypeName(model)
 
@@ -108,9 +101,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		}
 	}
 
-	@Validate({
-		suggestions: ['Check if the field type is supported', 'Add custom scalar mapping in options', 'Consider using a different field type'],
-	})
 	private mapFieldType(field: DataModelField): string {
 		if (!this.typeMapper) {
 			throw new Error('TypeMapper is not initialized')
