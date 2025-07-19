@@ -1,6 +1,5 @@
 import { SCALAR_TYPES } from '@utils/config/constants'
 import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
-import type { DMMF } from '@prisma/generator-helper'
 
 type GraphQLTypeModifiers = {
 	isRequired?: boolean

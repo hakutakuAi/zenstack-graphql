@@ -1,7 +1,6 @@
 import { EnumTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
-import type { DMMF } from '@prisma/generator-helper'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { Generate, SchemaOp } from '@utils/error'
 import { Enum } from '@zenstackhq/sdk/ast'
@@ -12,12 +11,12 @@ export interface EnumValueConfig {
 }
 
 export class EnumGenerator extends BaseGenerator {
-	private enums: readonly DMMF.DatamodelEnum[] | Enum[]
+	private enums: Enum[]
 
 	constructor(context: GeneratorContext) {
 		super(context)
 		if (!context.enums) {
-			throw new Error('DMMF enums are required for EnumGenerator')
+			throw new Error('Enums are required for EnumGenerator')
 		}
 		this.enums = context.enums
 	}
@@ -60,7 +59,7 @@ export class EnumGenerator extends BaseGenerator {
 	@SchemaOp({
 		suggestions: ['Check enum definition for name and configuration', 'Ensure enum name is a valid GraphQL identifier', 'Verify enum values are properly defined'],
 	})
-	private generateEnum(enumObj: DMMF.DatamodelEnum | Enum): void {
+	private generateEnum(enumObj: Enum): void {
 		const enumName = this.getEnumName(enumObj)
 
 		if (this.hasEnum(enumName)) {
@@ -80,48 +79,26 @@ export class EnumGenerator extends BaseGenerator {
 		this.registry.registerType(enumName, TypeKind.ENUM, enumComposer, true)
 	}
 
-	private getEnumName(enumObj: DMMF.DatamodelEnum | Enum): string {
+	private getEnumName(enumObj: Enum): string {
 		return this.typeFormatter.formatTypeName(enumObj.name)
 	}
 
-	private getEnumDescription(enumObj: DMMF.DatamodelEnum | Enum): string | undefined {
-		if ('documentation' in enumObj) {
-			return enumObj.documentation || undefined
-		}
-
-		if ('comments' in enumObj) {
-			return enumObj.comments?.[0]
-		}
-
-		return undefined
+	private getEnumDescription(enumObj: Enum): string | undefined {
+		return enumObj.comments?.[0]
 	}
 
-	private createEnumValues(enumObj: DMMF.DatamodelEnum | Enum): Record<string, EnumValueConfig> {
+	private createEnumValues(enumObj: Enum): Record<string, EnumValueConfig> {
 		const values: Record<string, EnumValueConfig> = {}
 
-		if ('values' in enumObj) {
-			for (const enumValue of enumObj.values) {
-				const valueName = this.getEnumValueNameFromDMMF(enumValue)
+		for (const field of enumObj.fields) {
+			const valueName = this.getEnumValueNameFromField(field)
 
-				values[valueName] = {
-					value: enumValue.name,
-				}
-			}
-		} else if ('fields' in enumObj) {
-			for (const field of enumObj.fields) {
-				const valueName = this.getEnumValueNameFromField(field)
-
-				values[valueName] = {
-					value: field.name,
-				}
+			values[valueName] = {
+				value: field.name,
 			}
 		}
 
 		return values
-	}
-
-	private getEnumValueNameFromDMMF(enumValue: DMMF.EnumValue): string {
-		return this.typeFormatter.formatEnumValueName(enumValue.name)
 	}
 
 	private getEnumValueNameFromField(field: any): string {

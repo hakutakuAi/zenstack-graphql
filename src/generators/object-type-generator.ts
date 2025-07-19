@@ -1,7 +1,6 @@
 import { ObjectTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
-import type { DMMF } from '@prisma/generator-helper'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { Generate, SchemaOp, Validate } from '@utils/error'
@@ -17,9 +16,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.models) {
-			throw new Error('DMMF models are required for ObjectTypeGenerator')
-		}
 		this.models = context.models
 	}
 

@@ -20,12 +20,7 @@ export class RelationGenerator extends BaseGenerator {
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.models) {
-			throw new Error('DMMF models are required for RelationGenerator')
-		}
-		if (!context.typeMapper) {
-			throw new Error('TypeMapper is required for RelationGenerator')
-		}
+
 		this.models = context.models
 	}
 

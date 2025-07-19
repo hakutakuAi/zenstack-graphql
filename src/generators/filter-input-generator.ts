@@ -1,12 +1,10 @@
 import { GeneratorContext } from '@types'
-import type { DMMF } from '@prisma/generator-helper'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { Generate, SchemaOp, Validate } from '@utils/error'
-import { InputTypeComposer, SchemaComposer } from 'graphql-compose'
 
 export class FilterInputGenerator extends BaseGenerator {
 	private models: DataModel[]
@@ -15,7 +13,7 @@ export class FilterInputGenerator extends BaseGenerator {
 	constructor(context: GeneratorContext) {
 		super(context)
 		if (!context.models) {
-			throw new Error('DMMF models are required for FilterInputGenerator')
+			throw new Error('Models are required for FilterInputGenerator')
 		}
 		if (!context.typeMapper) {
 			throw new Error('TypeMapper is required for FilterInputGenerator')
@@ -217,8 +215,7 @@ export class FilterInputGenerator extends BaseGenerator {
 
 	@Validate()
 	private isFilterableField(model: DataModel, field: DataModelField): boolean {
-		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && 
-               ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
+		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
 	}
 
 	private getObjectTypeName(model: DataModel): string {

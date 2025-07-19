@@ -14,7 +14,7 @@ import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
 import { SortInputGenerator } from '@generators/sort-input-generator'
 import { FilterInputGenerator } from '@generators/filter-input-generator'
-import { Generate, Validate } from '@utils/error'
+import { Generate } from '@utils/error'
 
 export interface GenerationStats {
 	objectTypes: number
@@ -73,7 +73,7 @@ export class CoreGenerator {
 			this.registry.addRelayRequirements()
 		}
 
-		const scalarGenerator = this.createScalarGenerator()
+		const scalarGenerator = this.generatorFactory.create(ScalarGenerator)
 		scalarGenerator.generate()
 		const scalarTypes = scalarGenerator.getGeneratedScalars()
 
@@ -84,7 +84,7 @@ export class CoreGenerator {
 			}
 		})
 
-		const enumGenerator = this.createEnumGenerator()
+		const enumGenerator = this.generatorFactory.create(EnumGenerator)
 		enumGenerator.generate()
 		const enumTypes = enumGenerator.getGeneratedEnums()
 
@@ -95,7 +95,7 @@ export class CoreGenerator {
 			}
 		})
 
-		const objectGenerator = this.createObjectTypeGenerator()
+		const objectGenerator = this.generatorFactory.create(ObjectTypeGenerator)
 		objectGenerator.generate()
 		const objectTypes = objectGenerator.getGeneratedObjectTypes()
 
@@ -106,7 +106,7 @@ export class CoreGenerator {
 			}
 		})
 
-		const relationGenerator = this.createRelationGenerator()
+		const relationGenerator = this.generatorFactory.create(RelationGenerator)
 		relationGenerator.generate()
 		const relationFields = relationGenerator.getGeneratedRelations()
 
@@ -115,7 +115,7 @@ export class CoreGenerator {
 		let filterInputTypes: string[] = []
 
 		if (this.options.connectionTypes) {
-			const connectionGenerator = this.createConnectionGenerator()
+			const connectionGenerator = this.generatorFactory.create(ConnectionGenerator)
 			connectionGenerator.generate()
 
 			connectionTypes = connectionGenerator.getGeneratedConnectionTypes()
@@ -134,11 +134,11 @@ export class CoreGenerator {
 				}
 			})
 
-			const sortInputGenerator = this.createSortInputGenerator()
+			const sortInputGenerator = this.generatorFactory.create(SortInputGenerator)
 			sortInputGenerator.generate()
 			sortInputTypes = sortInputGenerator.getGeneratedSortInputTypes()
 
-			const filterInputGenerator = this.createFilterInputGenerator()
+			const filterInputGenerator = this.generatorFactory.create(FilterInputGenerator)
 			filterInputGenerator.generate()
 			filterInputTypes = filterInputGenerator.getGeneratedFilterInputTypes()
 		}
@@ -163,34 +163,6 @@ export class CoreGenerator {
 				warnings: this.warnings,
 			},
 		}
-	}
-
-	private createScalarGenerator(): ScalarGenerator {
-		return this.generatorFactory.createScalarGenerator()
-	}
-
-	private createEnumGenerator(): EnumGenerator {
-		return this.generatorFactory.createEnumGenerator()
-	}
-
-	private createObjectTypeGenerator(): ObjectTypeGenerator {
-		return this.generatorFactory.createObjectTypeGenerator()
-	}
-
-	private createRelationGenerator(): RelationGenerator {
-		return this.generatorFactory.createRelationGenerator()
-	}
-
-	private createConnectionGenerator(): ConnectionGenerator {
-		return this.generatorFactory.createConnectionGenerator()
-	}
-
-	private createSortInputGenerator(): SortInputGenerator {
-		return this.generatorFactory.createSortInputGenerator()
-	}
-
-	private createFilterInputGenerator(): FilterInputGenerator {
-		return this.generatorFactory.createFilterInputGenerator()
 	}
 
 	addWarning(message: string): void {

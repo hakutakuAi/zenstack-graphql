@@ -1,5 +1,4 @@
 import { GeneratorContext } from '@types'
-import type { DMMF } from '@prisma/generator-helper'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
@@ -13,12 +12,7 @@ export class SortInputGenerator extends BaseGenerator {
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.models) {
-			throw new Error('DMMF models are required for SortInputGenerator')
-		}
-		if (!context.typeMapper) {
-			throw new Error('TypeMapper is required for SortInputGenerator')
-		}
+
 		this.models = context.models
 		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.errorHandler, this.typeFormatter)
 	}
