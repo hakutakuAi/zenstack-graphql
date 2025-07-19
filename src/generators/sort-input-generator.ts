@@ -1,7 +1,7 @@
 import { GeneratorContext } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
-import { TypeKind } from '@utils/registry/unified-registry'
+import { TypeKind } from '@/utils/registry/registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
@@ -26,7 +26,7 @@ export class SortInputGenerator extends BaseGenerator {
 		}
 
 		this.createSortDirectionEnum()
-		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateSortInputType(model))
+		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateSortInputType(model))
 	}
 
 	private createSortDirectionEnum(): void {
@@ -50,7 +50,7 @@ export class SortInputGenerator extends BaseGenerator {
 			.filter((field) => this.isSortableField(model, field))
 			.reduce(
 				(acc, field) => {
-					const fieldName = this.typeFormatter.formatFieldName(field.name)
+					const fieldName = this.getFormattedFieldName(model, field)
 					acc[fieldName] = { description: `Sort by ${fieldName}` }
 					return acc
 				},
@@ -59,19 +59,6 @@ export class SortInputGenerator extends BaseGenerator {
 
 		const sortInputTC = this.typeFactories.createSortInputType(typeName, fields)
 		this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
-	}
-
-	private isSortableField(model: DataModel, field: DataModelField): boolean {
-		const isAttrSortable = ValidationUtils.isFieldSortable(model, field.name, this.attributeProcessor)
-		const isTypeSortable = ValidationUtils.isSortableFieldType(field)
-		const shouldInclude = ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
-
-		return isAttrSortable && isTypeSortable && shouldInclude
-	}
-
-	private getObjectTypeName(model: DataModel): string {
-		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || model.name)
 	}
 
 	getGeneratedSortInputTypes(): string[] {

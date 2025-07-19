@@ -3,7 +3,7 @@ import { GraphQLScalarType, GraphQLError } from 'graphql'
 import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
-import { TypeKind } from '@utils/registry/unified-registry'
+import { TypeKind } from '@/utils/registry/registry'
 
 export interface ScalarConfig {
 	name: string

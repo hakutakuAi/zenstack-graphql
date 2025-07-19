@@ -143,9 +143,7 @@ export class AttributeProcessor {
 
 	isFieldSortable(model: DataModel, fieldName: string): boolean {
 		const field = this.findField(model, fieldName)
-		const result = field ? this.fieldHasAttribute(field, '@graphql.sortable') : false
-		console.log(`Checking if ${model.name}.${fieldName} is sortable: ${result}`)
-		return result
+		return field ? this.fieldHasAttribute(field, '@graphql.sortable') : false
 	}
 
 	isFieldFilterable(model: DataModel, fieldName: string): boolean {

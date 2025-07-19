@@ -2,12 +2,10 @@ import { GeneratorContext } from '@types'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
-import { TypeKind } from '@utils/registry/unified-registry'
-import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
+import { TypeKind } from '@/utils/registry/registry'
 
 export class FilterInputGenerator extends BaseGenerator {
 	private models: DataModel[]
-	private typeFactories: GraphQLTypeFactories
 
 	constructor(context: GeneratorContext) {
 		super(context)
@@ -18,7 +16,6 @@ export class FilterInputGenerator extends BaseGenerator {
 			throw new Error('TypeMapper is required for FilterInputGenerator')
 		}
 		this.models = context.models
-		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.typeFormatter)
 	}
 
 	protected override skipGeneration(): boolean {
@@ -36,113 +33,85 @@ export class FilterInputGenerator extends BaseGenerator {
 	}
 
 	private createCommonFilterTypes(): void {
-		if (!this.schemaComposer.has('NumericFilterInput')) {
-			const numericFilterTC = this.schemaComposer.createInputTC({
-				name: 'NumericFilterInput',
-				description: 'Input type for numeric filtering operations',
-				fields: {
-					equals: {
-						type: 'Float',
-						description: 'Equal to the given value',
-					},
-					not: {
-						type: 'Float',
-						description: 'Not equal to the given value',
-					},
-					gt: {
-						type: 'Float',
-						description: 'Greater than the given value',
-					},
-					lt: {
-						type: 'Float',
-						description: 'Less than the given value',
-					},
-				},
-			})
-			this.registry.registerType('NumericFilterInput', TypeKind.INPUT, numericFilterTC, true)
+		this.createNumericFilterType()
+		this.createDateTimeFilterType()
+		this.createStringFilterType()
+		this.createBooleanFilterType()
+	}
+
+	private createNumericFilterType(): void {
+		this.createFilterType('NumericFilterInput', 'numeric', 'Float', false)
+	}
+
+	private createDateTimeFilterType(): void {
+		this.createFilterType('DateTimeFilterInput', 'datetime', 'DateTime', false)
+	}
+
+	private createStringFilterType(): void {
+		this.createFilterType('StringFilterInput', 'string', 'String', true)
+	}
+
+	private createBooleanFilterType(): void {
+		this.createFilterType('BooleanFilterInput', 'boolean', 'Boolean', false)
+	}
+
+	private createFilterType(name: string, description: string, typeName: string, includeStringOperations: boolean): void {
+		if (this.schemaComposer.has(name)) {
+			return
 		}
 
-		if (!this.schemaComposer.has('DateTimeFilterInput')) {
-			const dateFilterTC = this.schemaComposer.createInputTC({
-				name: 'DateTimeFilterInput',
-				description: 'Input type for datetime filtering operations',
-				fields: {
-					equals: {
-						type: 'DateTime',
-						description: 'Equal to the given value',
-					},
-					not: {
-						type: 'DateTime',
-						description: 'Not equal to the given value',
-					},
-					gt: {
-						type: 'DateTime',
-						description: 'Greater than the given value',
-					},
-					lt: {
-						type: 'DateTime',
-						description: 'Less than the given value',
-					},
-				},
-			})
-			this.registry.registerType('DateTimeFilterInput', TypeKind.INPUT, dateFilterTC, true)
+		const fields: Record<string, { type: string; description: string }> = {
+			equals: {
+				type: typeName,
+				description: 'Equal to the given value',
+			},
+			not: {
+				type: typeName,
+				description: 'Not equal to the given value',
+			},
 		}
 
-		if (!this.schemaComposer.has('StringFilterInput')) {
-			const stringFilterTC = this.schemaComposer.createInputTC({
-				name: 'StringFilterInput',
-				description: 'Input type for string filtering operations',
-				fields: {
-					equals: {
-						type: 'String',
-						description: 'Equal to the given value',
-					},
-					not: {
-						type: 'String',
-						description: 'Not equal to the given value',
-					},
-					in: {
-						type: '[String!]',
-						description: 'In the given list of values',
-					},
-					notIn: {
-						type: '[String!]',
-						description: 'Not in the given list of values',
-					},
-					contains: {
-						type: 'String',
-						description: 'Contains the given value',
-					},
-					startsWith: {
-						type: 'String',
-						description: 'Starts with the given value',
-					},
-					endsWith: {
-						type: 'String',
-						description: 'Ends with the given value',
-					},
-				},
-			})
-			this.registry.registerType('StringFilterInput', TypeKind.INPUT, stringFilterTC, true)
+		if (typeName !== 'Boolean' && typeName !== 'String') {
+			fields.gt = {
+				type: typeName,
+				description: 'Greater than the given value',
+			}
+			fields.lt = {
+				type: typeName,
+				description: 'Less than the given value',
+			}
 		}
 
-		if (!this.schemaComposer.has('BooleanFilterInput')) {
-			const booleanFilterTC = this.schemaComposer.createInputTC({
-				name: 'BooleanFilterInput',
-				description: 'Input type for boolean filtering operations',
-				fields: {
-					equals: {
-						type: 'Boolean',
-						description: 'Equal to the given value',
-					},
-					not: {
-						type: 'Boolean',
-						description: 'Not equal to the given value',
-					},
-				},
-			})
-			this.registry.registerType('BooleanFilterInput', TypeKind.INPUT, booleanFilterTC, true)
+		if (includeStringOperations) {
+			fields.in = {
+				type: `[${typeName}!]`,
+				description: 'In the given list of values',
+			}
+			fields.notIn = {
+				type: `[${typeName}!]`,
+				description: 'Not in the given list of values',
+			}
+			fields.contains = {
+				type: typeName,
+				description: 'Contains the given value',
+			}
+			fields.startsWith = {
+				type: typeName,
+				description: 'Starts with the given value',
+			}
+			fields.endsWith = {
+				type: typeName,
+				description: 'Ends with the given value',
+			}
 		}
+
+		const filterTC = this.schemaComposer.createInputTC({
+			name,
+			description: `Input type for ${description} filtering operations`,
+			fields,
+		})
+
+		this.registry.registerType(name, TypeKind.INPUT, filterTC, true)
 	}
 
 	private generateFilterInputType(model: DataModel): void {
@@ -158,7 +127,7 @@ export class FilterInputGenerator extends BaseGenerator {
 		model.fields
 			.filter((field) => this.isFilterableField(model, field))
 			.forEach((field) => {
-				const fieldName = this.typeFormatter.formatFieldName(field.name)
+				const fieldName = this.getFormattedFieldName(model, field)
 
 				let filterType: string
 
@@ -205,13 +174,8 @@ export class FilterInputGenerator extends BaseGenerator {
 		this.registry.registerType(filterInputName, TypeKind.INPUT, filterInputTC, true)
 	}
 
-	private isFilterableField(model: DataModel, field: DataModelField): boolean {
+	protected override isFilterableField(model: DataModel, field: DataModelField): boolean {
 		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
-	}
-
-	private getObjectTypeName(model: DataModel): string {
-		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || model.name)
 	}
 
 	getGeneratedFilterInputTypes(): string[] {

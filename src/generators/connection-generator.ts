@@ -1,7 +1,7 @@
 import { GeneratorContext } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
-import { TypeKind } from '@utils/registry/unified-registry'
+import { TypeKind } from '@/utils/registry/registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
@@ -26,7 +26,7 @@ export class ConnectionGenerator extends BaseGenerator {
 		}
 
 		this.createCommonTypes()
-		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateConnectionType(model))
+		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateConnectionType(model))
 	}
 
 	private createCommonTypes(): void {
@@ -64,11 +64,6 @@ export class ConnectionGenerator extends BaseGenerator {
 
 		const connectionTC = this.typeFactories.createConnectionType(typeName)
 		this.registry.registerType(connectionName, TypeKind.CONNECTION, connectionTC, true)
-	}
-
-	private getObjectTypeName(model: DataModel): string {
-		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || model.name)
 	}
 
 	getGeneratedConnectionTypes(): string[] {

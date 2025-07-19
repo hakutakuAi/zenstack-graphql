@@ -9,7 +9,7 @@ import { CoreGenerator } from '@generators'
 import { ErrorHandler, PluginError, ErrorCategory, ErrorSeverity, validateOptions, PluginOptions, AttributeProcessor, TypeMapper } from '@utils'
 import { TypeFormatter } from '@utils/schema'
 import fileWriter from '@/utils/io/file-writer'
-import { UnifiedRegistry } from '@/utils/registry/unified-registry'
+import { Registry } from '@/utils/registry/registry'
 
 export const name = 'ZenStack GraphQL'
 export const description = 'Generates GraphQL schemas'
@@ -38,7 +38,7 @@ export default async function run(model: Model, options: SdkPluginOptions) {
 		const models = model.declarations.filter((x) => isDataModel(x) && !x.isAbstract) as DataModel[]
 		const enums = model.declarations.filter((x) => isEnum(x)) as Enum[]
 		const typeMapper = TypeMapper.createFromModelsAndEnums(models, enums)
-		const registry = new UnifiedRegistry(schemaComposer, errorHandler)
+		const registry = new Registry(schemaComposer, errorHandler)
 
 		const coreGenerator = new CoreGenerator({
 			options: normalizedOptions,

@@ -35,7 +35,7 @@ export interface TypeInfo {
 	isGenerated: boolean
 }
 
-export class UnifiedRegistry {
+export class Registry {
 	private types: Map<string, TypeInfo> = new Map()
 	private readonly schemaComposer: SchemaComposer<unknown>
 	private readonly errorHandler: ErrorHandler
@@ -71,35 +71,29 @@ export class UnifiedRegistry {
 		}
 	}
 
-	registerObjectType(typeName: string, composer: ObjectTypeComposer<any, any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.OBJECT, composer, isGenerated)
-	}
+	registerType<K extends keyof ComposerTypeMap>(typeName: string, kind: K, composer: ComposerTypeMap[K], isGenerated = true): void {
+		if (this.types.has(typeName)) {
+			const existing = this.types.get(typeName)!
+			if (existing.kind !== kind) {
+				this.errorHandler.logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
+					typeName,
+					existingKind: existing.kind,
+					newKind: kind,
+					conflictType: 'TypeKindMismatch',
+				})
+			}
+			return
+		}
 
-	registerScalarType(typeName: string, composer: ScalarTypeComposer<any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.SCALAR, composer, isGenerated)
-	}
+		this.types.set(typeName, {
+			name: typeName,
+			kind,
+			description: this.getComposerDescription(composer),
+			composer,
+			isGenerated,
+		})
 
-	registerEnumType(typeName: string, composer: EnumTypeComposer<any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.ENUM, composer, isGenerated)
-	}
-
-	registerInputType(typeName: string, composer: InputTypeComposer<any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.INPUT, composer, isGenerated)
-	}
-
-	registerInterfaceType(typeName: string, composer: InterfaceTypeComposer<any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.INTERFACE, composer, isGenerated)
-	}
-
-	registerConnectionType(typeName: string, composer: ObjectTypeComposer<any, any>, isGenerated = true): void {
-		this.registerTypeSafely(typeName, TypeKind.CONNECTION, composer, isGenerated)
-	}
-
-	registerType(typeName: string, kind: TypeKind, composer: any, isGenerated = true): void {
-		this.registerTypeSafely(typeName, kind, composer, isGenerated)
-	}
-
-	private registerTypeSafely<K extends keyof ComposerTypeMap>(typeName: string, kind: K, composer: ComposerTypeMap[K], isGenerated: boolean): void {
+		this.schemaComposer.set(typeName, composer)
 		if (this.types.has(typeName)) {
 			const existing = this.types.get(typeName)!
 			if (existing.kind !== kind) {
@@ -272,7 +266,7 @@ export class UnifiedRegistry {
 
 	registerEdgeType(name: string, composer: ObjectTypeComposer<any, any>): void {
 		this.edgeTypes.add(name)
-		this.registerTypeSafely(name, TypeKind.EDGE, composer, true)
+		this.registerType(name, TypeKind.EDGE, composer, true)
 	}
 
 	hasEdgeType(name: string): boolean {
@@ -361,6 +355,6 @@ export class UnifiedRegistry {
 			},
 		})
 
-		this.registerInterfaceType('Node', nodeInterface, true)
+		this.registerType('Node', TypeKind.INTERFACE, nodeInterface, true)
 	}
 }

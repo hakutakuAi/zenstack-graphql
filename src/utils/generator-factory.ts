@@ -5,7 +5,7 @@ import { TypeMapper } from '@utils/schema/type-mapper'
 import { ErrorHandler } from '@utils/error/error-handler'
 import { NormalizedOptions } from '@utils/config/options-validator'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { UnifiedRegistry } from '@utils/registry/unified-registry'
+import { Registry } from '@/utils/registry/registry'
 import { BaseGenerator } from '@generators/base-generator'
 import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 
@@ -23,7 +23,7 @@ export class GeneratorFactory {
 		models: DataModel[]
 		enums: Enum[]
 		typeFormatter: TypeFormatter
-		registry: UnifiedRegistry
+		registry: Registry
 	}) {
 		this.context = {
 			schemaComposer: params.schemaComposer,

@@ -1,7 +1,7 @@
 import { EnumTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
-import { TypeKind } from '@utils/registry/unified-registry'
+import { TypeKind } from '@/utils/registry/registry'
 import { Enum } from '@zenstackhq/sdk/ast'
 
 export interface EnumValueConfig {

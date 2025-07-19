@@ -5,7 +5,7 @@ import { ErrorHandler } from '@utils/error/error-handler'
 import { AttributeProcessor } from '@utils/schema/attribute-processor'
 import { TypeMapper } from '@utils/schema/type-mapper'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { UnifiedRegistry } from '@utils/registry/unified-registry'
+import { Registry } from '@/utils/registry/registry'
 
 export type ComposerType = ReturnType<SchemaComposer['get']>
 
@@ -16,7 +16,7 @@ export interface GeneratorContext {
 	typeMapper: TypeMapper
 	typeFormatter: TypeFormatter
 	schemaComposer: SchemaComposer<unknown>
-	registry: UnifiedRegistry
+	registry: Registry
 	models: DataModel[]
 	enums: Enum[]
 }

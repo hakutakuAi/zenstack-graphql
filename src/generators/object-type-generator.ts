@@ -2,7 +2,7 @@ import { ObjectTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
 import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
-import { TypeKind } from '@utils/registry/unified-registry'
+import { TypeKind } from '@/utils/registry/registry'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface FieldConfig {
@@ -19,7 +19,7 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	}
 
 	generate(): void {
-		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateObjectType(model))
+		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateObjectType(model))
 	}
 
 	getGeneratedObjectTypes(): string[] {
@@ -65,11 +65,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
 	}
 
-	private getObjectTypeName(model: DataModel): string {
-		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || model.name)
-	}
-
 	private getObjectTypeDescription(model: DataModel): string | undefined {
 		return ValidationUtils.getModelDescription(model, this.attributeProcessor)
 	}
@@ -84,13 +79,12 @@ export class ObjectTypeGenerator extends BaseGenerator {
 			}, {})
 	}
 
-	private shouldIncludeField(model: DataModel, field: DataModelField): boolean {
+	protected override shouldIncludeField(model: DataModel, field: DataModelField, includeRelations: boolean = true): boolean {
 		return ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, this.options.includeRelations)
 	}
 
 	private getFieldName(model: DataModel, field: DataModelField): string {
-		const customName = ValidationUtils.getFieldName(model, field.name, this.attributeProcessor)
-		return this.typeFormatter.formatFieldName(customName || field.name)
+		return this.getFormattedFieldName(model, field)
 	}
 
 	private createFieldConfig(field: DataModelField): FieldConfig {

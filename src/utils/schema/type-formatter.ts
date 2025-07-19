@@ -1,17 +1,5 @@
 import { FieldNaming, TypeNaming } from '@utils/config/options-validator'
-
-function toPascalCase(str: string): string {
-	return str.charAt(0).toUpperCase() + str.slice(1).replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-}
-
-function toCamelCase(str: string): string {
-	const pascalCase = toPascalCase(str)
-	return pascalCase.charAt(0).toLowerCase() + pascalCase.slice(1)
-}
-
-function toSnakeCase(str: string): string {
-	return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).replace(/^_/, '')
-}
+import { pascalCase, camelCase, snakeCase, constantCase } from 'change-case'
 
 export class TypeFormatter {
 	private readonly typeNaming: TypeNaming
@@ -25,9 +13,9 @@ export class TypeFormatter {
 	formatTypeName(name: string): string {
 		switch (this.typeNaming) {
 			case 'PascalCase':
-				return toPascalCase(name)
+				return pascalCase(name)
 			case 'camelCase':
-				return toCamelCase(name)
+				return camelCase(name)
 			case 'preserve':
 				return name
 		}
@@ -36,28 +24,36 @@ export class TypeFormatter {
 	formatFieldName(name: string): string {
 		switch (this.fieldNaming) {
 			case 'camelCase':
-				return toCamelCase(name)
+				return camelCase(name)
 			case 'snake_case':
-				return toSnakeCase(name)
+				return snakeCase(name)
 			case 'preserve':
 				return name
 		}
 	}
 
 	formatEnumValueName(name: string): string {
-		return name.toUpperCase()
+		return constantCase(name)
+	}
+
+	formatNameWithSuffix(typeName: string, suffix: string): string {
+		return `${this.formatTypeName(typeName)}${suffix}`
 	}
 
 	formatConnectionTypeName(typeName: string): string {
-		return `${this.formatTypeName(typeName)}Connection`
+		return this.formatNameWithSuffix(typeName, 'Connection')
 	}
 
 	formatEdgeTypeName(typeName: string): string {
-		return `${this.formatTypeName(typeName)}Edge`
+		return this.formatNameWithSuffix(typeName, 'Edge')
 	}
 
 	formatSortInputTypeName(typeName: string): string {
-		return `${this.formatTypeName(typeName)}SortInput`
+		return this.formatNameWithSuffix(typeName, 'SortInput')
+	}
+
+	formatFilterInputTypeName(typeName: string): string {
+		return this.formatNameWithSuffix(typeName, 'FilterInput')
 	}
 
 	static fromOptions(typeNaming: TypeNaming, fieldNaming: FieldNaming): TypeFormatter {
