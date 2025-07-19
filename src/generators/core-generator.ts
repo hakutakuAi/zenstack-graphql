@@ -23,7 +23,6 @@ export interface GenerationStats {
 	connectionTypes: number
 	sortInputTypes: number
 	filterInputTypes: number
-	warnings: string[]
 }
 
 export interface GenerationResult {
@@ -121,16 +120,7 @@ export class CoreGenerator {
 				connectionTypes: connectionTypes.length,
 				sortInputTypes: sortInputTypes.length,
 				filterInputTypes: filterInputTypes.length,
-				warnings: this.warnings,
 			},
 		}
-	}
-
-	addWarning(message: string): void {
-		this.warnings.push(message)
-	}
-
-	getWarnings(): string[] {
-		return this.warnings
 	}
 }

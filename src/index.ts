@@ -57,7 +57,6 @@ export default async function run(model: Model, options: SdkPluginOptions) {
 		await fileWriter.writeSchema(result.sdl, normalizedOptions.output)
 
 		return {
-			warnings: result.stats.warnings,
 			metadata: {
 				stats: {
 					objectTypes: result.stats.objectTypes,
