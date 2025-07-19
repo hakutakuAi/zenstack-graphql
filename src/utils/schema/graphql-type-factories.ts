@@ -1,21 +1,18 @@
 import { SchemaComposer, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from 'graphql-compose'
-import { ErrorHandler } from '@utils/error/error-handler'
 import { SchemaOp } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export class GraphQLTypeFactories {
 	private readonly schemaComposer: SchemaComposer<unknown>
-	private readonly errorHandler: ErrorHandler
 	private readonly typeFormatter: TypeFormatter
 
-	constructor(schemaComposer: SchemaComposer<unknown>, errorHandler: ErrorHandler, typeFormatter: TypeFormatter) {
+	constructor(schemaComposer: SchemaComposer<unknown>, typeFormatter: TypeFormatter) {
 		this.schemaComposer = schemaComposer
-		this.errorHandler = errorHandler
 		this.typeFormatter = typeFormatter
 	}
 
 	@SchemaOp({
-		suggestions: ['Check GraphQL type naming conflicts', 'Ensure PageInfo fields are valid GraphQL types']
+		suggestions: ['Check GraphQL type naming conflicts', 'Ensure PageInfo fields are valid GraphQL types'],
 	})
 	createPageInfoType(): ObjectTypeComposer<any, any> {
 		if (this.schemaComposer.has('PageInfo')) {
@@ -50,7 +47,7 @@ export class GraphQLTypeFactories {
 	}
 
 	@SchemaOp({
-		suggestions: ['Check GraphQL input type naming conflicts', 'Ensure input fields are valid GraphQL types']
+		suggestions: ['Check GraphQL input type naming conflicts', 'Ensure input fields are valid GraphQL types'],
 	})
 	createPaginationInputTypes(): InputTypeComposer<any>[] {
 		const createdTypesTC = []
@@ -133,7 +130,7 @@ export class GraphQLTypeFactories {
 	}
 
 	@SchemaOp({
-		suggestions: ['Check GraphQL enum naming conflicts']
+		suggestions: ['Check GraphQL enum naming conflicts'],
 	})
 	createSortDirectionEnum(): EnumTypeComposer<any> {
 		if (this.schemaComposer.has('SortDirection')) {
@@ -160,7 +157,7 @@ export class GraphQLTypeFactories {
 	}
 
 	@SchemaOp({
-		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types']
+		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types'],
 	})
 	createConnectionType(modelType: string, description?: string): ObjectTypeComposer<any, any> {
 		const connectionName = this.typeFormatter.formatConnectionTypeName(modelType)
@@ -196,7 +193,7 @@ export class GraphQLTypeFactories {
 	}
 
 	@SchemaOp({
-		suggestions: ['Check for naming conflicts', 'Ensure node type is defined in the schema']
+		suggestions: ['Check for naming conflicts', 'Ensure node type is defined in the schema'],
 	})
 	createEdgeType(modelType: string): ObjectTypeComposer<any, any> {
 		const edgeName = this.typeFormatter.formatEdgeTypeName(modelType)
@@ -225,7 +222,7 @@ export class GraphQLTypeFactories {
 	}
 
 	@SchemaOp({
-		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting']
+		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting'],
 	})
 	createSortInputType(modelType: string, fields: Record<string, { description: string }>): InputTypeComposer<any> {
 		this.createSortDirectionEnum()
@@ -248,19 +245,18 @@ export class GraphQLTypeFactories {
 		const sortInputTC = this.schemaComposer.createInputTC({
 			name: sortInputName,
 			description: `Sort input for ${modelType} connections`,
-			fields: Object.keys(sortFields).length > 0 ? sortFields : {
-				_placeholder: {
-					type: 'String',
-					description: 'Placeholder field when no sortable fields are available'
-				}
-			},
+			fields:
+				Object.keys(sortFields).length > 0
+					? sortFields
+					: {
+							_placeholder: {
+								type: 'String',
+								description: 'Placeholder field when no sortable fields are available',
+							},
+						},
 		})
 
 		this.schemaComposer.set(sortInputName, sortInputTC)
 		return sortInputTC
 	}
-}
-
-export function createGraphQLTypeFactories(schemaComposer: SchemaComposer<unknown>, errorHandler: ErrorHandler, typeFormatter: TypeFormatter): GraphQLTypeFactories {
-	return new GraphQLTypeFactories(schemaComposer, errorHandler, typeFormatter)
 }

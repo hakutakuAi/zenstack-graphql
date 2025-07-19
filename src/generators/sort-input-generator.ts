@@ -14,7 +14,7 @@ export class SortInputGenerator extends BaseGenerator {
 		super(context)
 
 		this.models = context.models
-		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.errorHandler, this.typeFormatter)
+		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.typeFormatter)
 	}
 
 	protected override skipGeneration(): boolean {
