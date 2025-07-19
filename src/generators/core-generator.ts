@@ -73,34 +73,13 @@ export class CoreGenerator {
 		scalarGenerator.generate()
 		const scalarTypes = scalarGenerator.getGeneratedScalars()
 
-		scalarTypes.forEach((typeName) => {
-			const composer = this.schemaComposer.getSTC(typeName)
-			if (composer) {
-				this.registry.registerType(typeName, TypeKind.SCALAR, composer, true)
-			}
-		})
-
 		const enumGenerator = this.generatorFactory.create(EnumGenerator)
 		enumGenerator.generate()
 		const enumTypes = enumGenerator.getGeneratedEnums()
 
-		enumTypes.forEach((typeName) => {
-			const composer = this.schemaComposer.getETC(typeName)
-			if (composer) {
-				this.registry.registerType(typeName, TypeKind.ENUM, composer, true)
-			}
-		})
-
 		const objectGenerator = this.generatorFactory.create(ObjectTypeGenerator)
 		objectGenerator.generate()
 		const objectTypes = objectGenerator.getGeneratedObjectTypes()
-
-		objectTypes.forEach((typeName) => {
-			const composer = this.schemaComposer.getOTC(typeName)
-			if (composer) {
-				this.registry.registerType(typeName, TypeKind.OBJECT, composer, true)
-			}
-		})
 
 		const relationGenerator = this.generatorFactory.create(RelationGenerator)
 		relationGenerator.generate()
@@ -115,20 +94,6 @@ export class CoreGenerator {
 			connectionGenerator.generate()
 
 			connectionTypes = connectionGenerator.getGeneratedConnectionTypes()
-			connectionTypes.forEach((typeName) => {
-				const composer = this.schemaComposer.getOTC(typeName)
-				if (composer) {
-					this.registry.registerType(typeName, TypeKind.CONNECTION, composer, true)
-				}
-			})
-
-			const edgeTypes = connectionGenerator.getGeneratedEdgeTypes()
-			edgeTypes.forEach((typeName) => {
-				const composer = this.schemaComposer.getOTC(typeName)
-				if (composer) {
-					this.registry.registerType(typeName, TypeKind.EDGE, composer, true)
-				}
-			})
 
 			const sortInputGenerator = this.generatorFactory.create(SortInputGenerator)
 			sortInputGenerator.generate()

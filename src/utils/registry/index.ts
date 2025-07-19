@@ -1,1 +1,1 @@
-export * from './registry-manager'
+export * from './registry'
