@@ -1,54 +1,88 @@
-import { DMMF } from '@zenstackhq/sdk/prisma'
-import { asDataModel } from '@types'
+import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { AttributeProcessor } from './attribute-processor'
 import { HandleErrors } from '@utils/error/error-decorators'
 
 export class ValidationUtils {
 	@HandleErrors()
-	static shouldGenerateModel(model: DMMF.Model, processor: AttributeProcessor): boolean {
-		const dataModel = asDataModel(model)
-		return !processor.attr(dataModel, '@@graphql.ignore').exists()
+	static shouldGenerateModel(model: DataModel, processor: AttributeProcessor): boolean {
+		return !processor.attr(model, '@@graphql.ignore').exists()
 	}
 
 	@HandleErrors()
-	static shouldIncludeField(model: DMMF.Model, field: DMMF.Field, processor: AttributeProcessor, includeRelations: boolean): boolean {
-		if (field.relationName && !includeRelations) {
+	static shouldIncludeField(model: DataModel, field: DataModelField, processor: AttributeProcessor, includeRelations: boolean): boolean {
+		const isRelation = field.type.reference && field.type.reference.ref?.name && !field.type.type
+
+		if (isRelation && !includeRelations) {
 			return false
 		}
 
-		return !processor.hasFieldIgnoreAttr(asDataModel(model), field.name)
+		return !processor.hasFieldIgnoreAttr(model, field.name)
 	}
 
 	@HandleErrors()
-	static getModelName(model: DMMF.Model, processor: AttributeProcessor): string | undefined {
-		const dataModel = asDataModel(model)
-		return processor.attr(dataModel, '@@graphql.name').getString('name') || model.name
+	static getModelName(model: DataModel, processor: AttributeProcessor): string | undefined {
+		return processor.attr(model, '@@graphql.name').getString('name') || model.name
 	}
 
 	@HandleErrors()
-	static getFieldName(model: DMMF.Model, fieldName: string, processor: AttributeProcessor): string | undefined {
-		return processor.processField(asDataModel(model), fieldName).name() || fieldName
+	static getFieldName(model: DataModel, fieldName: string, processor: AttributeProcessor): string | undefined {
+		return processor.processField(model, fieldName).name() || fieldName
 	}
 
 	@HandleErrors()
-	static getModelDescription(model: DMMF.Model, processor: AttributeProcessor): string | undefined {
-		const dataModel = asDataModel(model)
-		return processor.attr(dataModel, '@@graphql.description').getString('description') || model.documentation
+	static getModelDescription(model: DataModel, processor: AttributeProcessor): string | undefined {
+		return processor.attr(model, '@@graphql.description').getString('description')
 	}
 
 	@HandleErrors()
-	static isFieldNonSortable(model: DMMF.Model, fieldName: string, processor: AttributeProcessor): boolean {
-		return processor.processField(asDataModel(model), fieldName).isNonSortable()
+	static isFieldSortable(model: DataModel, fieldName: string, processor: AttributeProcessor): boolean {
+		return processor.processField(model, fieldName).isSortable()
 	}
 
 	@HandleErrors()
-	static isFieldNonFilterable(model: DMMF.Model, fieldName: string, processor: AttributeProcessor): boolean {
-		return processor.processField(asDataModel(model), fieldName).isNonFilterable()
+	static isFieldFilterable(model: DataModel, fieldName: string, processor: AttributeProcessor): boolean {
+		return processor.processField(model, fieldName).isFilterable()
 	}
 
 	@HandleErrors()
-	static getFieldInputTypeName(model: DMMF.Model, fieldName: string, processor: AttributeProcessor): string | undefined {
-		return processor.processField(asDataModel(model), fieldName).inputTypeName()
+	static isSortableFieldType(field: DataModelField): boolean {
+		const fieldType = field.type.type
+
+		if (!fieldType) return false
+
+		switch (fieldType) {
+			case 'Int':
+			case 'Float':
+			case 'Decimal':
+			case 'DateTime':
+			case 'String':
+			case 'Boolean':
+				return true
+			default:
+				return false
+		}
+	}
+
+	@HandleErrors()
+	static isRangeFilterableType(field: DataModelField): boolean {
+		const fieldType = field.type.type
+
+		if (!fieldType) return false
+
+		switch (fieldType) {
+			case 'Int':
+			case 'Float':
+			case 'Decimal':
+			case 'DateTime':
+				return true
+			default:
+				return false
+		}
+	}
+
+	@HandleErrors()
+	static isStringSearchableType(field: DataModelField): boolean {
+		return field.type.type === 'String'
 	}
 
 	static extractErrorMessage(error: unknown): string {

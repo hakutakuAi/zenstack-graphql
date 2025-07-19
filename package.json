@@ -2,8 +2,8 @@
 	"name": "zenstack-graphql",
 	"module": "src/index.ts",
 	"scripts": {
-		"build": "rm -rf dist && tsc && tsc-alias",
-		"generate-example": "bun run build && zenstack generate --schema ./example/schema.zmodel"
+		"build": "rm -rf dist && tsc && tsc-alias && cp ./src/plugin.zmodel ./dist/plugin.zmodel ",
+		"generate-example": "bun run build && cd ./example && zenstack generate && cd .."
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.18",

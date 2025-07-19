@@ -21,9 +21,8 @@ interface FieldAttributeChain {
 	description(): string | undefined
 	exists(): boolean
 	isIgnored(): boolean
-	isNonSortable(): boolean
-	isNonFilterable(): boolean
-	inputTypeName(): string | undefined
+	isSortable(): boolean
+	isFilterable(): boolean
 	field(): DataModelField | undefined
 	model(): DataModel
 }
@@ -90,17 +89,12 @@ export class AttributeProcessor {
 				return field ? this.fieldHasAttribute(field, '@graphql.ignore') : false
 			},
 
-			isNonSortable: (): boolean => {
-				return field ? this.fieldHasAttribute(field, '@graphql.nonSortable') : false
+			isSortable: (): boolean => {
+				return field ? this.fieldHasAttribute(field, '@graphql.sortable') : false
 			},
 
-			isNonFilterable: (): boolean => {
-				return field ? this.fieldHasAttribute(field, '@graphql.nonFilterable') : false
-			},
-
-			inputTypeName: (): string | undefined => {
-				if (!field) return undefined
-				return this.getFieldStringArg(field, '@graphql.inputType', 'name')
+			isFilterable: (): boolean => {
+				return field ? this.fieldHasAttribute(field, '@graphql.filterable') : false
 			},
 
 			field: (): DataModelField | undefined => field,
@@ -148,21 +142,16 @@ export class AttributeProcessor {
 		return field ? this.fieldHasAttribute(field, '@graphql.ignore') : false
 	}
 
-	isFieldNonSortable(model: DataModel, fieldName: string): boolean {
+	isFieldSortable(model: DataModel, fieldName: string): boolean {
 		const field = this.findField(model, fieldName)
-		return field ? this.fieldHasAttribute(field, '@graphql.nonSortable') : false
+		const result = field ? this.fieldHasAttribute(field, '@graphql.sortable') : false
+		console.log(`Checking if ${model.name}.${fieldName} is sortable: ${result}`)
+		return result
 	}
 
-	isFieldNonFilterable(model: DataModel, fieldName: string): boolean {
+	isFieldFilterable(model: DataModel, fieldName: string): boolean {
 		const field = this.findField(model, fieldName)
-		return field ? this.fieldHasAttribute(field, '@graphql.nonFilterable') : false
-	}
-
-	getFieldInputTypeName(model: DataModel, fieldName: string): string | undefined {
-		const field = this.findField(model, fieldName)
-		if (!field) return undefined
-
-		return this.getFieldStringArg(field, '@graphql.inputType', 'name')
+		return field ? this.fieldHasAttribute(field, '@graphql.filterable') : false
 	}
 
 	private getCacheKey(prefix: string, model: DataModel, suffix: string = ''): string {

@@ -1,42 +1,36 @@
-import { ObjectTypeComposer } from 'graphql-compose'
-import { GeneratorContext, DMMF } from '@types'
+import { GeneratorContext } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Generate, SchemaOp, Validate } from '@utils/error'
+import { Generate, SchemaOp } from '@utils/error'
+import { DataModel } from '@zenstackhq/sdk/ast'
 
 export class ConnectionGenerator extends BaseGenerator {
-	private dmmfModels: readonly DMMF.Model[]
+	private models: DataModel[]
 	private typeFactories: GraphQLTypeFactories
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.dmmfModels) {
-			throw new Error('DMMF models are required for ConnectionGenerator')
-		}
-		if (!context.typeMapper) {
-			throw new Error('TypeMapper is required for ConnectionGenerator')
-		}
-		this.dmmfModels = context.dmmfModels
+
+		this.models = context.models
 		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.errorHandler, this.typeFormatter)
+	}
+
+	protected override skipGeneration(): boolean {
+		return !this.options.connectionTypes
 	}
 
 	@Generate({
 		suggestions: ['Check model definitions in your schema', 'Ensure connection type options are properly configured', 'Verify Relay specification compliance'],
 	})
 	generate(): void {
-		if (!this.options.connectionTypes) {
+		if (this.skipGeneration()) {
 			return
 		}
 
 		this.createCommonTypes()
-		this.dmmfModels.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateConnectionType(model))
-	}
-
-	@Validate()
-	private shouldIncludeField(dmmfModel: DMMF.Model, field: DMMF.Field): boolean {
-		return ValidationUtils.shouldIncludeField(dmmfModel, field, this.attributeProcessor, true)
+		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateConnectionType(model))
 	}
 
 	@SchemaOp()
@@ -48,16 +42,13 @@ export class ConnectionGenerator extends BaseGenerator {
 		paginationInputTypes.forEach((inputTC) => {
 			this.registry.registerType(inputTC.getTypeName(), TypeKind.INPUT, inputTC, true)
 		})
-
-		const sortDirectionTC = this.typeFactories.createSortDirectionEnum()
-		this.registry.registerType('SortDirection', TypeKind.ENUM, sortDirectionTC, true)
 	}
 
 	@Generate({
 		suggestions: ['Check model definition in schema', 'Verify all field types are supported for connection types'],
 	})
-	private generateConnectionType(dmmfModel: DMMF.Model): void {
-		const typeName = this.getObjectTypeName(dmmfModel)
+	private generateConnectionType(model: DataModel): void {
+		const typeName = this.getObjectTypeName(model)
 		const connectionName = this.typeFormatter.formatConnectionTypeName(typeName)
 
 		if (this.registry.isTypeOfKind(connectionName, TypeKind.CONNECTION)) {
@@ -81,39 +72,11 @@ export class ConnectionGenerator extends BaseGenerator {
 
 		const connectionTC = this.typeFactories.createConnectionType(typeName)
 		this.registry.registerType(connectionName, TypeKind.CONNECTION, connectionTC, true)
-
-		this.createSortInputType(dmmfModel)
 	}
 
-	@SchemaOp({
-		suggestions: ['Check field definitions in the model', 'Ensure fields are valid for sorting'],
-	})
-	private createSortInputType(dmmfModel: DMMF.Model): void {
-		const typeName = this.getObjectTypeName(dmmfModel)
-		const sortInputName = this.typeFormatter.formatSortInputTypeName(typeName)
-
-		if (this.schemaComposer.has(sortInputName)) {
-			return
-		}
-
-		const fields = dmmfModel.fields
-			.filter((field) => field.kind !== 'object' && this.shouldIncludeField(dmmfModel, field))
-			.reduce(
-				(acc, field) => {
-					const fieldName = this.typeFormatter.formatFieldName(field.name)
-					acc[fieldName] = { description: `Sort by ${fieldName}` }
-					return acc
-				},
-				{} as Record<string, { description: string }>
-			)
-
-		const sortInputTC = this.typeFactories.createSortInputType(typeName, fields)
-		this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
-	}
-
-	private getObjectTypeName(dmmfModel: DMMF.Model): string {
-		const customName = ValidationUtils.getModelName(dmmfModel, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || dmmfModel.name)
+	private getObjectTypeName(model: DataModel): string {
+		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
+		return this.typeFormatter.formatTypeName(customName || model.name)
 	}
 
 	getGeneratedConnectionTypes(): string[] {

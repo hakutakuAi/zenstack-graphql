@@ -1,8 +1,7 @@
+import { BuiltinType } from '@zenstackhq/sdk/ast'
 import { z } from 'zod'
 
-export type ScalarTypeKey = 'String' | 'Int' | 'BigInt' | 'Float' | 'Boolean' | 'DateTime' | 'Json' | 'Decimal' | 'Bytes' | 'ID'
-
-export const SCALAR_TYPES: Record<ScalarTypeKey, string> = {
+export const SCALAR_TYPES: Record<BuiltinType, string> = {
 	String: 'String',
 	Int: 'Int',
 	BigInt: 'Int',
@@ -12,7 +11,6 @@ export const SCALAR_TYPES: Record<ScalarTypeKey, string> = {
 	Json: 'JSON',
 	Decimal: 'Decimal',
 	Bytes: 'String',
-	ID: 'ID',
 }
 
 export const VALID_SCALAR_VALUES = Object.values(SCALAR_TYPES)

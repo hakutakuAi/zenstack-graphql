@@ -83,34 +83,26 @@ attribute @graphql.name(name: String)
 attribute @graphql.description(description: String)
 
 /**
- * Mark a field as non-sortable in connection queries
+ * Mark a field as sortable in connection queries
+ * By default, fields are not sortable unless explicitly marked
  *
  * @example
  * model User {
  *   id Int @id
- *   randomValue Float @graphql.nonSortable
+ *   score Float @graphql.sortable
  * }
  */
-attribute @graphql.nonSortable()
+attribute @graphql.sortable()
 
 /**
- * Mark a field as non-filterable in queries
+ * Mark a field as filterable in queries
+ * By default, fields are not filterable unless explicitly marked
  *
  * @example
  * model User {
  *   id Int @id
- *   sensitiveData String @graphql.nonFilterable
+ *   name String @graphql.filterable
  * }
  */
-attribute @graphql.nonFilterable()
+attribute @graphql.filterable()
 
-/**
- * Customize a field's input type name
- *
- * @example
- * model Post {
- *   id Int @id
- *   content String @graphql.inputType(name: "PostContentInput")
- * }
- */
-attribute @graphql.inputType(name: String)

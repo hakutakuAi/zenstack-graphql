@@ -1,10 +1,10 @@
 import { ObjectTypeComposer, SchemaComposer } from 'graphql-compose'
-import type { DMMF } from '@zenstackhq/sdk/prisma'
 import { BaseGenerator } from '@generators/base-generator'
 import { ErrorCategory } from '@utils/error/error-handler'
 import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
 import { Generate, SchemaOp } from '@utils/error'
+import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface RelationField {
 	modelName: string
@@ -16,17 +16,17 @@ export interface RelationField {
 }
 
 export class RelationGenerator extends BaseGenerator {
-	private dmmfModels: readonly DMMF.Model[]
+	private models: DataModel[]
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.dmmfModels) {
+		if (!context.models) {
 			throw new Error('DMMF models are required for RelationGenerator')
 		}
 		if (!context.typeMapper) {
 			throw new Error('TypeMapper is required for RelationGenerator')
 		}
-		this.dmmfModels = context.dmmfModels
+		this.models = context.models
 	}
 
 	protected override skipGeneration(): boolean {
@@ -52,7 +52,7 @@ export class RelationGenerator extends BaseGenerator {
 	private extractRelations(): RelationField[] {
 		const relations: RelationField[] = []
 
-		for (const model of this.dmmfModels) {
+		for (const model of this.models) {
 			if (this.shouldSkipModel(model)) {
 				continue
 			}
@@ -63,26 +63,27 @@ export class RelationGenerator extends BaseGenerator {
 						continue
 					}
 
-					const targetModel = this.findModelByName(field.type)
+					const targetModelName = field.type.reference?.ref?.name || ''
+					const targetModel = this.findModelByName(targetModelName)
 
 					if (!targetModel) {
-						this.errorHandler.logWarning(`Target model ${field.type} not found for relation ${model.name}.${field.name}`, ErrorCategory.SCHEMA, {
+						this.errorHandler.logWarning(`Target model ${targetModelName} not found for relation ${model.name}.${field.name}`, ErrorCategory.SCHEMA, {
 							modelName: model.name,
 							fieldName: field.name,
-							targetModelName: field.type,
+							targetModelName,
 						})
 						continue
 					}
 
-					const targetField = this.findRelatedField(targetModel, model.name, field.relationName)
+					const targetField = this.findRelatedField(targetModel, model.name)
 
 					relations.push({
 						modelName: model.name,
 						fieldName: field.name,
-						targetModelName: field.type,
+						targetModelName,
 						targetFieldName: targetField?.name || null,
-						isList: field.isList,
-						isRequired: field.isRequired,
+						isList: field.type.array,
+						isRequired: field.type.optional === false,
 					})
 				}
 			}
@@ -170,20 +171,24 @@ export class RelationGenerator extends BaseGenerator {
 		}
 	}
 
-	private shouldSkipModel(model: DMMF.Model): boolean {
+	private shouldSkipModel(model: DataModel): boolean {
 		return ValidationUtils.shouldGenerateModel(model, this.attributeProcessor) === false
 	}
 
-	private shouldSkipField(model: DMMF.Model, field: DMMF.Field): boolean {
+	private shouldSkipField(model: DataModel, field: DataModelField): boolean {
 		return ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true) === false
 	}
 
-	private findModelByName(name: string): DMMF.Model | undefined {
-		return this.dmmfModels.find((model) => model.name === name)
+	private findModelByName(name: string): DataModel | undefined {
+		return this.models.find((model) => model.name === name)
 	}
 
-	private findRelatedField(model: DMMF.Model, relatedModelName: string, relationName?: string): DMMF.Field | undefined {
-		return model.fields.find((field) => field.type === relatedModelName && field.relationName === relationName)
+	private findRelatedField(model: DataModel, sourceModelName: string): DataModelField | undefined {
+		return model.fields.find((field) => {
+			if (!field.type.reference || !field.type.reference.ref) return false
+
+			return field.type.reference.ref.name === sourceModelName
+		})
 	}
 
 	private getObjectTypeComposer(modelName: string): ObjectTypeComposer | undefined {

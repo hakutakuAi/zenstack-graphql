@@ -154,15 +154,6 @@ input PaginationInput {
   before: String
 }
 
-"""Sort direction for ordering results"""
-enum SortDirection {
-  """Ascending order"""
-  ASC
-
-  """Descending order"""
-  DESC
-}
-
 """An edge in a Space connection."""
 type SpaceEdge {
   """The Space at the end of the edge."""
@@ -182,24 +173,6 @@ type SpaceConnection {
 
   """The total count of items in the connection."""
   totalCount: Int!
-}
-
-"""Sort input for Space connections"""
-input SpaceSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by updatedAt"""
-  updatedAt: SortDirection
-
-  """Sort by name"""
-  name: SortDirection
-
-  """Sort by slug"""
-  slug: SortDirection
 }
 
 """An edge in a SpaceUser connection."""
@@ -223,30 +196,6 @@ type SpaceUserConnection {
   totalCount: Int!
 }
 
-"""Sort input for SpaceUser connections"""
-input SpaceUserSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by updatedAt"""
-  updatedAt: SortDirection
-
-  """Sort by spaceId"""
-  spaceId: SortDirection
-
-  """Sort by userId"""
-  userId: SortDirection
-
-  """Sort by role"""
-  role: SortDirection
-
-  """Sort by invitedBy"""
-  invitedBy: SortDirection
-}
-
 """An edge in a User connection."""
 type UserEdge {
   """The User at the end of the edge."""
@@ -266,39 +215,6 @@ type UserConnection {
 
   """The total count of items in the connection."""
   totalCount: Int!
-}
-
-"""Sort input for User connections"""
-input UserSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by updatedAt"""
-  updatedAt: SortDirection
-
-  """Sort by email"""
-  email: SortDirection
-
-  """Sort by emailVerified"""
-  emailVerified: SortDirection
-
-  """Sort by password"""
-  password: SortDirection
-
-  """Sort by name"""
-  name: SortDirection
-
-  """Sort by image"""
-  image: SortDirection
-
-  """Sort by lastSeen"""
-  lastSeen: SortDirection
-
-  """Sort by preferences"""
-  preferences: SortDirection
 }
 
 """An edge in a List connection."""
@@ -322,33 +238,6 @@ type ListConnection {
   totalCount: Int!
 }
 
-"""Sort input for List connections"""
-input ListSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by updatedAt"""
-  updatedAt: SortDirection
-
-  """Sort by spaceId"""
-  spaceId: SortDirection
-
-  """Sort by ownerId"""
-  ownerId: SortDirection
-
-  """Sort by title"""
-  title: SortDirection
-
-  """Sort by private"""
-  private: SortDirection
-
-  """Sort by color"""
-  color: SortDirection
-}
-
 """An edge in a Todo connection."""
 type TodoEdge {
   """The Todo at the end of the edge."""
@@ -368,39 +257,6 @@ type TodoConnection {
 
   """The total count of items in the connection."""
   totalCount: Int!
-}
-
-"""Sort input for Todo connections"""
-input TodoSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by updatedAt"""
-  updatedAt: SortDirection
-
-  """Sort by ownerId"""
-  ownerId: SortDirection
-
-  """Sort by listId"""
-  listId: SortDirection
-
-  """Sort by title"""
-  title: SortDirection
-
-  """Sort by completedAt"""
-  completedAt: SortDirection
-
-  """Sort by description"""
-  description: SortDirection
-
-  """Sort by priority"""
-  priority: SortDirection
-
-  """Sort by dueDate"""
-  dueDate: SortDirection
 }
 
 """An edge in a ActivityLog connection."""
@@ -424,30 +280,6 @@ type ActivityLogConnection {
   totalCount: Int!
 }
 
-"""Sort input for ActivityLog connections"""
-input ActivityLogSortInput {
-  """Sort by id"""
-  id: SortDirection
-
-  """Sort by createdAt"""
-  createdAt: SortDirection
-
-  """Sort by userId"""
-  userId: SortDirection
-
-  """Sort by action"""
-  action: SortDirection
-
-  """Sort by entityId"""
-  entityId: SortDirection
-
-  """Sort by entityType"""
-  entityType: SortDirection
-
-  """Sort by metadata"""
-  metadata: SortDirection
-}
-
 """An edge in a Tag connection."""
 type TagEdge {
   """The Tag at the end of the edge."""
@@ -469,14 +301,140 @@ type TagConnection {
   totalCount: Int!
 }
 
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""Sort input for Space connections"""
+input SpaceSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for SpaceUser connections"""
+input SpaceUserSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for User connections"""
+input UserSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for List connections"""
+input ListSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Todo connections"""
+input TodoSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by priority"""
+  priority: SortDirection
+
+  """Sort by dueDate"""
+  dueDate: SortDirection
+}
+
+"""Sort input for ActivityLog connections"""
+input ActivityLogSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
 """Sort input for Tag connections"""
 input TagSortInput {
-  """Sort by id"""
-  id: SortDirection
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
 
-  """Sort by name"""
-  name: SortDirection
+"""Input type for numeric filtering operations"""
+input NumericFilterInput {
+  """Equal to the given value"""
+  equals: Float
 
-  """Sort by color"""
-  color: SortDirection
+  """Not equal to the given value"""
+  not: Float
+
+  """Greater than the given value"""
+  gt: Float
+
+  """Less than the given value"""
+  lt: Float
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
+}
+
+"""Input type for string filtering operations"""
+input StringFilterInput {
+  """Equal to the given value"""
+  equals: String
+
+  """Not equal to the given value"""
+  not: String
+
+  """In the given list of values"""
+  in: [String!]
+
+  """Not in the given list of values"""
+  notIn: [String!]
+
+  """Contains the given value"""
+  contains: String
+
+  """Starts with the given value"""
+  startsWith: String
+
+  """Ends with the given value"""
+  endsWith: String
+}
+
+"""Input type for boolean filtering operations"""
+input BooleanFilterInput {
+  """Equal to the given value"""
+  equals: Boolean
+
+  """Not equal to the given value"""
+  not: Boolean
+}
+
+"""Filter input type for Todo"""
+input TodoFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by title"""
+  title: StringFilterInput
+
+  """Filter by priority"""
+  priority: NumericFilterInput
+
+  """Logical AND operation"""
+  AND: [TodoFilterInput!]
+
+  """Logical OR operation"""
+  OR: [TodoFilterInput!]
 }

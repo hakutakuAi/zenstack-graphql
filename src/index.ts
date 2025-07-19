@@ -2,38 +2,54 @@ export * from '@generators'
 export * from '@utils'
 
 import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
-import type { DMMF } from '@zenstackhq/sdk/prisma'
-import type { Model } from '@zenstackhq/sdk/ast'
+import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
 import { SchemaComposer } from 'graphql-compose'
 
 import { CoreGenerator } from '@generators'
 import { ErrorHandler, PluginError, ErrorCategory, ErrorSeverity, validateOptions, PluginOptions, AttributeProcessor, TypeMapper } from '@utils'
 import { TypeFormatter } from '@utils/schema'
-
-import fileWriter from './utils/io/file-writer'
+import fileWriter from '@/utils/io/file-writer'
+import { UnifiedRegistry } from '@/utils/registry/unified-registry'
 
 export const name = 'ZenStack GraphQL'
 export const description = 'Generates GraphQL schemas'
 
-export default async function run(model: Model, options: SdkPluginOptions, dmmf: DMMF.Document) {
+export default async function run(model: Model, options: SdkPluginOptions) {
 	const errorHandler = ErrorHandler.getInstance()
+
+	if (!model) {
+		throw errorHandler.createError(
+			'Model is required',
+			ErrorCategory.VALIDATION,
+			ErrorSeverity.FATAL,
+			{
+				model: model ? 'Provided' : 'Missing',
+			},
+			['Ensure that the model is correctly passed to the plugin.', 'Check your ZModel schema for completeness.']
+		)
+	}
 
 	try {
 		const normalizedOptions = validateOptions(options as PluginOptions, errorHandler)
 		const schemaComposer = new SchemaComposer()
 		const attributeProcessor = new AttributeProcessor()
-		const typeMapper = TypeMapper.createFromDMMF(dmmf)
 		const typeFormatter = TypeFormatter.fromOptions(normalizedOptions.typeNaming, normalizedOptions.fieldNaming)
 
+		const models = model.declarations.filter((x) => isDataModel(x) && !x.isAbstract) as DataModel[]
+		const enums = model.declarations.filter((x) => isEnum(x)) as Enum[]
+		const typeMapper = TypeMapper.createFromModelsAndEnums(models, enums)
+		const registry = new UnifiedRegistry(schemaComposer, errorHandler)
+
 		const coreGenerator = new CoreGenerator({
-			model,
 			options: normalizedOptions,
-			dmmf,
 			errorHandler,
 			attributeProcessor,
 			typeMapper,
 			typeFormatter,
 			schemaComposer,
+			models,
+			enums,
+			registry,
 		})
 
 		const result = coreGenerator.generateSchema()

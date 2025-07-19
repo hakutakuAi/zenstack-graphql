@@ -1,32 +1,33 @@
 import { ObjectTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { GeneratorContext, DMMF } from '@types'
+import { GeneratorContext } from '@types'
+import type { DMMF } from '@prisma/generator-helper'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@utils/registry/unified-registry'
 import { Generate, SchemaOp, Validate } from '@utils/error'
+import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface FieldConfig {
 	type: string
-	description?: string
 	resolve?: any
 }
 
 export class ObjectTypeGenerator extends BaseGenerator {
-	private readonly dmmfModels: readonly DMMF.Model[]
+	private models: DataModel[]
 
 	constructor(context: GeneratorContext) {
 		super(context)
-		if (!context.dmmfModels) {
+		if (!context.models) {
 			throw new Error('DMMF models are required for ObjectTypeGenerator')
 		}
-		this.dmmfModels = context.dmmfModels
+		this.models = context.models
 	}
 
 	@Generate({
 		suggestions: ['Check model definitions in your schema', 'Ensure field types are valid GraphQL types', 'Verify model attributes are properly configured'],
 	})
 	generate(): void {
-		this.dmmfModels.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateObjectType(model))
+		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateObjectType(model))
 	}
 
 	getGeneratedObjectTypes(): string[] {
@@ -56,15 +57,15 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	@SchemaOp({
 		suggestions: ['Check model definition structure and content', 'Ensure model name is a valid GraphQL identifier', 'Verify all field types are supported'],
 	})
-	private generateObjectType(dmmfModel: DMMF.Model): void {
-		const typeName = this.getObjectTypeName(dmmfModel)
+	private generateObjectType(model: DataModel): void {
+		const typeName = this.getObjectTypeName(model)
 
 		if (this.hasObjectType(typeName)) {
 			return
 		}
 
-		const fields = this.createObjectFields(dmmfModel)
-		const description = this.getObjectTypeDescription(dmmfModel)
+		const fields = this.createObjectFields(model)
+		const description = this.getObjectTypeDescription(model)
 
 		const objectComposer = this.schemaComposer.createObjectTC({
 			name: typeName,
@@ -75,48 +76,46 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
 	}
 
-	private getObjectTypeName(dmmfModel: DMMF.Model): string {
-		const customName = ValidationUtils.getModelName(dmmfModel, this.attributeProcessor)
-		return this.typeFormatter.formatTypeName(customName || dmmfModel.name)
+	private getObjectTypeName(model: DataModel): string {
+		const customName = ValidationUtils.getModelName(model, this.attributeProcessor)
+		return this.typeFormatter.formatTypeName(customName || model.name)
 	}
 
-	private getObjectTypeDescription(dmmfModel: DMMF.Model): string | undefined {
-		return ValidationUtils.getModelDescription(dmmfModel, this.attributeProcessor)
+	private getObjectTypeDescription(model: DataModel): string | undefined {
+		return ValidationUtils.getModelDescription(model, this.attributeProcessor)
 	}
 
-	private createObjectFields(dmmfModel: DMMF.Model): Record<string, FieldConfig> {
-		return dmmfModel.fields
-			.filter((field) => this.shouldIncludeField(dmmfModel, field))
+	private createObjectFields(model: DataModel): Record<string, FieldConfig> {
+		return model.fields
+			.filter((field) => this.shouldIncludeField(model, field))
 			.reduce((fields, field) => {
-				const fieldName = this.getFieldName(dmmfModel, field)
+				const fieldName = this.getFieldName(model, field)
 				const fieldConfig = this.createFieldConfig(field)
 				return { ...fields, [fieldName]: fieldConfig }
 			}, {})
 	}
 
-	private shouldIncludeField(dmmfModel: DMMF.Model, field: DMMF.Field): boolean {
-		return ValidationUtils.shouldIncludeField(dmmfModel, field, this.attributeProcessor, this.options.includeRelations)
+	private shouldIncludeField(model: DataModel, field: DataModelField): boolean {
+		return ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, this.options.includeRelations)
 	}
 
-	private getFieldName(dmmfModel: DMMF.Model, field: DMMF.Field): string {
-		const customName = ValidationUtils.getFieldName(dmmfModel, field.name, this.attributeProcessor)
+	private getFieldName(model: DataModel, field: DataModelField): string {
+		const customName = ValidationUtils.getFieldName(model, field.name, this.attributeProcessor)
 		return this.typeFormatter.formatFieldName(customName || field.name)
 	}
 
-	private createFieldConfig(field: DMMF.Field): FieldConfig {
+	private createFieldConfig(field: DataModelField): FieldConfig {
 		const graphqlType = this.mapFieldType(field)
-		const description = field.documentation
 
 		return {
 			type: graphqlType,
-			...(description && { description }),
 		}
 	}
 
 	@Validate({
 		suggestions: ['Check if the field type is supported', 'Add custom scalar mapping in options', 'Consider using a different field type'],
 	})
-	private mapFieldType(field: DMMF.Field): string {
+	private mapFieldType(field: DataModelField): string {
 		if (!this.typeMapper) {
 			throw new Error('TypeMapper is not initialized')
 		}

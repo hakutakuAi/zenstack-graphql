@@ -1,5 +1,6 @@
-import type { DMMF } from '@zenstackhq/sdk/prisma'
-import { ScalarTypeKey, SCALAR_TYPES } from '@utils/config/constants'
+import { SCALAR_TYPES } from '@utils/config/constants'
+import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
+import type { DMMF } from '@prisma/generator-helper'
 
 type GraphQLTypeModifiers = {
 	isRequired?: boolean
@@ -7,51 +8,70 @@ type GraphQLTypeModifiers = {
 }
 
 export class TypeMapper {
-	private readonly models: ReadonlyMap<string, DMMF.Model>
-	private readonly enums: ReadonlyMap<string, DMMF.DatamodelEnum>
+	private readonly models: ReadonlyMap<string, DataModel>
+	private readonly enums: ReadonlyMap<string, Enum>
 
-	constructor(dmmfModels: readonly DMMF.Model[], dmmfEnums: readonly DMMF.DatamodelEnum[]) {
-		this.models = new Map(dmmfModels.map((model) => [model.name, model]))
-		this.enums = new Map(dmmfEnums.map((enum_) => [enum_.name, enum_]))
+	constructor(models: DataModel[], enums: Enum[]) {
+		this.models = new Map(models.map((model) => [model.name, model]))
+		this.enums = new Map(enums.map((enum_) => [enum_.name, enum_]))
 	}
 
-	mapFieldType(field: DMMF.Field): string | null {
-		return field.isList ? this.mapListType(field) : this.mapSingleType(field)
+	static createFromModelsAndEnums(models: DataModel[], enums: Enum[]): TypeMapper {
+		return new TypeMapper(models, enums)
 	}
 
-	private mapListType(field: DMMF.Field): string | null {
-		const baseType = this.mapScalarType(field.type)
-		return baseType ? this.applyModifiers(baseType, { isList: true, isRequired: true }) : null
+	mapFieldType(field: DataModelField): string | null {
+		return field.type.array ? this.mapListType(field) : this.mapSingleType(field)
 	}
 
-	private mapSingleType(field: DMMF.Field): string | null {
-		if (field.type in SCALAR_TYPES) {
-			return this.applyModifiers(SCALAR_TYPES[field.type as ScalarTypeKey], { isRequired: field.isRequired })
+	private mapListType(field: DataModelField): string | null {
+		const typeStr = this.getTypeString(field)
+		return typeStr ? this.applyModifiers(typeStr, { isList: true, isRequired: !field.type.optional }) : null
+	}
+
+	private mapSingleType(field: DataModelField): string | null {
+		const typeStr = this.getTypeString(field)
+		if (!typeStr) return null
+
+		return this.applyModifiers(typeStr, { isRequired: !field.type.optional })
+	}
+
+	private getTypeString(field: DataModelField): string | null {
+		if (field.type.type) {
+			if (field.type.type in SCALAR_TYPES) {
+				return SCALAR_TYPES[field.type.type]
+			}
+			return null
 		}
 
-		if (this.isEnumType(field.type)) {
-			return this.applyModifiers(field.type, { isRequired: field.isRequired })
-		}
+		if (field.type.reference) {
+			const refName = field.type.reference.ref?.name || ''
 
-		if (this.isModelType(field.type)) {
-			return this.applyModifiers(field.type, { isRequired: field.isRequired })
+			if (this.isEnumType(refName)) {
+				return refName
+			}
+
+			if (this.isModelType(refName)) {
+				return refName
+			}
 		}
 
 		return null
 	}
 
-	mapScalarType(type: string): string | null {
-		if (type in SCALAR_TYPES) {
-			return SCALAR_TYPES[type as ScalarTypeKey]
+	mapScalarType(typeStr: string): string | null {
+		if (typeStr in SCALAR_TYPES) {
+			return SCALAR_TYPES[typeStr as keyof typeof SCALAR_TYPES]
 		}
 
-		return this.isEnumType(type) ? type : null
+		return this.isEnumType(typeStr) ? typeStr : null
 	}
 
-	getRelationFieldType(field: DMMF.Field): string {
-		return this.applyModifiers(field.type, {
-			isList: field.isList,
-			isRequired: field.isRequired,
+	getRelationFieldType(field: DataModelField): string {
+		const typeStr = field.type.reference?.ref?.name || ''
+		return this.applyModifiers(typeStr, {
+			isList: field.type.array,
+			isRequired: !field.type.optional,
 		})
 	}
 
@@ -67,13 +87,17 @@ export class TypeMapper {
 		return this.models.has(type)
 	}
 
-	isRelationField(field: DMMF.Field): boolean {
-		return field.kind === 'object' && !!field.relationName
+	isRelationField(field: DataModelField): boolean {
+		return !!field.type.reference && this.isModelType(field.type.reference.ref?.name || '')
 	}
 
-	getFieldKind(field: DMMF.Field): 'scalar' | 'object' | 'enum' {
-		if (field.kind === 'object') return 'object'
-		if (this.isEnumType(field.type)) return 'enum'
+	getFieldKind(field: DataModelField): 'scalar' | 'object' | 'enum' {
+		if (this.isRelationField(field)) return 'object'
+
+		if (field.type.reference && this.isEnumType(field.type.reference.ref?.name || '')) {
+			return 'enum'
+		}
+
 		return 'scalar'
 	}
 
@@ -81,9 +105,5 @@ export class TypeMapper {
 		if (!baseType) return ''
 
 		return modifiers.isList ? `[${baseType}!]${modifiers.isRequired ? '!' : ''}` : modifiers.isRequired ? `${baseType}!` : baseType
-	}
-
-	static createFromDMMF(dmmf: DMMF.Document): TypeMapper {
-		return new TypeMapper(dmmf.datamodel.models, dmmf.datamodel.enums)
 	}
 }

@@ -9,11 +9,8 @@ generator js {
 
 plugin graphql {
     provider = '../dist'
-	// from the root of the project (where im running the zenstack generate)
-	// TODO: make this relative to the schema file? would be more convenient
-    output = './example/schema.graphql'
+    output = './schema.graphql'
 }
-
 
 enum SpaceUserRole {
     USER
@@ -128,17 +125,17 @@ model List {
 
 model Todo {
     id          String    @id @default(uuid())
-    createdAt   DateTime  @default(now())
+    createdAt   DateTime  @default(now()) @graphql.sortable() @graphql.filterable()
     updatedAt   DateTime  @updatedAt
     owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
     ownerId     String
     list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
     listId      String
-    title       String    @length(1, 100)
+    title       String    @length(1, 100) @graphql.filterable()
     completedAt DateTime?
     description String?
-    priority    Int       @default(0)
-    dueDate     DateTime?
+    priority    Int       @default(0) @graphql.sortable() @graphql.filterable()
+    dueDate     DateTime? @graphql.sortable()
 
     // require login
     @@deny('all', auth() == null)
