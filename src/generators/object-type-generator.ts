@@ -1,4 +1,3 @@
-import { ObjectTypeComposer } from 'graphql-compose'
 import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'

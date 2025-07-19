@@ -1,4 +1,3 @@
-import { GeneratorFactoryContext } from '@types'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'

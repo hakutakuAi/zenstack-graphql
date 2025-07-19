@@ -13,11 +13,11 @@ export class ValidationUtils {
 			return false
 		}
 
-		return !processor.hasFieldIgnoreAttr(model, field.name)
+		return !processor.processField(model, field.name).isIgnored()
 	}
 
 	static getModelName(model: DataModel, processor: AttributeProcessor): string | undefined {
-		return processor.attr(model, '@@graphql.name').getString('name') || model.name
+		return processor.processModel(model).getString('name') || model.name
 	}
 
 	static getFieldName(model: DataModel, fieldName: string, processor: AttributeProcessor): string | undefined {
@@ -25,7 +25,7 @@ export class ValidationUtils {
 	}
 
 	static getModelDescription(model: DataModel, processor: AttributeProcessor): string | undefined {
-		return processor.attr(model, '@@graphql.description').getString('description')
+		return processor.processModel(model).getString('description')
 	}
 
 	static isFieldSortable(model: DataModel, fieldName: string, processor: AttributeProcessor): boolean {

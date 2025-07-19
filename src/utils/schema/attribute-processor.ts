@@ -102,59 +102,6 @@ export class AttributeProcessor {
 		}
 	}
 
-	getModelName(model: DataModel): string {
-		return this.getModelStringArg(model, '@@graphql.name', 'name') || model.name
-	}
-
-	getModelDescription(model: DataModel): string | undefined {
-		return this.getModelStringArg(model, '@@graphql.description', 'description')
-	}
-
-	hasModelIgnoreAttr(model: DataModel): boolean {
-		return this.modelHasAttribute(model, '@@graphql.ignore')
-	}
-
-	getModelConnectionConfig(model: DataModel): { relay?: boolean; pageSize?: number } {
-		const attr = this.findModelAttribute(model, '@@graphql.connection')
-		return {
-			relay: this.getBooleanAttributeArg(attr, 'relay'),
-			pageSize: this.getNumberAttributeArg(attr, 'pageSize'),
-		}
-	}
-
-	getFieldName(model: DataModel, fieldName: string): string {
-		const field = this.findField(model, fieldName)
-		if (!field) return fieldName
-
-		return this.getFieldStringArg(field, '@graphql.name', 'name') || fieldName
-	}
-
-	getFieldDescription(model: DataModel, fieldName: string): string | undefined {
-		const field = this.findField(model, fieldName)
-		if (!field) return undefined
-
-		return this.getFieldStringArg(field, '@graphql.description', 'description')
-	}
-
-	hasFieldIgnoreAttr(model: DataModel, fieldName: string): boolean {
-		const field = this.findField(model, fieldName)
-		return field ? this.fieldHasAttribute(field, '@graphql.ignore') : false
-	}
-
-	isFieldSortable(model: DataModel, fieldName: string): boolean {
-		const field = this.findField(model, fieldName)
-		return field ? this.fieldHasAttribute(field, '@graphql.sortable') : false
-	}
-
-	isFieldFilterable(model: DataModel, fieldName: string): boolean {
-		const field = this.findField(model, fieldName)
-		return field ? this.fieldHasAttribute(field, '@graphql.filterable') : false
-	}
-
-	private getCacheKey(prefix: string, model: DataModel, suffix: string = ''): string {
-		return `${prefix}:${model.name}:${suffix}`
-	}
-
 	private modelHasAttribute(model: DataModel, attrName: string): boolean {
 		return !!model.attributes?.some((attr) => attr.decl.ref?.name === attrName)
 	}
