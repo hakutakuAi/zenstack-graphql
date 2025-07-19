@@ -1,32 +1,21 @@
-import { GeneratorContext } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
-import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@/utils/registry/registry'
-import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
 export class ConnectionGenerator extends BaseGenerator {
-	private models: DataModel[]
-	private typeFactories: GraphQLTypeFactories
-
-	constructor(context: GeneratorContext) {
-		super(context)
-
-		this.models = context.models
-		this.typeFactories = new GraphQLTypeFactories(this.schemaComposer, this.typeFormatter)
-	}
-
 	protected override skipGeneration(): boolean {
 		return !this.options.connectionTypes
 	}
 
-	generate(): void {
+	generate(): string[] {
 		if (this.skipGeneration()) {
-			return
+			return []
 		}
 
 		this.createCommonTypes()
 		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateConnectionType(model))
+
+		return this.registry.getConnectionTypes()
 	}
 
 	private createCommonTypes(): void {
@@ -48,8 +37,6 @@ export class ConnectionGenerator extends BaseGenerator {
 		}
 
 		if (!this.schemaComposer.has(typeName)) {
-			console.warn(`Base type ${typeName} does not exist in SchemaComposer. Creating a placeholder for connection generation.`)
-
 			this.schemaComposer.createObjectTC({
 				name: typeName,
 				fields: {
@@ -64,25 +51,5 @@ export class ConnectionGenerator extends BaseGenerator {
 
 		const connectionTC = this.typeFactories.createConnectionType(typeName)
 		this.registry.registerType(connectionName, TypeKind.CONNECTION, connectionTC, true)
-	}
-
-	getGeneratedConnectionTypes(): string[] {
-		return this.registry.getConnectionTypes()
-	}
-
-	getGeneratedEdgeTypes(): string[] {
-		return this.registry.getEdgeTypes()
-	}
-
-	hasConnectionType(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.CONNECTION)
-	}
-
-	hasEdgeType(name: string): boolean {
-		return this.registry.hasEdgeType(name)
-	}
-
-	getConnectionTypeForModel(modelName: string): string | undefined {
-		return this.registry.getConnectionTypeForModel(modelName, this.typeFormatter)
 	}
 }

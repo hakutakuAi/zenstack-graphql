@@ -1,9 +1,10 @@
 import { ObjectTypeComposer } from 'graphql-compose'
+import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
-import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@/utils/registry/registry'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
+import { ErrorCategory, logWarning } from '@utils/error'
 
 export interface FieldConfig {
 	type: string
@@ -11,39 +12,9 @@ export interface FieldConfig {
 }
 
 export class ObjectTypeGenerator extends BaseGenerator {
-	private models: DataModel[]
-
-	constructor(context: GeneratorContext) {
-		super(context)
-		this.models = context.models
-	}
-
-	generate(): void {
+	generate(): string[] {
 		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateObjectType(model))
-	}
-
-	getGeneratedObjectTypes(): string[] {
 		return this.registry.getObjectTypes()
-	}
-
-	hasObjectType(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
-	}
-
-	getObjectComposer(name: string): ObjectTypeComposer | undefined {
-		return this.registry.getObjectComposer(name)
-	}
-
-	getObjectTypeFields(typeName: string): string[] {
-		return this.registry.getObjectTypeFields(typeName)
-	}
-
-	hasField(typeName: string, fieldName: string): boolean {
-		return this.registry.hasField(typeName, fieldName)
-	}
-
-	getFieldType(typeName: string, fieldName: string): string | undefined {
-		return this.registry.getFieldType(typeName, fieldName)
 	}
 
 	private generateObjectType(model: DataModel): void {
@@ -53,13 +24,21 @@ export class ObjectTypeGenerator extends BaseGenerator {
 			return
 		}
 
-		const fields = this.createObjectFields(model)
+		const fieldsResult = this.createObjectFields(model)
+		if (fieldsResult.isErr()) {
+			logWarning(`Failed to create fields for model ${model.name}: ${fieldsResult.error}`, ErrorCategory.GENERATION, {
+				modelName: model.name,
+				error: fieldsResult.error,
+			})
+			return
+		}
+
 		const description = this.getObjectTypeDescription(model)
 
 		const objectComposer = this.schemaComposer.createObjectTC({
 			name: typeName,
 			description,
-			fields,
+			fields: fieldsResult.value,
 		})
 
 		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
@@ -69,14 +48,23 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		return ValidationUtils.getModelDescription(model, this.attributeProcessor)
 	}
 
-	private createObjectFields(model: DataModel): Record<string, FieldConfig> {
-		return model.fields
-			.filter((field) => this.shouldIncludeField(model, field))
-			.reduce((fields, field) => {
+	private createObjectFields(model: DataModel): Result<Record<string, FieldConfig>, string> {
+		const fields: Record<string, FieldConfig> = {}
+
+		for (const field of model.fields) {
+			if (this.shouldIncludeField(model, field)) {
 				const fieldName = this.getFieldName(model, field)
-				const fieldConfig = this.createFieldConfig(field)
-				return { ...fields, [fieldName]: fieldConfig }
-			}, {})
+				const fieldConfigResult = this.createFieldConfig(field)
+
+				if (fieldConfigResult.isErr()) {
+					return err(fieldConfigResult.error)
+				}
+
+				fields[fieldName] = fieldConfigResult.value
+			}
+		}
+
+		return ok(fields)
 	}
 
 	protected override shouldIncludeField(model: DataModel, field: DataModelField, includeRelations: boolean = true): boolean {
@@ -87,28 +75,36 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		return this.getFormattedFieldName(model, field)
 	}
 
-	private createFieldConfig(field: DataModelField): FieldConfig {
-		const graphqlType = this.mapFieldType(field)
+	private createFieldConfig(field: DataModelField): Result<FieldConfig, string> {
+		const graphqlTypeResult = this.mapFieldType(field)
 
-		return {
-			type: graphqlType,
+		if (graphqlTypeResult.isErr()) {
+			return err(graphqlTypeResult.error)
 		}
+
+		return ok({
+			type: graphqlTypeResult.value,
+		})
 	}
 
-	private mapFieldType(field: DataModelField): string {
+	private mapFieldType(field: DataModelField): Result<string, string> {
 		if (!this.typeMapper) {
-			throw new Error('TypeMapper is not initialized')
+			return err('TypeMapper is not initialized')
 		}
 
 		if (this.typeMapper.isRelationField(field)) {
-			return this.typeMapper.getRelationFieldType(field)
+			return ok(this.typeMapper.getRelationFieldType(field))
 		}
 
 		const mappedType = this.typeMapper.mapFieldType(field)
 		if (!mappedType) {
-			throw new Error(`Unsupported field type: ${field.type}`)
+			return err(`Unsupported field type: ${field.type}`)
 		}
 
-		return mappedType
+		return ok(mappedType)
+	}
+
+	hasObjectType(name: string): boolean {
+		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
 	}
 }

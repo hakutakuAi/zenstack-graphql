@@ -4,4 +4,4 @@ export * from './schema'
 export * from './io'
 export * from './config'
 
-export * from './generator-factory'
+export * from '../generators/generator-factory'

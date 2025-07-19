@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { ErrorHandler, ErrorCategory, ErrorSeverity } from '@utils/error/error-handler'
+import { Result, ok, err } from 'neverthrow'
+import { ErrorCategory, PluginErrorData, createError } from '@utils/error'
 import { VALID_SCALAR_VALUES, scalarTypesSchema } from './constants'
 
 export type FieldNaming = 'camelCase' | 'snake_case' | 'preserve'
@@ -62,11 +63,11 @@ const optionsSchema = z.object({
 	schemaPath: z.string().optional(),
 })
 
-export function validateOptions(options: PluginOptions = {}, errorHandler = ErrorHandler.getInstance()): NormalizedOptions {
+export function validateOptions(options: PluginOptions = {}): Result<NormalizedOptions, PluginErrorData> {
 	try {
 		const validatedOptions = optionsSchema.parse(options)
 
-		return {
+		return ok({
 			output: validatedOptions.output ?? DEFAULT_OPTIONS.output,
 			scalarTypes: {
 				...DEFAULT_OPTIONS.scalarTypes,
@@ -79,7 +80,7 @@ export function validateOptions(options: PluginOptions = {}, errorHandler = Erro
 			fieldNaming: validatedOptions.fieldNaming ?? DEFAULT_OPTIONS.fieldNaming,
 			typeNaming: validatedOptions.typeNaming ?? DEFAULT_OPTIONS.typeNaming,
 			includeRelations: validatedOptions.includeRelations ?? DEFAULT_OPTIONS.includeRelations,
-		}
+		})
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			const errorMessages = error.issues
@@ -91,10 +92,9 @@ export function validateOptions(options: PluginOptions = {}, errorHandler = Erro
 
 			const suggestions = generateSuggestions(error.issues)
 
-			throw errorHandler.createError(
+			return createError(
 				`Invalid plugin options:\n${errorMessages}`,
 				ErrorCategory.VALIDATION,
-				ErrorSeverity.ERROR,
 				{
 					originalOptions: options,
 					validationErrors: error.issues,
@@ -104,9 +104,11 @@ export function validateOptions(options: PluginOptions = {}, errorHandler = Erro
 			)
 		}
 
-		throw errorHandler.createError(`Error during options validation: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.VALIDATION, ErrorSeverity.ERROR, {
-			originalError: error,
-		})
+		return createError(
+			`Error during options validation: ${error instanceof Error ? error.message : String(error)}`, 
+			ErrorCategory.VALIDATION, 
+			{ originalError: error }
+		)
 	}
 }
 

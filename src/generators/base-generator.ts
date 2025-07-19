@@ -1,5 +1,4 @@
 import { SchemaComposer } from 'graphql-compose'
-import { ErrorHandler } from '@utils/error/error-handler'
 import { NormalizedOptions } from '@utils/config/options-validator'
 import { AttributeProcessor } from '@utils/schema/attribute-processor'
 import { TypeMapper } from '@utils/schema/type-mapper'
@@ -7,28 +6,33 @@ import { TypeFormatter } from '@utils/schema/type-formatter'
 import { Registry } from '@/utils/registry/registry'
 import { GeneratorContext } from '@types'
 import { ValidationUtils } from '@utils/schema/validation'
-import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
+import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
+import { GraphQLTypeFactories } from '@/utils'
 
-export abstract class BaseGenerator {
-	protected readonly registry: Registry
-	protected readonly schemaComposer: SchemaComposer<unknown>
+export abstract class BaseGenerator<T = void> {
 	protected readonly options: NormalizedOptions
-	protected readonly errorHandler: ErrorHandler
+	protected readonly enums: Enum[]
+	protected readonly models: DataModel[]
+	protected readonly schemaComposer: SchemaComposer<unknown>
+	protected readonly registry: Registry
 	protected readonly attributeProcessor: AttributeProcessor
 	protected readonly typeFormatter: TypeFormatter
 	protected readonly typeMapper: TypeMapper
+	protected readonly typeFactories: GraphQLTypeFactories
 
 	constructor(context: GeneratorContext) {
-		this.schemaComposer = context.schemaComposer
 		this.options = context.options
-		this.errorHandler = context.errorHandler
+		this.models = context.models
+		this.enums = context.enums
+		this.schemaComposer = context.schemaComposer
+		this.registry = context.registry
 		this.attributeProcessor = context.attributeProcessor
 		this.typeFormatter = context.typeFormatter
 		this.typeMapper = context.typeMapper
-		this.registry = context.registry
+		this.typeFactories = context.typeFactories
 	}
 
-	abstract generate(): void
+	abstract generate(): T
 
 	protected skipGeneration(): boolean {
 		return false

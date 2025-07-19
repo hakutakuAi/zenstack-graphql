@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { dirname, resolve, isAbsolute } from 'path'
-import { ErrorHandler, ErrorCategory, ErrorSeverity } from '@utils/error/error-handler'
+import { Result, ok, err } from 'neverthrow'
+import { ErrorCategory, PluginErrorData, createError } from '@utils/error'
 
 export interface WriteOptions {
 	createDirectories?: boolean
@@ -10,67 +11,81 @@ export interface WriteOptions {
 }
 
 export interface WriteResult {
-	success: boolean
 	path: string
 	bytesWritten: number
 	backupPath?: string
 }
 
 export class FileWriter {
-	private errorHandler: ErrorHandler
+	async writeSchema(content: string, outputPath: string, options: WriteOptions = {}): Promise<Result<WriteResult, PluginErrorData>> {
+		try {
+			const resolvedPathResult = this.resolvePath(outputPath)
+			if (resolvedPathResult.isErr()) {
+				return err(resolvedPathResult.error)
+			}
+			const resolvedPath = resolvedPathResult.value
+			const finalOptions = this.normalizeOptions(options)
 
-	constructor(errorHandler: ErrorHandler = ErrorHandler.getInstance()) {
-		this.errorHandler = errorHandler
+			const validateResult = await this.validateWriteOperation(resolvedPath, finalOptions)
+			if (validateResult.isErr()) {
+				return err(validateResult.error)
+			}
+
+			let backupPath: string | undefined
+			if (finalOptions.backup && (await this.fileExists(resolvedPath))) {
+				const backupResult = await this.createBackup(resolvedPath)
+				if (backupResult.isErr()) {
+					return err(backupResult.error)
+				}
+				backupPath = backupResult.value
+			}
+
+			if (finalOptions.createDirectories) {
+				const dirResult = await this.ensureDirectoryExists(dirname(resolvedPath))
+				if (dirResult.isErr()) {
+					return err(dirResult.error)
+				}
+			}
+
+			await fs.writeFile(resolvedPath, content, { encoding: finalOptions.encoding })
+			const stats = await fs.stat(resolvedPath)
+
+			return ok({
+				path: resolvedPath,
+				bytesWritten: stats.size,
+				backupPath,
+			})
+		} catch (error) {
+			return createError(`Failed to write file: ${outputPath}`, ErrorCategory.FILE, { path: outputPath, error })
+		}
 	}
 
-	async writeSchema(content: string, outputPath: string, options: WriteOptions = {}): Promise<WriteResult> {
-		const resolvedPath = this.resolvePath(outputPath)
-		const finalOptions = this.normalizeOptions(options)
-
-		await this.validateWriteOperation(resolvedPath, finalOptions)
-
-		let backupPath: string | undefined
-		if (finalOptions.backup && (await this.fileExists(resolvedPath))) {
-			backupPath = await this.createBackup(resolvedPath)
-		}
-
-		if (finalOptions.createDirectories) {
-			await this.ensureDirectoryExists(dirname(resolvedPath))
-		}
-
-		await fs.writeFile(resolvedPath, content, { encoding: finalOptions.encoding })
-		const stats = await fs.stat(resolvedPath)
-
-		return {
-			success: true,
-			path: resolvedPath,
-			bytesWritten: stats.size,
-			backupPath,
-		}
-	}
-
-	async writeMultipleFiles(files: Array<{ path: string; content: string }>, options: WriteOptions = {}): Promise<WriteResult[]> {
+	async writeMultipleFiles(files: Array<{ path: string; content: string }>, options: WriteOptions = {}): Promise<Result<WriteResult[], PluginErrorData>> {
 		const results: WriteResult[] = []
 		const finalOptions = this.normalizeOptions(options)
 
 		for (const file of files) {
-			let result: WriteResult
-			try {
-				result = await this.writeSchema(file.content, file.path, finalOptions)
-			} catch (error) {
-				result = this.createFailedResult(file.path, error)
+			const result = await this.writeSchema(file.content, file.path, finalOptions)
+			if (result.isErr()) {
+				return err(result.error)
 			}
-			results.push(result)
+			results.push(result.value)
 		}
 
-		return results
+		return ok(results)
 	}
 
-	async ensureDirectoryExists(dirPath: string): Promise<void> {
+	async ensureDirectoryExists(dirPath: string): Promise<Result<void, PluginErrorData>> {
 		const directoryExists = await this.directoryExistsInternal(dirPath)
 		if (!directoryExists) {
-			await fs.mkdir(dirPath, { recursive: true })
+			try {
+				await fs.mkdir(dirPath, { recursive: true })
+				return ok(undefined)
+			} catch (error) {
+				return createError(`Failed to create directory: ${dirPath}`, ErrorCategory.FILE, { path: dirPath, error })
+			}
 		}
+		return ok(undefined)
 	}
 
 	private async directoryExistsInternal(dirPath: string): Promise<boolean> {
@@ -91,20 +106,24 @@ export class FileWriter {
 		}
 	}
 
-	async createBackup(filePath: string): Promise<string> {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-		const backupPath = `${filePath}.backup.${timestamp}`
+	async createBackup(filePath: string): Promise<Result<string, PluginErrorData>> {
+		try {
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+			const backupPath = `${filePath}.backup.${timestamp}`
 
-		await fs.copyFile(filePath, backupPath)
-		return backupPath
+			await fs.copyFile(filePath, backupPath)
+			return ok(backupPath)
+		} catch (error) {
+			return createError(`Failed to create backup of file: ${filePath}`, ErrorCategory.FILE, { path: filePath, error })
+		}
 	}
 
-	private resolvePath(outputPath: string): string {
+	private resolvePath(outputPath: string): Result<string, PluginErrorData> {
 		if (!outputPath || outputPath.trim() === '') {
-			throw new Error('Output path cannot be empty')
+			return createError('Output path cannot be empty', ErrorCategory.FILE, { outputPath })
 		}
 
-		return isAbsolute(outputPath) ? outputPath : resolve(process.cwd(), outputPath)
+		return ok(isAbsolute(outputPath) ? outputPath : resolve(process.cwd(), outputPath))
 	}
 
 	private normalizeOptions(options: WriteOptions): Required<WriteOptions> {
@@ -116,11 +135,11 @@ export class FileWriter {
 		}
 	}
 
-	private async validateWriteOperation(filePath: string, options: Required<WriteOptions>): Promise<void> {
+	private async validateWriteOperation(filePath: string, options: Required<WriteOptions>): Promise<Result<void, PluginErrorData>> {
 		const fileExists = await this.fileExists(filePath)
 
 		if (fileExists && !options.overwrite) {
-			throw this.errorHandler.createError(`File already exists and overwrite is disabled: ${filePath}`, ErrorCategory.FILE, ErrorSeverity.ERROR, { filePath, overwrite: options.overwrite }, [
+			return createError(`File already exists and overwrite is disabled: ${filePath}`, ErrorCategory.FILE, { filePath, overwrite: options.overwrite }, [
 				'Set overwrite option to true',
 				'Choose a different output path',
 				'Remove the existing file manually',
@@ -128,74 +147,20 @@ export class FileWriter {
 		}
 
 		const directory = dirname(filePath)
-		const directoryExists = await this.fileExists(directory)
+		const directoryExists = await this.directoryExistsInternal(directory)
 
 		if (!directoryExists && !options.createDirectories) {
-			throw this.errorHandler.createError(
-				`Directory does not exist and createDirectories is disabled: ${directory}`,
-				ErrorCategory.FILE,
-				ErrorSeverity.ERROR,
-				{ directory, createDirectories: options.createDirectories },
-				['Set createDirectories option to true', 'Create the directory manually', 'Use an existing directory path']
-			)
-		}
-	}
-
-	private async attemptFallbackWrite(originalPath: string, content: string, options: Required<WriteOptions>): Promise<WriteResult> {
-		const fallbackPaths = this.generateFallbackPaths(originalPath)
-
-		for (const fallbackPath of fallbackPaths) {
-			const result = await this.tryWriteToPath(fallbackPath, content, options)
-			if (result.success) {
-				return result
-			}
+			return createError(`Directory does not exist and createDirectories is disabled: ${directory}`, ErrorCategory.FILE, { directory, createDirectories: options.createDirectories }, [
+				'Set createDirectories option to true',
+				'Create the directory manually',
+				'Use an existing directory path',
+			])
 		}
 
-		return this.createFailedResult(originalPath, new Error('All fallback attempts failed'))
-	}
-
-	private async tryWriteToPath(filePath: string, content: string, options: Required<WriteOptions>): Promise<WriteResult> {
-		try {
-			if (options.createDirectories) {
-				await this.ensureDirectoryExists(dirname(filePath))
-			}
-
-			await fs.writeFile(filePath, content, { encoding: options.encoding })
-			const stats = await fs.stat(filePath)
-
-			return {
-				success: true,
-				path: filePath,
-				bytesWritten: stats.size,
-			}
-		} catch {
-			return {
-				success: false,
-				path: filePath,
-				bytesWritten: 0,
-			}
-		}
-	}
-
-	private generateFallbackPaths(originalPath: string): string[] {
-		const ext = originalPath.split('.').pop() || ''
-		const baseName = originalPath.replace(`.${ext}`, '')
-		const timestamp = Date.now()
-
-		return [`${baseName}.fallback.${ext}`, `${baseName}.${timestamp}.${ext}`, resolve(process.cwd(), `fallback-output.${ext}`), resolve(process.cwd(), `output-${timestamp}.${ext}`)]
-	}
-
-	private createFailedResult(filePath: string, error: unknown): WriteResult {
-		return {
-			success: false,
-			path: filePath,
-			bytesWritten: 0,
-		}
+		return ok(undefined)
 	}
 
 	static create(): FileWriter {
 		return new FileWriter()
 	}
 }
-
-export default FileWriter.create()

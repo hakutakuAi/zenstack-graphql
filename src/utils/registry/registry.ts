@@ -1,6 +1,7 @@
 import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer, ScalarTypeComposer, InputTypeComposer, InterfaceTypeComposer, UnionTypeComposer } from 'graphql-compose'
 import { printSchema, GraphQLSchema } from 'graphql'
-import { ErrorHandler, ErrorCategory } from '@utils/error/error-handler'
+import { Result, ok } from 'neverthrow'
+import { ErrorCategory, logWarning } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export enum TypeKind {
@@ -38,13 +39,12 @@ export interface TypeInfo {
 export class Registry {
 	private types: Map<string, TypeInfo> = new Map()
 	private readonly schemaComposer: SchemaComposer<unknown>
-	private readonly errorHandler: ErrorHandler
 	private processedRelations: Set<string> = new Set()
 	private edgeTypes: Set<string> = new Set()
+	private warnings: string[] = []
 
-	constructor(schemaComposer: SchemaComposer<unknown>, errorHandler: ErrorHandler = new ErrorHandler()) {
+	constructor(schemaComposer: SchemaComposer<unknown>) {
 		this.schemaComposer = schemaComposer
-		this.errorHandler = errorHandler
 		this.syncFromSchemaComposer()
 	}
 
@@ -75,29 +75,7 @@ export class Registry {
 		if (this.types.has(typeName)) {
 			const existing = this.types.get(typeName)!
 			if (existing.kind !== kind) {
-				this.errorHandler.logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
-					typeName,
-					existingKind: existing.kind,
-					newKind: kind,
-					conflictType: 'TypeKindMismatch',
-				})
-			}
-			return
-		}
-
-		this.types.set(typeName, {
-			name: typeName,
-			kind,
-			description: this.getComposerDescription(composer),
-			composer,
-			isGenerated,
-		})
-
-		this.schemaComposer.set(typeName, composer)
-		if (this.types.has(typeName)) {
-			const existing = this.types.get(typeName)!
-			if (existing.kind !== kind) {
-				this.errorHandler.logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
+				logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
 					typeName,
 					existingKind: existing.kind,
 					newKind: kind,
@@ -141,7 +119,7 @@ export class Registry {
 					return composer as ComposerTypeMap[K]
 				} else {
 					const actualKind = this.determineComposerKind(composer)
-					this.errorHandler.logWarning(`Type ${typeName} exists but is of kind ${actualKind}, not ${kind}`, ErrorCategory.SCHEMA, {
+					logWarning(`Type ${typeName} exists but is of kind ${actualKind}, not ${kind}`, ErrorCategory.SCHEMA, {
 						typeName,
 						requestedKind: kind,
 						actualKind,
@@ -153,7 +131,7 @@ export class Registry {
 		}
 
 		if (typeInfo.kind !== kind) {
-			this.errorHandler.logWarning(`Type ${typeName} is registered with kind ${typeInfo.kind}, not ${kind}`, ErrorCategory.SCHEMA, {
+			logWarning(`Type ${typeName} is registered with kind ${typeInfo.kind}, not ${kind}`, ErrorCategory.SCHEMA, {
 				typeName,
 				requestedKind: kind,
 				actualKind: typeInfo.kind,
@@ -321,7 +299,7 @@ export class Registry {
 		} catch (error) {
 			const errorMessage = `Schema validation failed: ${error instanceof Error ? error.message : String(error)}`
 
-			this.errorHandler.logWarning(errorMessage, ErrorCategory.SCHEMA, {
+			logWarning(errorMessage, ErrorCategory.SCHEMA, {
 				validationError: error,
 				errorType: 'SchemaValidation',
 			})

@@ -2,7 +2,6 @@ import { ScalarTypeComposer, SchemaComposer } from 'graphql-compose'
 import { GraphQLScalarType, GraphQLError } from 'graphql'
 import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
-import { GeneratorContext } from '@types'
 import { TypeKind } from '@/utils/registry/registry'
 
 export interface ScalarConfig {
@@ -14,36 +13,23 @@ export interface ScalarConfig {
 }
 
 export class ScalarGenerator extends BaseGenerator {
-	constructor(context: GeneratorContext) {
-		super(context)
-		if (!context.typeMapper) {
-			throw new Error('TypeMapper is required for ScalarGenerator')
-		}
-	}
-
 	protected override skipGeneration(): boolean {
 		return !this.options.generateScalars
 	}
 
-	generate(): void {
+	generate(): string[] {
 		if (this.skipGeneration()) {
-			return
+			return []
 		}
 
 		this.registerBuiltInScalars()
 		this.registerCustomScalars()
-	}
 
-	getGeneratedScalars(): string[] {
 		return this.registry.getScalarTypes()
 	}
 
 	hasScalar(name: string): boolean {
 		return this.registry.isTypeOfKind(name, TypeKind.SCALAR)
-	}
-
-	getScalarComposer(name: string): ScalarTypeComposer | undefined {
-		return this.registry.getScalarComposer(name)
 	}
 
 	private registerBuiltInScalars(): void {

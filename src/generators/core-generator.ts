@@ -1,12 +1,5 @@
-import { SchemaComposer } from 'graphql-compose'
-import { ErrorHandler } from '@utils/error/error-handler'
-import { AttributeProcessor } from '@utils/schema/attribute-processor'
-import { TypeMapper } from '@utils/schema/type-mapper'
-import { TypeFormatter } from '@utils/schema/type-formatter'
-import { Registry, TypeKind } from '@/utils/registry/registry'
-import { GeneratorContext } from '@types'
-import { NormalizedOptions } from '@utils/config/options-validator'
-import { GeneratorFactory } from '@utils/generator-factory'
+import { GeneratorFactoryContext } from '@types'
+import { GeneratorFactory } from '@/generators/generator-factory'
 import { ScalarGenerator } from '@generators/scalar-generator'
 import { EnumGenerator } from '@generators/enum-generator'
 import { ObjectTypeGenerator } from '@generators/object-type-generator'
@@ -31,84 +24,39 @@ export interface GenerationResult {
 }
 
 export class CoreGenerator {
-	private schemaComposer: SchemaComposer<unknown>
-	private errorHandler: ErrorHandler
-	private attributeProcessor: AttributeProcessor
-	private typeMapper: TypeMapper
-	private typeFormatter: TypeFormatter
-	private options: NormalizedOptions
-	private registry: Registry
 	private warnings: string[] = []
 	private generatorFactory: GeneratorFactory
 
-	constructor(context: GeneratorContext) {
-		this.options = context.options
-		this.errorHandler = context.errorHandler
-		this.attributeProcessor = context.attributeProcessor
-		this.typeMapper = context.typeMapper
-		this.typeFormatter = context.typeFormatter
-		this.schemaComposer = context.schemaComposer
-		this.registry = context.registry
-
-		this.generatorFactory = new GeneratorFactory({
-			schemaComposer: this.schemaComposer,
-			options: this.options,
-			errorHandler: this.errorHandler,
-			attributeProcessor: this.attributeProcessor,
-			typeMapper: this.typeMapper,
-			typeFormatter: this.typeFormatter,
-			models: context.models,
-			enums: context.enums,
-			registry: this.registry,
-		})
+	constructor(context: GeneratorFactoryContext) {
+		this.generatorFactory = new GeneratorFactory(context)
 	}
 
-	generateSchema(): GenerationResult {
-		if (this.options.relayCompliant) {
-			this.registry.addRelayRequirements()
+	generate(): GenerationResult {
+		if (this.generatorFactory.context.options.relayCompliant) {
+			this.generatorFactory.context.registry.addRelayRequirements()
 		}
 
-		const scalarGenerator = this.generatorFactory.create(ScalarGenerator)
-		scalarGenerator.generate()
-		const scalarTypes = scalarGenerator.getGeneratedScalars()
-
-		const enumGenerator = this.generatorFactory.create(EnumGenerator)
-		enumGenerator.generate()
-		const enumTypes = enumGenerator.getGeneratedEnums()
-
-		const objectGenerator = this.generatorFactory.create(ObjectTypeGenerator)
-		objectGenerator.generate()
-		const objectTypes = objectGenerator.getGeneratedObjectTypes()
-
-		const relationGenerator = this.generatorFactory.create(RelationGenerator)
-		relationGenerator.generate()
-		const relationFields = relationGenerator.getGeneratedRelations()
+		const scalarTypes = this.generatorFactory.create(ScalarGenerator).generate()
+		const enumTypes = this.generatorFactory.create(EnumGenerator).generate()
+		const objectTypes = this.generatorFactory.create(ObjectTypeGenerator).generate()
+		const relationFields = this.generatorFactory.create(RelationGenerator).generate()
 
 		let connectionTypes: string[] = []
 		let sortInputTypes: string[] = []
 		let filterInputTypes: string[] = []
 
-		if (this.options.connectionTypes) {
-			const connectionGenerator = this.generatorFactory.create(ConnectionGenerator)
-			connectionGenerator.generate()
-
-			connectionTypes = connectionGenerator.getGeneratedConnectionTypes()
-
-			const sortInputGenerator = this.generatorFactory.create(SortInputGenerator)
-			sortInputGenerator.generate()
-			sortInputTypes = sortInputGenerator.getGeneratedSortInputTypes()
-
-			const filterInputGenerator = this.generatorFactory.create(FilterInputGenerator)
-			filterInputGenerator.generate()
-			filterInputTypes = filterInputGenerator.getGeneratedFilterInputTypes()
+		if (this.generatorFactory.context.options.connectionTypes) {
+			connectionTypes = this.generatorFactory.create(ConnectionGenerator).generate()
+			sortInputTypes = this.generatorFactory.create(SortInputGenerator).generate()
+			filterInputTypes = this.generatorFactory.create(FilterInputGenerator).generate()
 		}
 
-		const validationErrors = this.registry.validateSchema()
+		const validationErrors = this.generatorFactory.context.registry.validateSchema()
 		if (validationErrors.length > 0) {
 			this.warnings.push(...validationErrors)
 		}
 
-		const sdl = this.registry.generateSDL()
+		const sdl = this.generatorFactory.context.registry.generateSDL()
 
 		return {
 			sdl,

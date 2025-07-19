@@ -1,6 +1,5 @@
 import { EnumTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { GeneratorContext } from '@types'
 import { TypeKind } from '@/utils/registry/registry'
 import { Enum } from '@zenstackhq/sdk/ast'
 
@@ -10,46 +9,17 @@ export interface EnumValueConfig {
 }
 
 export class EnumGenerator extends BaseGenerator {
-	private enums: Enum[]
-
-	constructor(context: GeneratorContext) {
-		super(context)
-		if (!context.enums) {
-			throw new Error('Enums are required for EnumGenerator')
-		}
-		this.enums = context.enums
-	}
-
 	protected override skipGeneration(): boolean {
 		return !this.options.generateEnums
 	}
 
-	generate(): void {
+	generate(): string[] {
 		if (this.skipGeneration()) {
-			return
+			return []
 		}
 
 		this.enums.forEach((enumObj) => this.generateEnum(enumObj))
-	}
-
-	getGeneratedEnums(): string[] {
 		return this.registry.getEnumTypes()
-	}
-
-	hasEnum(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.ENUM)
-	}
-
-	getEnumComposer(name: string): EnumTypeComposer | undefined {
-		return this.registry.getEnumComposer(name)
-	}
-
-	getEnumValues(enumName: string): string[] {
-		return this.registry.getEnumValues(enumName)
-	}
-
-	isValidEnumValue(enumName: string, value: string): boolean {
-		return this.registry.isValidEnumValue(enumName, value)
 	}
 
 	private generateEnum(enumObj: Enum): void {
@@ -96,5 +66,9 @@ export class EnumGenerator extends BaseGenerator {
 
 	private getEnumValueNameFromField(field: any): string {
 		return this.typeFormatter.formatEnumValueName(field.name)
+	}
+
+	hasEnum(name: string): boolean {
+		return this.registry.isTypeOfKind(name, TypeKind.ENUM)
 	}
 }

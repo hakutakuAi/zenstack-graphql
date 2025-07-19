@@ -1,35 +1,24 @@
-import { GeneratorContext } from '@types'
+import { GeneratorFactoryContext } from '@types'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
 import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@/utils/registry/registry'
 
 export class FilterInputGenerator extends BaseGenerator {
-	private models: DataModel[]
-
-	constructor(context: GeneratorContext) {
-		super(context)
-		if (!context.models) {
-			throw new Error('Models are required for FilterInputGenerator')
-		}
-		if (!context.typeMapper) {
-			throw new Error('TypeMapper is required for FilterInputGenerator')
-		}
-		this.models = context.models
-	}
-
 	protected override skipGeneration(): boolean {
 		return !this.options.connectionTypes
 	}
 
-	generate(): void {
+	generate(): string[] {
 		if (this.skipGeneration()) {
-			return
+			return []
 		}
 
 		this.createCommonFilterTypes()
 
 		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateFilterInputType(model))
+
+		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
 	}
 
 	private createCommonFilterTypes(): void {
@@ -176,18 +165,5 @@ export class FilterInputGenerator extends BaseGenerator {
 
 	protected override isFilterableField(model: DataModel, field: DataModelField): boolean {
 		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
-	}
-
-	getGeneratedFilterInputTypes(): string[] {
-		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
-	}
-
-	hasFilterInputType(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.INPUT) && name.endsWith('FilterInput')
-	}
-
-	getFilterInputTypeForModel(modelName: string): string | undefined {
-		const filterInputName = `${this.typeFormatter.formatTypeName(modelName)}FilterInput`
-		return this.registry.isTypeOfKind(filterInputName, TypeKind.INPUT) ? filterInputName : undefined
 	}
 }
