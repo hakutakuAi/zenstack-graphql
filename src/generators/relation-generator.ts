@@ -2,7 +2,6 @@ import { ObjectTypeComposer } from 'graphql-compose'
 import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
 import { ErrorCategory, logWarning } from '@utils/error'
-import { ValidationUtils } from '@utils/schema/validation'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface RelationField {
@@ -125,7 +124,9 @@ export class RelationGenerator extends BaseGenerator {
 	}
 
 	private getRelationFieldType(relation: RelationField): string {
-		const typeName = this.typeFormatter.formatTypeName(relation.targetModelName)
+		const targetModel = this.findModelByName(relation.targetModelName)
+
+		const typeName = targetModel ? this.getObjectTypeName(targetModel) : this.typeFormatter.formatTypeName(relation.targetModelName)
 
 		if (relation.isList) {
 			return `[${typeName}!]!`
@@ -154,11 +155,11 @@ export class RelationGenerator extends BaseGenerator {
 	}
 
 	private shouldSkipModel(model: DataModel): boolean {
-		return ValidationUtils.shouldGenerateModel(model, this.attributeProcessor) === false
+		return this.attributeProcessor.model(model).isIgnored()
 	}
 
 	private shouldSkipField(model: DataModel, field: DataModelField): boolean {
-		return ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true) === false
+		return !this.attributeProcessor.field(model, field.name).shouldInclude(true)
 	}
 
 	private findModelByName(name: string): DataModel | undefined {
@@ -174,7 +175,9 @@ export class RelationGenerator extends BaseGenerator {
 	}
 
 	private getObjectTypeComposer(modelName: string): ObjectTypeComposer | undefined {
-		const typeName = this.typeFormatter.formatTypeName(modelName)
+		const model = this.findModelByName(modelName)
+
+		const typeName = model ? this.getObjectTypeName(model) : this.typeFormatter.formatTypeName(modelName)
 
 		if (this.schemaComposer.has(typeName)) {
 			const composer = this.schemaComposer.get(typeName)

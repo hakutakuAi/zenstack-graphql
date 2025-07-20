@@ -1,6 +1,6 @@
+import { ObjectTypeComposer } from 'graphql-compose'
 import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
-import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@/utils/registry/registry'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { ErrorCategory, logWarning } from '@utils/error'
@@ -14,6 +14,10 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	generate(): string[] {
 		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateObjectType(model))
 		return this.registry.getObjectTypes()
+	}
+
+	hasObjectType(name: string): boolean {
+		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
 	}
 
 	private generateObjectType(model: DataModel): void {
@@ -33,7 +37,7 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		}
 
 		const description = this.getObjectTypeDescription(model)
-
+		
 		const objectComposer = this.schemaComposer.createObjectTC({
 			name: typeName,
 			description,
@@ -44,7 +48,7 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	}
 
 	private getObjectTypeDescription(model: DataModel): string | undefined {
-		return ValidationUtils.getModelDescription(model, this.attributeProcessor)
+		return this.attributeProcessor.model(model).description()
 	}
 
 	private createObjectFields(model: DataModel): Result<Record<string, FieldConfig>, string> {
@@ -66,8 +70,8 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		return ok(fields)
 	}
 
-	protected override shouldIncludeField(model: DataModel, field: DataModelField, includeRelations: boolean = true): boolean {
-		return ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, this.options.includeRelations)
+	protected override shouldIncludeField(model: DataModel, field: DataModelField): boolean {
+		return this.attributeProcessor.field(model, field.name).shouldInclude(this.options.includeRelations)
 	}
 
 	private getFieldName(model: DataModel, field: DataModelField): string {
@@ -81,8 +85,16 @@ export class ObjectTypeGenerator extends BaseGenerator {
 			return err(graphqlTypeResult.error)
 		}
 
+		const model = this.models.find((m) => m.fields.includes(field))
+		if (!model) {
+			return err(`Could not find model for field ${field.name}`)
+		}
+
+		const description = this.attributeProcessor.field(model, field.name).description()
+
 		return ok({
 			type: graphqlTypeResult.value,
+			description,
 		})
 	}
 
@@ -101,9 +113,5 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		}
 
 		return ok(mappedType)
-	}
-
-	hasObjectType(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
 	}
 }

@@ -1,0 +1,65 @@
+datasource db {
+    provider = 'postgresql'
+    url = env('DATABASE_URL')
+}
+
+generator js {
+    provider = 'prisma-client-js'
+}
+
+// Custom configuration to demonstrate snake_case field naming
+plugin graphql {
+    provider = '../../dist'
+    output = './schema.graphql'
+    fieldNaming = 'snake_case'  // Use snake_case for field names
+    typeNaming = 'PascalCase'   // Keep PascalCase for type names
+}
+
+// Model with mixed case fields to demonstrate snake_case conversion
+model UserAccount {
+    id              String         @id @default(uuid())
+    firstName       String         // Will become first_name in GraphQL
+    lastName        String         // Will become last_name in GraphQL
+    emailAddress    String         @unique // Will become email_address in GraphQL
+    createdAt       DateTime       @default(now()) 
+    lastLoginTime   DateTime?      // Will become last_login_time in GraphQL
+    profileSettings Json?          // Will become profile_settings in GraphQL
+    isActive        Boolean        @default(true) // Will become is_active in GraphQL
+    userPosts       BlogPost[]     // Will become user_posts in GraphQL
+    
+    // A field with custom name that overrides the snake_case convention
+    phoneNumber     String?        @graphql.name(name: "contact_phone")
+}
+
+// Model with custom name that overrides the PascalCase convention
+model BlogPost {
+    id          String       @id @default(uuid())
+    title       String       // Will become title in GraphQL (already snake_case)
+    content     String       // Will become content in GraphQL (already snake_case)
+    author      UserAccount  @relation(fields: [authorId], references: [id])
+    authorId    String       // Will become author_id in GraphQL
+    publishDate DateTime     @default(now()) // Will become publish_date in GraphQL
+    tags        String[]     // Will become tags in GraphQL
+    
+    @@graphql.name(name: "Article")
+}
+
+// Enum with custom value mappings
+enum PostStatus {
+    DRAFT
+    PUBLISHED
+    ARCHIVED
+    
+    @@graphql.name(name: "ContentStatus")
+}
+
+// Model with custom field descriptions
+model Comment {
+    id          String    @id @default(uuid())
+    content     String    @graphql.description(description: "The comment text content")
+    postId      String    // Will become post_id in GraphQL
+    authorName  String    // Will become author_name in GraphQL
+    createdAt   DateTime  @default(now())
+    
+    @@graphql.description(description: "User comments on blog posts")
+}

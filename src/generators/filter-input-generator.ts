@@ -1,6 +1,5 @@
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
-import { ValidationUtils } from '@utils/schema/validation'
 import { TypeKind } from '@/utils/registry/registry'
 
 export class FilterInputGenerator extends BaseGenerator {
@@ -15,7 +14,7 @@ export class FilterInputGenerator extends BaseGenerator {
 
 		this.createCommonFilterTypes()
 
-		this.models.filter((model) => ValidationUtils.shouldGenerateModel(model, this.attributeProcessor)).forEach((model) => this.generateFilterInputType(model))
+		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateFilterInputType(model))
 
 		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
 	}
@@ -119,13 +118,15 @@ export class FilterInputGenerator extends BaseGenerator {
 
 				let filterType: string
 
-				if (ValidationUtils.isRangeFilterableType(field)) {
+				const fieldProcessor = this.attributeProcessor.field(model, field.name)
+
+				if (fieldProcessor.isRangeFilterableType()) {
 					if (field.type.type === 'DateTime') {
 						filterType = 'DateTimeFilterInput'
 					} else {
 						filterType = 'NumericFilterInput'
 					}
-				} else if (ValidationUtils.isStringSearchableType(field)) {
+				} else if (fieldProcessor.isStringSearchableType()) {
 					filterType = 'StringFilterInput'
 				} else if (field.type.type === 'Boolean') {
 					filterType = 'BooleanFilterInput'
@@ -163,6 +164,7 @@ export class FilterInputGenerator extends BaseGenerator {
 	}
 
 	protected override isFilterableField(model: DataModel, field: DataModelField): boolean {
-		return ValidationUtils.isFieldFilterable(model, field.name, this.attributeProcessor) && ValidationUtils.shouldIncludeField(model, field, this.attributeProcessor, true)
+		const fieldProcessor = this.attributeProcessor.field(model, field.name)
+		return fieldProcessor.isFilterable() && fieldProcessor.shouldInclude(true)
 	}
 }

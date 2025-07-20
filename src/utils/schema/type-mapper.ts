@@ -1,5 +1,6 @@
 import { SCALAR_TYPES } from '@utils/config/constants'
 import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
+import { SchemaProcessor } from './schema-processor'
 
 export enum FieldTypeCategory {
 	SCALAR = 'scalar',
@@ -9,11 +10,23 @@ export enum FieldTypeCategory {
 
 export class TypeMapper {
 	private readonly modelMap: ReadonlyMap<string, DataModel>
+	private readonly customModelNameMap: Map<string, string>
 	private readonly enumMap: ReadonlyMap<string, Enum>
+	private readonly schemaProcessor: SchemaProcessor
 
 	constructor(models: DataModel[], enums: Enum[]) {
 		this.modelMap = new Map(models.map((model) => [model.name, model]))
 		this.enumMap = new Map(enums.map((enum_) => [enum_.name, enum_]))
+		this.customModelNameMap = new Map()
+		this.schemaProcessor = new SchemaProcessor()
+
+		for (const model of models) {
+			const processor = this.schemaProcessor.model(model)
+			const customName = processor.name()
+			if (customName !== model.name) {
+				this.customModelNameMap.set(model.name, customName)
+			}
+		}
 	}
 
 	static createFromModelsAndEnums(models: DataModel[], enums: Enum[]): TypeMapper {
@@ -40,6 +53,9 @@ export class TypeMapper {
 			}
 
 			if (this.isModelType(refName)) {
+				if (this.customModelNameMap.has(refName)) {
+					return this.customModelNameMap.get(refName)!
+				}
 				return refName
 			}
 		}
@@ -56,7 +72,12 @@ export class TypeMapper {
 	}
 
 	getRelationFieldType(field: DataModelField): string {
-		const typeStr = field.type.reference?.ref?.name || ''
+		let typeStr = field.type.reference?.ref?.name || ''
+
+		if (this.customModelNameMap.has(typeStr)) {
+			typeStr = this.customModelNameMap.get(typeStr)!
+		}
+
 		return this.formatGraphQLType(typeStr, field.type.array, !field.type.optional)
 	}
 
@@ -79,7 +100,17 @@ export class TypeMapper {
 	}
 
 	isModelType(type: string): boolean {
-		return this.modelMap.has(type)
+		if (this.modelMap.has(type)) {
+			return true
+		}
+
+		for (const [, customName] of this.customModelNameMap.entries()) {
+			if (customName === type) {
+				return true
+			}
+		}
+
+		return false
 	}
 
 	isRelationField(field: DataModelField): boolean {

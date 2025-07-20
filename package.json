@@ -3,7 +3,15 @@
 	"module": "src/index.ts",
 	"scripts": {
 		"build": "rm -rf dist && tsc && tsc-alias && cp ./src/plugin.zmodel ./dist/plugin.zmodel ",
-		"generate-example": "bun run build && cd ./example && zenstack generate && cd .."
+		"generate:basic": "cd ./examples/basic && zenstack generate",
+		"generate:full": "cd ./examples/full-features && zenstack generate",
+		"generate:custom": "cd ./examples/custom-naming && zenstack generate",
+		"generate:all": "bun run generate:basic && bun run generate:full && bun run generate:custom",
+		"test:basic": "cd ./examples/basic && bun test",
+		"test:full": "cd ./examples/full-features && bun test",
+		"test:custom": "cd ./examples/custom-naming && bun test",
+		"test:all": "cd ./examples && bun test",
+		"e2e": "bun run build && bun generate:all && bun test:all"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.18",

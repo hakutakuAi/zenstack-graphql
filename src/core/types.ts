@@ -1,7 +1,7 @@
 import { SchemaComposer } from 'graphql-compose'
 import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 import { NormalizedOptions } from '@utils/config/options-validator'
-import { AttributeProcessor, GraphQLTypeFactories, Registry, TypeFormatter, TypeMapper } from '@/utils'
+import { SchemaProcessor, GraphQLTypeFactories, Registry, TypeFormatter, TypeMapper } from '@/utils'
 
 export type ComposerType = ReturnType<SchemaComposer['get']>
 
@@ -14,7 +14,7 @@ export interface GeneratorFactoryContext {
 export interface GeneratorContext extends GeneratorFactoryContext {
 	schemaComposer: SchemaComposer<unknown>
 	registry: Registry
-	attributeProcessor: AttributeProcessor
+	attributeProcessor: SchemaProcessor
 	typeFormatter: TypeFormatter
 	typeMapper: TypeMapper
 	typeFactories: GraphQLTypeFactories

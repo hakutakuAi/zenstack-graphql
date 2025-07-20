@@ -1,0 +1,259 @@
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+type UserAccount {
+  id: String!
+  firstName: String!
+  lastName: String!
+  emailAddress: String!
+  createdAt: DateTime!
+  lastLoginTime: DateTime
+  profileSettings: JSON
+  isActive: Boolean!
+  userPosts: [Article!]!
+  contactPhone: String
+}
+
+type Article {
+  id: String!
+  title: String!
+  content: String!
+  author: UserAccount!
+  authorId: String!
+  publishDate: DateTime!
+  tags: [String!]!
+}
+
+"""User comments on blog posts"""
+type Comment {
+  id: String!
+
+  """The comment text content"""
+  content: String!
+  postId: String!
+  authorName: String!
+  createdAt: DateTime!
+}
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""Pagination input for forward pagination"""
+input ForwardPaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+}
+
+"""Pagination input for backward pagination"""
+input BackwardPaginationInput {
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Combined pagination input"""
+input PaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""An edge in a UserAccount connection."""
+type UserAccountEdge {
+  """The UserAccount at the end of the edge."""
+  node: UserAccount!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of UserAccount items."""
+type UserAccountConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of UserAccount edges."""
+  edges: [UserAccountEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Article connection."""
+type ArticleEdge {
+  """The Article at the end of the edge."""
+  node: Article!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Article items."""
+type ArticleConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Article edges."""
+  edges: [ArticleEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Comment connection."""
+type CommentEdge {
+  """The Comment at the end of the edge."""
+  node: Comment!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Comment items."""
+type CommentConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Comment edges."""
+  edges: [CommentEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""Sort input for UserAccount connections"""
+input UserAccountSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Article connections"""
+input ArticleSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Comment connections"""
+input CommentSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Input type for numeric filtering operations"""
+input NumericFilterInput {
+  """Equal to the given value"""
+  equals: Float
+
+  """Not equal to the given value"""
+  not: Float
+
+  """Greater than the given value"""
+  gt: Float
+
+  """Less than the given value"""
+  lt: Float
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
+}
+
+"""Input type for string filtering operations"""
+input StringFilterInput {
+  """Equal to the given value"""
+  equals: String
+
+  """Not equal to the given value"""
+  not: String
+
+  """In the given list of values"""
+  in: [String!]
+
+  """Not in the given list of values"""
+  notIn: [String!]
+
+  """Contains the given value"""
+  contains: String
+
+  """Starts with the given value"""
+  startsWith: String
+
+  """Ends with the given value"""
+  endsWith: String
+}
+
+"""Input type for boolean filtering operations"""
+input BooleanFilterInput {
+  """Equal to the given value"""
+  equals: Boolean
+
+  """Not equal to the given value"""
+  not: Boolean
+}

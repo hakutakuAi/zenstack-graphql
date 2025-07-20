@@ -37,8 +37,10 @@ export class ConnectionGenerator extends BaseGenerator {
 		}
 
 		if (!this.schemaComposer.has(typeName)) {
+			const description = this.attributeProcessor.model(model).description()
 			this.schemaComposer.createObjectTC({
 				name: typeName,
+				description,
 				fields: {
 					id: 'ID!',
 				},

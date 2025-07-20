@@ -1,0 +1,466 @@
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+"""/// Role levels for system users"""
+enum UserRole {
+  ADMIN
+  USER
+  GUEST
+}
+
+"""A product available for purchase"""
+type Merchandise {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  description: String
+  price: Float!
+  inventory: Int!
+  categories: [Category!]!
+  reviews: [Review!]!
+  isActive: Boolean!
+}
+
+type Category {
+  id: String!
+  name: String!
+  products: [Merchandise!]!
+  parent: Category
+  parentId: String
+  children: [Category!]!
+}
+
+type Review {
+  id: String!
+  createdAt: DateTime!
+  product: Merchandise!
+  productId: String!
+  reviewer: String!
+  rating: Int!
+
+  """User feedback"""
+  comment: String
+  isVerified: Boolean!
+}
+
+type User {
+  id: String!
+  email: String!
+  name: String
+  role: UserRole!
+  profile: Profile
+  orders: [Order!]!
+}
+
+type Profile {
+  id: String!
+  userId: String!
+  user: User!
+  bio: String
+  profilePicture: String
+}
+
+type Order {
+  id: String!
+  createdAt: DateTime!
+  user: User!
+  userId: String!
+  status: String!
+  items: [OrderItem!]!
+  totalAmount: Float!
+}
+
+type OrderItem {
+  id: String!
+  order: Order!
+  orderId: String!
+  productId: String!
+  quantity: Int!
+  price: Float!
+}
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""Pagination input for forward pagination"""
+input ForwardPaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+}
+
+"""Pagination input for backward pagination"""
+input BackwardPaginationInput {
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Combined pagination input"""
+input PaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""An edge in a Merchandise connection."""
+type MerchandiseEdge {
+  """The Merchandise at the end of the edge."""
+  node: Merchandise!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Merchandise items."""
+type MerchandiseConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Merchandise edges."""
+  edges: [MerchandiseEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Category connection."""
+type CategoryEdge {
+  """The Category at the end of the edge."""
+  node: Category!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Category items."""
+type CategoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Category edges."""
+  edges: [CategoryEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Review connection."""
+type ReviewEdge {
+  """The Review at the end of the edge."""
+  node: Review!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Review items."""
+type ReviewConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Review edges."""
+  edges: [ReviewEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a User connection."""
+type UserEdge {
+  """The User at the end of the edge."""
+  node: User!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of User items."""
+type UserConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of User edges."""
+  edges: [UserEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Profile connection."""
+type ProfileEdge {
+  """The Profile at the end of the edge."""
+  node: Profile!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Profile items."""
+type ProfileConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Profile edges."""
+  edges: [ProfileEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Order connection."""
+type OrderEdge {
+  """The Order at the end of the edge."""
+  node: Order!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Order items."""
+type OrderConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Order edges."""
+  edges: [OrderEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a OrderItem connection."""
+type OrderItemEdge {
+  """The OrderItem at the end of the edge."""
+  node: OrderItem!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of OrderItem items."""
+type OrderItemConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of OrderItem edges."""
+  edges: [OrderItemEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""Sort input for Merchandise connections"""
+input MerchandiseSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by price"""
+  price: SortDirection
+}
+
+"""Sort input for Category connections"""
+input CategorySortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Review connections"""
+input ReviewSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by rating"""
+  rating: SortDirection
+}
+
+"""Sort input for User connections"""
+input UserSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Profile connections"""
+input ProfileSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Order connections"""
+input OrderSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by totalAmount"""
+  totalAmount: SortDirection
+}
+
+"""Sort input for OrderItem connections"""
+input OrderItemSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Input type for numeric filtering operations"""
+input NumericFilterInput {
+  """Equal to the given value"""
+  equals: Float
+
+  """Not equal to the given value"""
+  not: Float
+
+  """Greater than the given value"""
+  gt: Float
+
+  """Less than the given value"""
+  lt: Float
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
+}
+
+"""Input type for string filtering operations"""
+input StringFilterInput {
+  """Equal to the given value"""
+  equals: String
+
+  """Not equal to the given value"""
+  not: String
+
+  """In the given list of values"""
+  in: [String!]
+
+  """Not in the given list of values"""
+  notIn: [String!]
+
+  """Contains the given value"""
+  contains: String
+
+  """Starts with the given value"""
+  startsWith: String
+
+  """Ends with the given value"""
+  endsWith: String
+}
+
+"""Input type for boolean filtering operations"""
+input BooleanFilterInput {
+  """Equal to the given value"""
+  equals: Boolean
+
+  """Not equal to the given value"""
+  not: Boolean
+}
+
+"""Filter input type for Merchandise"""
+input MerchandiseFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [MerchandiseFilterInput!]
+
+  """Logical OR operation"""
+  OR: [MerchandiseFilterInput!]
+}
+
+"""Filter input type for Category"""
+input CategoryFilterInput {
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [CategoryFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CategoryFilterInput!]
+}
+
+"""Filter input type for Review"""
+input ReviewFilterInput {
+  """Filter by rating"""
+  rating: NumericFilterInput
+
+  """Logical AND operation"""
+  AND: [ReviewFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ReviewFilterInput!]
+}
+
+"""Filter input type for Order"""
+input OrderFilterInput {
+  """Filter by status"""
+  status: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [OrderFilterInput!]
+
+  """Logical OR operation"""
+  OR: [OrderFilterInput!]
+}

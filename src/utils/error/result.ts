@@ -17,6 +17,28 @@ export interface PluginErrorData {
 	suggestions?: string[]
 }
 
+export class PluginError extends Error {
+	public readonly category: ErrorCategory
+	public readonly context?: Record<string, unknown>
+	public readonly suggestions?: string[]
+	public readonly isPluginError = true
+
+	constructor(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]) {
+		const formattedMessage = formatErrorMessage({
+			message,
+			category,
+			context,
+			suggestions,
+		})
+
+		super(formattedMessage)
+		this.name = 'PluginError'
+		this.category = category
+		this.context = context
+		this.suggestions = suggestions
+	}
+}
+
 export function formatErrorMessage(errorData: PluginErrorData): string {
 	let formattedMessage = `[${errorData.category}] ${errorData.message}`
 

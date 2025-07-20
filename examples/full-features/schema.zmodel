@@ -1,0 +1,119 @@
+datasource db {
+    provider = 'postgresql'
+    url = env('DATABASE_URL')
+}
+
+generator js {
+    provider = 'prisma-client-js'
+}
+
+plugin graphql {
+    provider = '../../dist'
+    output = './schema.graphql'
+    connectionTypes = true
+    relayCompliant = true
+    generateEnums = true
+    generateScalars = true
+    fieldNaming = 'camelCase'
+    typeNaming = 'PascalCase'
+}
+
+// Example of custom enum description
+/// Role levels for system users
+enum UserRole {
+    ADMIN
+    USER
+    GUEST
+}
+
+// Example of ignoring a model completely from GraphQL schema
+model InternalConfig {
+    id        Int      @id @default(autoincrement())
+    key       String   @unique
+    value     String
+    sensitive Boolean  @default(true)
+
+    @@graphql.ignore
+}
+
+// Example of custom model name and description
+model Product {
+    id          String       @id @default(uuid())
+    createdAt   DateTime     @default(now()) @graphql.sortable @graphql.filterable
+    updatedAt   DateTime     @updatedAt
+    name        String       @graphql.filterable
+    description String?
+    price       Float        @graphql.sortable
+    inventory   Int          @default(0)
+    categories  Category[]
+    reviews     Review[]
+    isActive    Boolean      @default(true)
+
+    // Custom model name and description
+    @@graphql.name(name: "Merchandise")
+    @@graphql.description(description: "A product available for purchase")
+    @@graphql.connection(relay: true, pageSize: 10)
+}
+
+// Example of a standard model with sortable/filterable fields
+model Category {
+    id        String    @id @default(uuid())
+    name      String    @graphql.filterable
+    products  Product[]
+    parent    Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+    parentId  String?
+    children  Category[] @relation("CategoryHierarchy")
+}
+
+// Example of a model with custom field names
+model Review {
+    id            String    @id @default(uuid())
+    createdAt     DateTime  @default(now()) @graphql.sortable
+    product       Product   @relation(fields: [productId], references: [id])
+    productId     String
+    authorName    String    @graphql.name(name: "reviewer") // Custom field name
+    rating        Int       @graphql.sortable @graphql.filterable
+    comment       String?   @graphql.description(description: "User feedback") // Field description
+    isVerified    Boolean   @default(false)
+}
+
+// Example of a model with complex relations
+model User {
+    id        String    @id @default(uuid())
+    email     String    @unique
+    name      String?
+    role      UserRole  @default(USER)
+    profile   Profile?
+    orders    Order[]
+}
+
+// Example of one-to-one relation
+model Profile {
+    id          String    @id @default(uuid())
+    userId      String    @unique
+    user        User      @relation(fields: [userId], references: [id])
+    bio         String?
+    avatarUrl   String?   @graphql.name(name: "profilePicture") // Custom field name
+    preferences Json?     @graphql.ignore // Ignored field
+}
+
+// Example of a model with many-to-many relation
+model Order {
+    id          String    @id @default(uuid())
+    createdAt   DateTime  @default(now()) @graphql.sortable
+    user        User      @relation(fields: [userId], references: [id])
+    userId      String
+    status      String    @graphql.filterable
+    items       OrderItem[]
+    totalAmount Float     @graphql.sortable
+}
+
+// Example of a join model
+model OrderItem {
+    id        String    @id @default(uuid())
+    order     Order     @relation(fields: [orderId], references: [id])
+    orderId   String
+    productId String    
+    quantity  Int
+    price     Float
+}

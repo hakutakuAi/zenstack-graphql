@@ -104,11 +104,7 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 			)
 		}
 
-		return createError(
-			`Error during options validation: ${error instanceof Error ? error.message : String(error)}`, 
-			ErrorCategory.VALIDATION, 
-			{ originalError: error }
-		)
+		return createError(`Error during options validation: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.VALIDATION, { originalError: error })
 	}
 }
 

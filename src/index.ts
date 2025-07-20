@@ -3,10 +3,9 @@ export * from '@utils'
 
 import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
-import { ok, err } from 'neverthrow'
 
 import { CoreGenerator } from '@generators'
-import { ErrorCategory, PluginErrorData, createError, PluginResult } from '@utils/error'
+import { ErrorCategory, PluginError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
 import { FileWriter } from '@utils/io/file-writer'
 
@@ -24,9 +23,13 @@ export interface PluginMetadata {
 	outputPath: string
 }
 
-export default async function run(model: Model, options: SdkPluginOptions): Promise<PluginResult<{ metadata: PluginMetadata }>> {
+export function throwError(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]): never {
+	throw new PluginError(message, category, context, suggestions)
+}
+
+export default async function run(model: Model, options: SdkPluginOptions): Promise<{ metadata: PluginMetadata }> {
 	if (!model) {
-		return createError(
+		throwError(
 			'Model is required',
 			ErrorCategory.VALIDATION,
 			{
@@ -36,13 +39,13 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 		)
 	}
 
-	const optionsResult = validateOptions(options as PluginOptions)
-	if (optionsResult.isErr()) {
-		return err(optionsResult.error)
-	}
-	const normalizedOptions = optionsResult.value
-
 	try {
+		const optionsResult = validateOptions(options as PluginOptions)
+		if (optionsResult.isErr()) {
+			throw new PluginError(optionsResult.error.message, optionsResult.error.category, optionsResult.error.context, optionsResult.error.suggestions)
+		}
+
+		const normalizedOptions = optionsResult.value
 		const models = model.declarations.filter((x) => isDataModel(x) && !x.isAbstract) as DataModel[]
 		const enums = model.declarations.filter((x) => isEnum(x)) as Enum[]
 
@@ -57,10 +60,10 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 
 		const writeResult = await fileWriter.writeSchema(result.sdl, normalizedOptions.output)
 		if (writeResult.isErr()) {
-			return err(writeResult.error)
+			throw new PluginError(writeResult.error.message, writeResult.error.category, writeResult.error.context, writeResult.error.suggestions)
 		}
 
-		return ok({
+		return {
 			metadata: {
 				stats: {
 					objectTypes: result.stats.objectTypes,
@@ -71,17 +74,19 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 				},
 				outputPath: normalizedOptions.output,
 			},
-		})
+		}
 	} catch (error) {
 		if ((error as any).isPluginError) {
-			return err(error as PluginErrorData)
+			throw error
 		}
 
 		if (error instanceof Error && error.message.includes('validation')) {
-			return createError('Invalid plugin options', ErrorCategory.VALIDATION, { originalError: error })
+			throw new PluginError('Invalid plugin options', ErrorCategory.VALIDATION, { originalError: error })
 		}
 
-		return createError('GraphQL schema generation failed', ErrorCategory.GENERATION, { originalError: error }, [
+		console.error('Error during GraphQL schema generation:', error)
+
+		throw new PluginError('GraphQL schema generation failed', ErrorCategory.GENERATION, { originalError: error }, [
 			'Check your ZModel schema for errors',
 			'Verify plugin configuration options',
 			'Ensure all required models and fields are properly defined',

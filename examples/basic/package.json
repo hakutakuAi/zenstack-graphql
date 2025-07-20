@@ -1,0 +1,11 @@
+{
+	"name": "zenstack-graphql-example-basic",
+	"private": true,
+	"scripts": {
+		"generate": "zenstack generate",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"zenstack": "^2.16.1"
+	}
+}

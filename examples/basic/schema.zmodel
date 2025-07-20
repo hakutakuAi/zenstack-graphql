@@ -8,7 +8,7 @@ generator js {
 }
 
 plugin graphql {
-    provider = '../dist'
+    provider = '../../dist'
     output = './schema.graphql'
 }
 
@@ -35,10 +35,10 @@ model Space {
     @@allow('create', true)
 
     // any user in the space can read the space
-    @@allow('read', members?[user == auth()])
+    @@allow('read', members?[user.id == auth().id])
 
     // space admin can update and delete
-    @@allow('update,delete', members?[user == auth() && role == ADMIN])
+    @@allow('update,delete', members?[user.id == auth().id && role == ADMIN])
 }
 
 
@@ -59,10 +59,11 @@ model SpaceUser {
     @@deny('all', auth() == null)
 
     // space admin can create/update/delete
-    @@allow('create,update,delete', space.members?[user == auth() && role == ADMIN])
+    @@allow('create,update,delete', space.members?[user.id == auth().id && role == ADMIN])
 
     // user can read entries for spaces which he's a member of
-    @@allow('read', space.members?[user == auth()])
+    @@allow('read', space.members?[user.id == auth().id])
+
 }
 
 
@@ -85,10 +86,10 @@ model User {
     @@allow('create', true)
 
     // can be read by users sharing any space
-    @@allow('read', spaces?[space.members?[user == auth()]])
+    @@allow('read', spaces?[space.members?[user.id == auth().id]])
 
     // full access by oneself
-    @@allow('all', auth() == this)
+    @@allow('all', auth().id == this.id)
 	@@auth
 }
 
@@ -110,17 +111,17 @@ model List {
     @@deny('all', auth() == null)
 
     // can be read by owner or space members (only if not private) 
-    @@allow('read', owner == auth() || (space.members?[user == auth()] && !private))
+    @@allow('read', owner.id == auth().id || (space.members?[user.id == auth().id] && !private))
 
     // when create, owner must be set to current user, and user must be in the space
-    @@allow('create', owner == auth() && space.members?[user == auth()])
+    @@allow('create', owner.id == auth().id && space.members?[user.id == auth().id])
 
     // when create, owner must be set to current user, and user must be in the space
     // update is not allowed to change owner
-    @@allow('update', owner == auth() && space.members?[user == auth()] && future().owner == owner)
+    @@allow('update', owner.id == auth().id && space.members?[user.id == auth().id] && future().owner == owner)
 
     // can be deleted by owner
-    @@allow('delete', owner == auth())
+    @@allow('delete', owner.id == auth().id)
 }
 
 
@@ -142,8 +143,8 @@ model Todo {
     @@deny('all', auth() == null)
 
     // owner has full access, also space members have full access (if the parent List is not private)
-    @@allow('all', list.owner == auth())
-    @@allow('all', list.space.members?[user == auth()] && !list.private)
+    @@allow('all', list.owner.id == auth().id)
+    @@allow('all', list.space.members?[user.id == auth().id] && !list.private)
 
     // update cannot change owner
     @@deny('update', future().owner != owner)
