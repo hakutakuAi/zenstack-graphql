@@ -6,6 +6,6 @@
 		"test": "bun test"
 	},
 	"dependencies": {
-		"zenstack": "^2.16.1"
+		"zenstack": "^2.17.0"
 	}
 }
