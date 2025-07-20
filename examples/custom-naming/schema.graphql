@@ -21,15 +21,18 @@ enum PostStatus {
 
 type UserAccount {
   id: String!
-  firstName: String!
-  lastName: String!
-  emailAddress: String!
-  createdAt: DateTime!
-  lastLoginTime: DateTime
-  profileSettings: JSON
-  isActive: Boolean!
+  first_name: String!
+  last_name: String!
+  email_address: String!
+  created_at: DateTime!
+  last_login_time: DateTime
+  profile_settings: JSON
+  is_active: Boolean!
+  user_posts: [Article!]!
+  contact_phone: String
+
+  """Relation to BlogPost via author"""
   userPosts: [Article!]!
-  contactPhone: String
 }
 
 type Article {
@@ -37,8 +40,8 @@ type Article {
   title: String!
   content: String!
   author: UserAccount!
-  authorId: String!
-  publishDate: DateTime!
+  author_id: String!
+  publish_date: DateTime!
   tags: [String!]!
 }
 
@@ -48,9 +51,9 @@ type Comment {
 
   """The comment text content"""
   content: String!
-  postId: String!
-  authorName: String!
-  createdAt: DateTime!
+  post_id: String!
+  author_name: String!
+  created_at: DateTime!
 }
 
 """Information about pagination in a connection."""

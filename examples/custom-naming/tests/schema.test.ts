@@ -33,31 +33,31 @@ describe('Custom Naming Example', () => {
 
 	test('Type names use PascalCase convention', () => {
 		expect(schemaComposer.has('UserAccount')).toBe(true)
-		expect(schemaComposer.has('BlogPost')).toBe(true)
+		expect(schemaComposer.has('Article')).toBe(true)
 		expect(schemaComposer.has('Comment')).toBe(true)
 	})
 
 	test('Field naming in UserAccount', () => {
 		const userAccountTC = schemaComposer.getOTC('UserAccount')
 
-		expect(userAccountTC.hasField('phone_number')).toBe(true)
+		expect(userAccountTC.hasField('contact_phone')).toBe(true)
 
 		expect(userAccountTC.hasField('user_posts')).toBe(true)
 		expect(userAccountTC.hasField('userPosts')).toBe(true)
 	})
 
-	test('BlogPost model fields and relations', () => {
-		const blogPostTC = schemaComposer.getOTC('BlogPost')
+	test('Article model fields and relations', () => {
+		const articleTC = schemaComposer.getOTC('Article')
 
-		expect(blogPostTC.hasField('title')).toBe(true)
-		expect(blogPostTC.hasField('content')).toBe(true)
-		expect(blogPostTC.hasField('author')).toBe(true)
-		expect(blogPostTC.hasField('author_id')).toBe(true)
-		expect(blogPostTC.hasField('publish_date')).toBe(true)
-		expect(blogPostTC.hasField('tags')).toBe(true)
+		expect(articleTC.hasField('title')).toBe(true)
+		expect(articleTC.hasField('content')).toBe(true)
+		expect(articleTC.hasField('author')).toBe(true)
+		expect(articleTC.hasField('author_id')).toBe(true)
+		expect(articleTC.hasField('publish_date')).toBe(true)
+		expect(articleTC.hasField('tags')).toBe(true)
 
-		expect(blogPostTC.getFieldType('author').toString()).toBe('UserAccount!')
-		expect(blogPostTC.getFieldType('author_id').toString()).toBe('String!')
+		expect(articleTC.getFieldType('author').toString()).toBe('UserAccount!')
+		expect(articleTC.getFieldType('author_id').toString()).toBe('String!')
 	})
 
 	test('Enum is not renamed', () => {
@@ -74,19 +74,19 @@ describe('Custom Naming Example', () => {
 
 	test('Relations follow the naming conventions', () => {
 		const userAccountTC = schemaComposer.getOTC('UserAccount')
-		const blogPostTC = schemaComposer.getOTC('BlogPost')
+		const articleTC = schemaComposer.getOTC('Article')
 
 		expect(userAccountTC.hasField('user_posts')).toBe(true)
 		expect(userAccountTC.hasField('userPosts')).toBe(true)
-		expect(userAccountTC.getFieldType('user_posts').toString()).toBe('[BlogPost!]!')
+		expect(userAccountTC.getFieldType('user_posts').toString()).toBe('[Article!]!')
 
-		expect(blogPostTC.hasField('author')).toBe(true)
-		expect(blogPostTC.hasField('author_id')).toBe(true)
+		expect(articleTC.hasField('author')).toBe(true)
+		expect(articleTC.hasField('author_id')).toBe(true)
 	})
 
 	test('Connection types follow naming conventions', () => {
 		expect(schemaComposer.has('UserAccountConnection')).toBe(true)
-		expect(schemaComposer.has('BlogPostConnection')).toBe(true)
+		expect(schemaComposer.has('ArticleConnection')).toBe(true)
 		expect(schemaComposer.has('CommentConnection')).toBe(true)
 
 		const userAccountConnectionTC = schemaComposer.getOTC('UserAccountConnection')
@@ -105,16 +105,16 @@ describe('Custom Naming Example', () => {
 	})
 
 	test('Issue with custom attribute processing', () => {
-		expect(schemaComposer.has('BlogPost')).toBe(true)
-		expect(schemaComposer.has('Article')).toBe(false)
+		expect(schemaComposer.has('Article')).toBe(true)
+		expect(schemaComposer.has('BlogPost')).toBe(false)
 
 		expect(schemaComposer.has('PostStatus')).toBe(true)
 		expect(schemaComposer.has('ContentStatus')).toBe(false)
 
 		const commentTC = schemaComposer.getOTC('Comment')
-		expect(commentTC.getDescription()).toBe('')
+		expect(commentTC.getDescription()).toBe('User comments on blog posts')
 
 		const contentField = commentTC.getField('content')
-		expect(contentField.description).toBeUndefined()
+		expect(contentField.description).toBe('The comment text content')
 	})
 })
