@@ -49,9 +49,8 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 		})
 
 		const result = coreGenerator.generate()
-		const fileWriter = FileWriter.create()
 
-		const writeResult = await fileWriter.writeSchema(result.sdl, normalizedOptions.output)
+		const writeResult = await FileWriter.create().writeSchema(result.sdl, normalizedOptions.output)
 
 		return {
 			metadata: {
@@ -68,7 +67,7 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 			},
 		}
 	} catch (error) {
-		if ((error as any).isPluginError) {
+		if (error instanceof PluginError) {
 			throw error
 		}
 

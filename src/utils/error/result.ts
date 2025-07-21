@@ -12,7 +12,6 @@ export class PluginError extends Error {
 	public readonly category: ErrorCategory
 	public readonly context?: Record<string, unknown>
 	public readonly suggestions?: string[]
-	public readonly isPluginError = true
 
 	constructor(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]) {
 		const formattedMessage = formatErrorMessage({

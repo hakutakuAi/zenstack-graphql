@@ -293,7 +293,9 @@ export class Registry {
 
 	validateSchema(): string[] {
 		try {
-			this.schemaComposer.buildSchema()
+			this.schemaComposer.buildSchema({
+				keepUnusedTypes: true,
+			})
 			return []
 		} catch (error) {
 			const errorMessage = `Schema validation failed: ${error instanceof Error ? error.message : String(error)}`

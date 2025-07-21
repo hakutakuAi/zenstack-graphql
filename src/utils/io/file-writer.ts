@@ -48,18 +48,6 @@ export class FileWriter {
 		}
 	}
 
-	async writeMultipleFiles(files: Array<{ path: string; content: string }>, options: WriteOptions = {}): Promise<WriteResult[]> {
-		const results: WriteResult[] = []
-		const finalOptions = this.normalizeOptions(options)
-
-		for (const file of files) {
-			const result = await this.writeSchema(file.content, file.path, finalOptions)
-			results.push(result)
-		}
-
-		return results
-	}
-
 	async ensureDirectoryExists(dirPath: string): Promise<void> {
 		const directoryExists = await this.directoryExistsInternal(dirPath)
 		if (!directoryExists) {
@@ -122,32 +110,22 @@ export class FileWriter {
 		const fileExists = await this.fileExists(filePath)
 
 		if (fileExists && !options.overwrite) {
-			throw new PluginError(
-				`File already exists and overwrite is disabled: ${filePath}`, 
-				ErrorCategory.FILE, 
-				{ filePath, overwrite: options.overwrite }, 
-				[
-					'Set overwrite option to true',
-					'Choose a different output path',
-					'Remove the existing file manually',
-				]
-			)
+			throw new PluginError(`File already exists and overwrite is disabled: ${filePath}`, ErrorCategory.FILE, { filePath, overwrite: options.overwrite }, [
+				'Set overwrite option to true',
+				'Choose a different output path',
+				'Remove the existing file manually',
+			])
 		}
 
 		const directory = dirname(filePath)
 		const directoryExists = await this.directoryExistsInternal(directory)
 
 		if (!directoryExists && !options.createDirectories) {
-			throw new PluginError(
-				`Directory does not exist and createDirectories is disabled: ${directory}`, 
-				ErrorCategory.FILE, 
-				{ directory, createDirectories: options.createDirectories },
-				[
-					'Set createDirectories option to true',
-					'Create the directory manually',
-					'Use an existing directory path',
-				]
-			)
+			throw new PluginError(`Directory does not exist and createDirectories is disabled: ${directory}`, ErrorCategory.FILE, { directory, createDirectories: options.createDirectories }, [
+				'Set createDirectories option to true',
+				'Create the directory manually',
+				'Use an existing directory path',
+			])
 		}
 	}
 
