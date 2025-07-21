@@ -3,15 +3,7 @@ import { BaseGenerator } from '@generators/base-generator'
 import { TypeKind } from '@/utils/registry/registry'
 
 export class FilterInputGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.connectionTypes
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		this.createCommonFilterTypes()
 
 		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateFilterInputType(model))

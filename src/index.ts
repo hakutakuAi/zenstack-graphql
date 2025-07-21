@@ -5,7 +5,7 @@ import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
 
 import { CoreGenerator } from '@generators'
-import { ErrorCategory, PluginError } from '@utils/error'
+import { ErrorCategory, PluginError, throwError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
 import { FileWriter } from '@utils/io/file-writer'
 
@@ -19,12 +19,10 @@ export interface PluginMetadata {
 		scalarTypes: number
 		relationFields: number
 		connectionTypes: number
+		sortInputTypes: number
+		filterInputTypes: number
 	}
 	outputPath: string
-}
-
-export function throwError(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]): never {
-	throw new PluginError(message, category, context, suggestions)
 }
 
 export default async function run(model: Model, options: SdkPluginOptions): Promise<{ metadata: PluginMetadata }> {
@@ -66,11 +64,13 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 		return {
 			metadata: {
 				stats: {
-					objectTypes: result.stats.objectTypes,
-					enumTypes: result.stats.enumTypes,
-					scalarTypes: result.stats.scalarTypes,
-					relationFields: result.stats.relationFields,
-					connectionTypes: result.stats.connectionTypes,
+					objectTypes: result.stats.objectTypes.length,
+					enumTypes: result.stats.enumTypes.length,
+					scalarTypes: result.stats.scalarTypes.length,
+					relationFields: result.stats.relationFields.length,
+					connectionTypes: result.stats.connectionTypes.length,
+					sortInputTypes: result.stats.sortInputTypes.length,
+					filterInputTypes: result.stats.filterInputTypes.length,
 				},
 				outputPath: normalizedOptions.output,
 			},

@@ -5,7 +5,7 @@ import { TypeMapper } from '@utils/schema/type-mapper'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { Registry } from '@/utils/registry/registry'
 import { GeneratorContext } from '@types'
-import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
+import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 import { GraphQLTypeFactories } from '@/utils'
 
 export abstract class BaseGenerator<T = void> {
@@ -32,8 +32,4 @@ export abstract class BaseGenerator<T = void> {
 	}
 
 	abstract generate(): T
-
-	protected skipGeneration(): boolean {
-		return false
-	}
 }

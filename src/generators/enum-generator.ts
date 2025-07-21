@@ -8,15 +8,7 @@ export interface EnumValueConfig {
 }
 
 export class EnumGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.generateEnums
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		this.enums.forEach((enumObj) => this.generateEnum(enumObj))
 		return this.registry.getEnumTypes()
 	}

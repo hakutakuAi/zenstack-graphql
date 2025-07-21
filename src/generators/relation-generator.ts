@@ -14,15 +14,7 @@ export interface RelationField {
 }
 
 export class RelationGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.includeRelations
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		const relations = this.extractRelations()
 		relations.forEach((relation) => this.processRelation(relation))
 		return this.registry.getProcessedRelations()

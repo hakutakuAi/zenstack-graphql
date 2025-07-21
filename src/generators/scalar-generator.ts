@@ -13,15 +13,7 @@ export interface ScalarConfig {
 }
 
 export class ScalarGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.generateScalars
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		this.registerBuiltInScalars()
 		this.registerCustomScalars()
 

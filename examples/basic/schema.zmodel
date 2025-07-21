@@ -10,7 +10,8 @@ generator js {
 plugin graphql {
     provider = '../../dist'
     output = './schema.graphql'
-	
+    generateFilters = true
+    generateSorts = true
 }
 
 enum SpaceUserRole {

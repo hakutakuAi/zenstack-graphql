@@ -3,15 +3,7 @@ import { TypeKind } from '@/utils/registry/registry'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
 export class ConnectionGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.connectionTypes
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		this.createCommonTypes()
 		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateConnectionType(model))
 

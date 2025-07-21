@@ -39,6 +39,10 @@ export class PluginError extends Error {
 	}
 }
 
+export function throwError(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]): never {
+	throw new PluginError(message, category, context, suggestions)
+}
+
 export function formatErrorMessage(errorData: PluginErrorData): string {
 	let formattedMessage = `[${errorData.category}] ${errorData.message}`
 

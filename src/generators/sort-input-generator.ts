@@ -5,15 +5,7 @@ import { DataModel } from '@zenstackhq/sdk/ast'
 import { ErrorCategory, logWarning } from '@utils/error'
 
 export class SortInputGenerator extends BaseGenerator {
-	protected override skipGeneration(): boolean {
-		return !this.options.connectionTypes
-	}
-
 	generate(): string[] {
-		if (this.skipGeneration()) {
-			return []
-		}
-
 		this.createSortDirectionEnum()
 
 		for (const model of this.models) {

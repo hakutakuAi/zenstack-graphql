@@ -17,6 +17,8 @@ const DEFAULT_OPTIONS = {
 	connectionTypes: true,
 	generateEnums: true,
 	generateScalars: true,
+	generateFilters: true,
+	generateSorts: true,
 	fieldNaming: 'camelCase' as FieldNaming,
 	typeNaming: 'PascalCase' as TypeNaming,
 	includeRelations: true,
@@ -28,6 +30,8 @@ export type PluginOptions = {
 	connectionTypes?: boolean
 	generateEnums?: boolean
 	generateScalars?: boolean
+	generateFilters?: boolean
+	generateSorts?: boolean
 	fieldNaming?: FieldNaming
 	typeNaming?: TypeNaming
 	includeRelations?: boolean
@@ -39,6 +43,8 @@ export type NormalizedOptions = {
 	connectionTypes: boolean
 	generateEnums: boolean
 	generateScalars: boolean
+	generateFilters: boolean
+	generateSorts: boolean
 	fieldNaming: FieldNaming
 	typeNaming: TypeNaming
 	includeRelations: boolean
@@ -53,6 +59,8 @@ const optionsSchema = z.object({
 	connectionTypes: z.boolean().optional(),
 	generateEnums: z.boolean().optional(),
 	generateScalars: z.boolean().optional(),
+	generateFilters: z.boolean().optional(),
+	generateSorts: z.boolean().optional(),
 	fieldNaming: fieldNamingSchema.optional(),
 	typeNaming: typeNamingSchema.optional(),
 	includeRelations: z.boolean().optional(),
@@ -72,6 +80,8 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 			connectionTypes: validatedOptions.connectionTypes ?? DEFAULT_OPTIONS.connectionTypes,
 			generateEnums: validatedOptions.generateEnums ?? DEFAULT_OPTIONS.generateEnums,
 			generateScalars: validatedOptions.generateScalars ?? DEFAULT_OPTIONS.generateScalars,
+			generateFilters: validatedOptions.generateFilters ?? DEFAULT_OPTIONS.generateFilters,
+			generateSorts: validatedOptions.generateSorts ?? DEFAULT_OPTIONS.generateSorts,
 			fieldNaming: validatedOptions.fieldNaming ?? DEFAULT_OPTIONS.fieldNaming,
 			typeNaming: validatedOptions.typeNaming ?? DEFAULT_OPTIONS.typeNaming,
 			includeRelations: validatedOptions.includeRelations ?? DEFAULT_OPTIONS.includeRelations,

@@ -87,10 +87,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	}
 
 	private mapFieldType(field: DataModelField): Result<string, string> {
-		if (!this.typeMapper) {
-			return err('TypeMapper is not initialized')
-		}
-
 		if (this.typeMapper.isRelationField(field)) {
 			return ok(this.typeMapper.getRelationFieldType(field))
 		}
