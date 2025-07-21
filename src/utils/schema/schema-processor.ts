@@ -1,4 +1,5 @@
 import { AttributeArg, DataModel, DataModelField, DataModelAttribute, DataModelFieldAttribute } from '@zenstackhq/sdk/ast'
+import { TypeFormatter } from './type-formatter'
 
 type ExpressionValue = { $type: string; value: any }
 
@@ -12,6 +13,7 @@ export interface ModelAttributeChain {
 	description(): string | undefined
 	model: DataModel
 	field(fieldName: string): FieldAttributeChain
+	getFormattedTypeName(formatter: TypeFormatter): string
 }
 
 export interface FieldAttributeChain {
@@ -31,6 +33,7 @@ export interface FieldAttributeChain {
 	isStringSearchableType(): boolean
 	field: DataModelField | undefined
 	model: DataModel
+	getFormattedFieldName(formatter: TypeFormatter): string
 }
 
 export class SchemaProcessor {
@@ -69,6 +72,12 @@ export class SchemaProcessor {
 			model,
 
 			field: (fieldName: string): FieldAttributeChain => this.field(model, fieldName),
+
+			getFormattedTypeName: (formatter: TypeFormatter): string => {
+				const customName = this.getModelStringArg(model, '@@graphql.name', 'name')
+				const nameToFormat = customName !== undefined ? customName : model.name
+				return formatter.formatTypeName(nameToFormat)
+			},
 		}
 	}
 
@@ -167,6 +176,13 @@ export class SchemaProcessor {
 
 			field,
 			model,
+
+			getFormattedFieldName: (formatter: TypeFormatter): string => {
+				if (!field) return formatter.formatFieldName(fieldName)
+				const customName = this.getFieldStringArg(field, '@graphql.name', 'name')
+				const nameToFormat = customName !== undefined && customName !== null ? customName : field.name
+				return formatter.formatFieldName(nameToFormat)
+			},
 		}
 	}
 
@@ -189,7 +205,7 @@ export class SchemaProcessor {
 			return undefined
 		}
 
-		return model.attributes.find(attr => attr.decl?.ref?.name === attrName)
+		return model.attributes.find((attr) => attr.decl?.ref?.name === attrName)
 	}
 
 	private findFieldAttribute(field: DataModelField, attrName: string): DataModelFieldAttribute | undefined {
@@ -197,7 +213,7 @@ export class SchemaProcessor {
 			return undefined
 		}
 
-		return field.attributes.find(attr => attr.decl?.ref?.name === attrName)
+		return field.attributes.find((attr) => attr.decl?.ref?.name === attrName)
 	}
 
 	private findField(model: DataModel, fieldName: string): DataModelField | undefined {
@@ -209,7 +225,7 @@ export class SchemaProcessor {
 			return undefined
 		}
 
-		return attr.args.find(arg => arg.name === argName)
+		return attr.args.find((arg) => arg.name === argName)
 	}
 
 	private getStringAttributeArg(attr: DataModelAttribute | DataModelFieldAttribute | undefined, argName: string): string | undefined {

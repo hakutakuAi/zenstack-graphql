@@ -126,7 +126,7 @@ export class RelationGenerator extends BaseGenerator {
 	private getRelationFieldType(relation: RelationField): string {
 		const targetModel = this.findModelByName(relation.targetModelName)
 
-		const typeName = targetModel ? this.getObjectTypeName(targetModel) : this.typeFormatter.formatTypeName(relation.targetModelName)
+		const typeName = targetModel ? this.attributeProcessor.model(targetModel).getFormattedTypeName(this.typeFormatter) : this.typeFormatter.formatTypeName(relation.targetModelName)
 
 		if (relation.isList) {
 			return `[${typeName}!]!`
@@ -177,7 +177,7 @@ export class RelationGenerator extends BaseGenerator {
 	private getObjectTypeComposer(modelName: string): ObjectTypeComposer | undefined {
 		const model = this.findModelByName(modelName)
 
-		const typeName = model ? this.getObjectTypeName(model) : this.typeFormatter.formatTypeName(modelName)
+		const typeName = model ? this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter) : this.typeFormatter.formatTypeName(modelName)
 
 		if (this.schemaComposer.has(typeName)) {
 			const composer = this.schemaComposer.get(typeName)

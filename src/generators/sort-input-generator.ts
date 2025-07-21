@@ -17,7 +17,7 @@ export class SortInputGenerator extends BaseGenerator {
 		this.createSortDirectionEnum()
 
 		for (const model of this.models) {
-			if (this.shouldGenerateModel(model)) {
+			if (!this.attributeProcessor.model(model).isIgnored()) {
 				const result = this.generateSortInputType(model)
 				if (result.isErr()) {
 					logWarning(`Failed to generate sort input for model ${model.name}: ${result.error}`, ErrorCategory.GENERATION, {
@@ -46,7 +46,7 @@ export class SortInputGenerator extends BaseGenerator {
 	}
 
 	private generateSortInputType(model: DataModel): Result<void, string> {
-		const typeName = this.getObjectTypeName(model)
+		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 		const sortInputName = this.typeFormatter.formatSortInputTypeName(typeName)
 
 		if (this.schemaComposer.has(sortInputName)) {
@@ -54,10 +54,16 @@ export class SortInputGenerator extends BaseGenerator {
 		}
 
 		const fields = model.fields
-			.filter((field) => this.isSortableField(model, field))
+			.filter((field) => {
+				const fieldProcessor = this.attributeProcessor.field(model, field.name)
+				const isAttrSortable = fieldProcessor.isSortable()
+				const isTypeSortable = fieldProcessor.isSortableType()
+				const shouldInclude = fieldProcessor.shouldInclude(true)
+				return isAttrSortable && isTypeSortable && shouldInclude
+			})
 			.reduce(
 				(acc, field) => {
-					const fieldName = this.getFormattedFieldName(model, field)
+					const fieldName = this.attributeProcessor.field(model, field.name).getFormattedFieldName(this.typeFormatter)
 					acc[fieldName] = { description: `Sort by ${fieldName}` }
 					return acc
 				},

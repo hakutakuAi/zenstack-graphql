@@ -36,36 +36,4 @@ export abstract class BaseGenerator<T = void> {
 	protected skipGeneration(): boolean {
 		return false
 	}
-
-	protected getObjectTypeName(model: DataModel): string {
-		const customName = this.attributeProcessor.model(model).name()
-		const nameToFormat = customName !== undefined ? customName : model.name
-		return this.typeFormatter.formatTypeName(nameToFormat)
-	}
-
-	protected shouldIncludeField(model: DataModel, field: DataModelField, includeRelations: boolean = true): boolean {
-		return this.attributeProcessor.field(model, field.name).shouldInclude(includeRelations)
-	}
-
-	protected isFilterableField(model: DataModel, field: DataModelField): boolean {
-		return this.attributeProcessor.field(model, field.name).isFilterable() && this.attributeProcessor.field(model, field.name).shouldInclude(true)
-	}
-
-	protected isSortableField(model: DataModel, field: DataModelField): boolean {
-		const isAttrSortable = this.attributeProcessor.field(model, field.name).isSortable()
-		const isTypeSortable = this.attributeProcessor.field(model, field.name).isSortableType()
-		const shouldInclude = this.attributeProcessor.field(model, field.name).shouldInclude(true)
-
-		return isAttrSortable && isTypeSortable && shouldInclude
-	}
-
-	protected getFormattedFieldName(model: DataModel, field: DataModelField): string {
-		const customName = this.attributeProcessor.field(model, field.name).name()
-		const nameToFormat = customName !== undefined ? customName : field.name
-		return this.typeFormatter.formatFieldName(nameToFormat)
-	}
-
-	protected shouldGenerateModel(model: DataModel): boolean {
-		return !this.attributeProcessor.model(model).isIgnored()
-	}
 }

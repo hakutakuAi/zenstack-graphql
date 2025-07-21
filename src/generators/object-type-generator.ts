@@ -12,7 +12,7 @@ export interface FieldConfig {
 
 export class ObjectTypeGenerator extends BaseGenerator {
 	generate(): string[] {
-		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateObjectType(model))
+		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateObjectType(model))
 		return this.registry.getObjectTypes()
 	}
 
@@ -21,7 +21,7 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	}
 
 	private generateObjectType(model: DataModel): void {
-		const typeName = this.getObjectTypeName(model)
+		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 
 		if (this.hasObjectType(typeName)) {
 			return
@@ -36,8 +36,8 @@ export class ObjectTypeGenerator extends BaseGenerator {
 			return
 		}
 
-		const description = this.getObjectTypeDescription(model)
-		
+		const description = this.attributeProcessor.model(model).description()
+
 		const objectComposer = this.schemaComposer.createObjectTC({
 			name: typeName,
 			description,
@@ -47,16 +47,12 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
 	}
 
-	private getObjectTypeDescription(model: DataModel): string | undefined {
-		return this.attributeProcessor.model(model).description()
-	}
-
 	private createObjectFields(model: DataModel): Result<Record<string, FieldConfig>, string> {
 		const fields: Record<string, FieldConfig> = {}
 
 		for (const field of model.fields) {
-			if (this.shouldIncludeField(model, field)) {
-				const fieldName = this.getFieldName(model, field)
+			if (this.attributeProcessor.field(model, field.name).shouldInclude(this.options.includeRelations)) {
+				const fieldName = this.attributeProcessor.field(model, field.name).getFormattedFieldName(this.typeFormatter)
 				const fieldConfigResult = this.createFieldConfig(field)
 
 				if (fieldConfigResult.isErr()) {
@@ -68,14 +64,6 @@ export class ObjectTypeGenerator extends BaseGenerator {
 		}
 
 		return ok(fields)
-	}
-
-	protected override shouldIncludeField(model: DataModel, field: DataModelField): boolean {
-		return this.attributeProcessor.field(model, field.name).shouldInclude(this.options.includeRelations)
-	}
-
-	private getFieldName(model: DataModel, field: DataModelField): string {
-		return this.getFormattedFieldName(model, field)
 	}
 
 	private createFieldConfig(field: DataModelField): Result<FieldConfig, string> {

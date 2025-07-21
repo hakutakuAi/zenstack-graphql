@@ -102,7 +102,7 @@ export class FilterInputGenerator extends BaseGenerator {
 	}
 
 	private generateFilterInputType(model: DataModel): void {
-		const typeName = this.getObjectTypeName(model)
+		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 		const filterInputName = this.typeFormatter.formatTypeName(`${typeName}FilterInput`)
 
 		if (this.schemaComposer.has(filterInputName)) {
@@ -114,7 +114,7 @@ export class FilterInputGenerator extends BaseGenerator {
 		model.fields
 			.filter((field) => this.isFilterableField(model, field))
 			.forEach((field) => {
-				const fieldName = this.getFormattedFieldName(model, field)
+				const fieldName = this.attributeProcessor.field(model, field.name).getFormattedFieldName(this.typeFormatter)
 
 				let filterType: string
 
@@ -163,7 +163,7 @@ export class FilterInputGenerator extends BaseGenerator {
 		this.registry.registerType(filterInputName, TypeKind.INPUT, filterInputTC, true)
 	}
 
-	protected override isFilterableField(model: DataModel, field: DataModelField): boolean {
+	protected isFilterableField(model: DataModel, field: DataModelField): boolean {
 		const fieldProcessor = this.attributeProcessor.field(model, field.name)
 		return fieldProcessor.isFilterable() && fieldProcessor.shouldInclude(true)
 	}

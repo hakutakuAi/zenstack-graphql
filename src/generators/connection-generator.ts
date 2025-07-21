@@ -13,7 +13,7 @@ export class ConnectionGenerator extends BaseGenerator {
 		}
 
 		this.createCommonTypes()
-		this.models.filter((model) => this.shouldGenerateModel(model)).forEach((model) => this.generateConnectionType(model))
+		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateConnectionType(model))
 
 		return this.registry.getConnectionTypes()
 	}
@@ -29,7 +29,7 @@ export class ConnectionGenerator extends BaseGenerator {
 	}
 
 	private generateConnectionType(model: DataModel): void {
-		const typeName = this.getObjectTypeName(model)
+		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 		const connectionName = this.typeFormatter.formatConnectionTypeName(typeName)
 
 		if (this.registry.isTypeOfKind(connectionName, TypeKind.CONNECTION)) {
