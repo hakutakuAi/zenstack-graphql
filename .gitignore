@@ -45,4 +45,3 @@ yarn.lock
 # Dev/Temp
 .vscode
 dist
-zenstack-plugin-development-guide.md

@@ -1,10 +1,10 @@
 import { expect, test, describe, beforeAll } from 'bun:test'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
-import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer } from 'graphql-compose'
+import { SchemaComposer } from 'graphql-compose'
 
 describe('Basic Example', () => {
-	const schemaPath = join(__dirname, '../schema.graphql')
+	const schemaPath = join(__dirname, './schema.graphql')
 	const schemaComposer = new SchemaComposer()
 
 	beforeAll(() => {

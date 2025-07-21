@@ -42,10 +42,10 @@ attribute @@graphql.description(description: String)
  * model Post {
  *   id Int @id
  *
- *   @@graphql.connection(relay: true, pageSize: 10)
+ *   @@graphql.connection(pageSize: 10)
  * }
  */
-attribute @@graphql.connection(relay: Boolean?, pageSize: Int?)
+attribute @@graphql.connection(pageSize: Int?)
 
 /// FIELD ATTRIBUTES
 

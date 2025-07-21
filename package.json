@@ -16,22 +16,22 @@
 	"devDependencies": {
 		"@types/bun": "^1.2.19",
 		"@types/node": "^24.0.15",
-		"@typescript-eslint/eslint-plugin": "^8.37.0",
-		"@typescript-eslint/parser": "^8.37.0",
+		"@typescript-eslint/eslint-plugin": "^8.38.0",
+		"@typescript-eslint/parser": "^8.38.0",
 		"eslint": "^9.31.0",
 		"prettier": "^3.6.2",
 		"prisma": "^6.12.0",
 		"tsc-alias": "^1.8.16",
 		"typescript": "^5.8.3",
-		"zenstack": "2.17.0"
+		"zenstack": "2.17.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
 		"@prisma/client": "^6.12.0",
-		"@zenstackhq/runtime": "2.17.0",
-		"@zenstackhq/sdk": "2.17.0",
+		"@zenstackhq/runtime": "2.17.1",
+		"@zenstackhq/sdk": "2.17.1",
 		"change-case": "^5.4.4",
 		"graphql-compose": "^9.1.0",
 		"neverthrow": "^8.2.0",

@@ -15,7 +15,6 @@ const DEFAULT_OPTIONS = {
 		Bytes: 'String',
 	},
 	connectionTypes: true,
-	relayCompliant: true,
 	generateEnums: true,
 	generateScalars: true,
 	fieldNaming: 'camelCase' as FieldNaming,
@@ -27,7 +26,6 @@ export type PluginOptions = {
 	output?: string
 	scalarTypes?: Record<string, string>
 	connectionTypes?: boolean
-	relayCompliant?: boolean
 	generateEnums?: boolean
 	generateScalars?: boolean
 	fieldNaming?: FieldNaming
@@ -39,7 +37,6 @@ export type NormalizedOptions = {
 	output: string
 	scalarTypes: Record<string, string>
 	connectionTypes: boolean
-	relayCompliant: boolean
 	generateEnums: boolean
 	generateScalars: boolean
 	fieldNaming: FieldNaming
@@ -54,7 +51,6 @@ const optionsSchema = z.object({
 	output: z.string().min(1, 'Output path cannot be empty').optional(),
 	scalarTypes: scalarTypesSchema.optional(),
 	connectionTypes: z.boolean().optional(),
-	relayCompliant: z.boolean().optional(),
 	generateEnums: z.boolean().optional(),
 	generateScalars: z.boolean().optional(),
 	fieldNaming: fieldNamingSchema.optional(),
@@ -74,7 +70,6 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 				...validatedOptions.scalarTypes,
 			},
 			connectionTypes: validatedOptions.connectionTypes ?? DEFAULT_OPTIONS.connectionTypes,
-			relayCompliant: validatedOptions.relayCompliant ?? DEFAULT_OPTIONS.relayCompliant,
 			generateEnums: validatedOptions.generateEnums ?? DEFAULT_OPTIONS.generateEnums,
 			generateScalars: validatedOptions.generateScalars ?? DEFAULT_OPTIONS.generateScalars,
 			fieldNaming: validatedOptions.fieldNaming ?? DEFAULT_OPTIONS.fieldNaming,

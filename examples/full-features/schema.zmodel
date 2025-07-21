@@ -10,10 +10,6 @@ generator js {
 plugin graphql {
     provider = '../../dist'
     output = './schema.graphql'
-    connectionTypes = true
-    relayCompliant = true
-    generateEnums = true
-    generateScalars = true
     fieldNaming = 'camelCase'
     typeNaming = 'PascalCase'
 }
@@ -52,7 +48,7 @@ model Product {
     // Custom model name and description
     @@graphql.name(name: "Merchandise")
     @@graphql.description(description: "A product available for purchase")
-    @@graphql.connection(relay: true, pageSize: 10)
+    @@graphql.connection(pageSize: 10)
 }
 
 // Example of a standard model with sortable/filterable fields

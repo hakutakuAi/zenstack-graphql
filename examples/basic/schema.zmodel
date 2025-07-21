@@ -10,6 +10,7 @@ generator js {
 plugin graphql {
     provider = '../../dist'
     output = './schema.graphql'
+	
 }
 
 enum SpaceUserRole {

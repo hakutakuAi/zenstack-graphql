@@ -5,7 +5,7 @@ import { EnumGenerator } from '@generators/enum-generator'
 import { ObjectTypeGenerator } from '@generators/object-type-generator'
 import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
-import { SortInputGenerator } from '@generators/sort-input-generator'
+import { SortInputGenerator } from '@/generators/sort-input-generator'
 import { FilterInputGenerator } from '@generators/filter-input-generator'
 
 export interface GenerationStats {
@@ -32,9 +32,7 @@ export class CoreGenerator {
 	}
 
 	generate(): GenerationResult {
-		if (this.generatorFactory.context.options.relayCompliant) {
-			this.generatorFactory.context.registry.addRelayRequirements()
-		}
+		this.generatorFactory.context.registry.addRelayRequirements()
 
 		const scalarTypes = this.generatorFactory.create(ScalarGenerator).generate()
 		const enumTypes = this.generatorFactory.create(EnumGenerator).generate()
