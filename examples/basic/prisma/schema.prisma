@@ -12,93 +12,74 @@ generator js {
   provider = "prisma-client-js"
 }
 
-enum SpaceUserRole {
-  USER
-  ADMIN
-  GUEST
+enum BookCategory {
+  FICTION
+  NONFICTION
+  SCIENCE
+  HISTORY
+  BIOGRAPHY
+  FANTASY
+  MYSTERY
 }
 
-model Space {
-  id        String      @id() @default(uuid())
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt()
+model Author {
+  id        String    @id() @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt()
   name      String
-  slug      String      @unique()
-  members   SpaceUser[]
-  lists     List[]
+  bio       String?
+  email     String    @unique()
+  website   String?
+  books     Book[]
+  articles  Article[]
 }
 
-model SpaceUser {
-  id        String        @id() @default(uuid())
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt()
-  space     Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  spaceId   String
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  role      SpaceUserRole
-  invitedBy String?
-
-  @@unique([userId, spaceId])
+model Book {
+  id        String       @id() @default(uuid())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt()
+  title     String
+  summary   String?
+  published DateTime
+  pages     Int
+  category  BookCategory
+  price     Decimal
+  inStock   Boolean      @default(true)
+  author    Author       @relation(fields: [authorId], references: [id])
+  authorId  String
+  reviews   Review[]
 }
 
-model User {
-  id            String      @id() @default(uuid())
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt()
-  email         String      @unique()
-  emailVerified DateTime?
-  password      String?
-  name          String?
-  spaces        SpaceUser[]
-  image         String?
-  lists         List[]
-  todos         Todo[]
-  lastSeen      DateTime?
-  preferences   Json?
+model Review {
+  id          String   @id() @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  rating      Int      @default(5)
+  text        String?
+  book        Book     @relation(fields: [bookId], references: [id])
+  bookId      String
+  readerName  String
+  readerEmail String
 }
 
-model List {
+model Article {
   id        String   @id() @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
-  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-  spaceId   String
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId   String
   title     String
-  private   Boolean  @default(false)
-  todos     Todo[]
-  color     String?
+  content   String
+  published Boolean  @default(false)
+  author    Author   @relation(fields: [authorId], references: [id])
+  authorId  String
+  readCount Int      @default(0)
+  tags      String[]
 }
 
-model Todo {
-  id          String    @id() @default(uuid())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt()
-  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId     String
-  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
-  listId      String
-  title       String
-  completedAt DateTime?
-  description String?
-  priority    Int       @default(0)
-  dueDate     DateTime?
-}
-
-model ActivityLog {
-  id         String   @id() @default(uuid())
-  createdAt  DateTime @default(now())
-  userId     String
-  action     String
-  entityId   String
-  entityType String
-  metadata   Json?
-}
-
-model Tag {
-  id    String  @id() @default(uuid())
-  name  String  @unique()
-  color String?
+model Publisher {
+  id      String  @id() @default(uuid())
+  name    String
+  address String
+  country String
+  website String?
+  founded Int?
 }

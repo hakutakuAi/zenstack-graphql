@@ -12,39 +12,80 @@ generator js {
   provider = "prisma-client-js"
 }
 
-enum PostStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
-model UserAccount {
-  id              String     @id() @default(uuid())
-  firstName       String
-  lastName        String
-  emailAddress    String     @unique()
-  createdAt       DateTime   @default(now())
-  lastLoginTime   DateTime?
-  profileSettings Json?
-  isActive        Boolean    @default(true)
-  userPosts       BlogPost[]
-  phoneNumber     String?
+model Customer {
+  id                String   @id() @default(uuid())
+  firstName         String
+  lastName          String
+  emailAddress      String   @unique()
+  registrationDate  DateTime @default(now())
+  loyaltyPoints     Int      @default(0)
+  shippingAddress   Address? @relation("CustomerShipping", fields: [shippingAddressId], references: [id])
+  shippingAddressId String?
+  billingAddress    Address? @relation("CustomerBilling", fields: [billingAddressId], references: [id])
+  billingAddressId  String?
+  orders            Order[]
+  phoneNumber       String?
 }
 
-model BlogPost {
-  id          String      @id() @default(uuid())
-  title       String
-  content     String
-  author      UserAccount @relation(fields: [authorId], references: [id])
-  authorId    String
-  publishDate DateTime    @default(now())
-  tags        String[]
+model ProductItem {
+  id            String      @id() @default(uuid())
+  name          String
+  description   String
+  price         Decimal
+  stockQuantity Int
+  categories    Category[]
+  orderItems    OrderItem[]
 }
 
-model Comment {
-  id         String   @id() @default(uuid())
-  content    String
-  postId     String
-  authorName String
-  createdAt  DateTime @default(now())
+model Address {
+  id               String     @id() @default(uuid())
+  streetLine1      String
+  streetLine2      String?
+  city             String
+  stateProvince    String
+  postalCode       String
+  country          String
+  customerShipping Customer[] @relation("CustomerShipping")
+  customerBilling  Customer[] @relation("CustomerBilling")
+}
+
+model Order {
+  id                  String      @id() @default(uuid())
+  orderDate           DateTime    @default(now())
+  customer            Customer    @relation(fields: [customerId], references: [id])
+  customerId          String
+  orderStatus         OrderStatus
+  orderItems          OrderItem[]
+  totalAmount         Decimal
+  paymentMethod       String
+  specialInstructions String?
+}
+
+model OrderItem {
+  id           String      @id() @default(uuid())
+  order        Order       @relation(fields: [orderId], references: [id])
+  orderId      String
+  product      ProductItem @relation(fields: [productId], references: [id])
+  productId    String
+  quantity     Int
+  unitPrice    Decimal
+  itemDiscount Decimal     @default(0)
+}
+
+model Category {
+  id             String        @id() @default(uuid())
+  name           String
+  description    String
+  products       ProductItem[]
+  parentCategory Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  parentId       String?
+  subCategories  Category[]    @relation("CategoryHierarchy")
 }

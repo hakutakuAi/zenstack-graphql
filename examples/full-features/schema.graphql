@@ -13,83 +13,136 @@ scalar JSON
 """An arbitrary-precision Decimal type"""
 scalar Decimal
 
-"""/// Role levels for system users"""
+"""/// Types of reactions users can leave"""
+enum ReactionType {
+  LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
+}
+
 enum UserRole {
   ADMIN
+  MODERATOR
   USER
   GUEST
 }
 
-"""A product available for purchase"""
-type Merchandise {
+enum ContentFormat {
+  TEXT
+  MARKDOWN
+  HTML
+  RICHTEXT
+}
+
+"""Platform member with social interactions"""
+type Member {
   id: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  name: String!
-  description: String
-  price: Float!
-  inventory: Int!
-  categories: [Category!]!
-  reviews: [Review!]!
+  username: String!
+  email: String!
+  fullName: String
+  bio: String
+  birthdate: DateTime
+  signupIpAddress: String
+
+  """User's last activity timestamp"""
+  lastActive: DateTime
+  posts: [Post!]!
+  comments: [Comment!]!
+  follows: [Follow!]!
+  followers: [Follow!]!
+  likes: [Reaction!]!
+  profile: UserProfile
+}
+
+type UserProfile {
+  id: String!
+  userId: String!
+  user: Member!
+  avatarUrl: String
+  coverImageUrl: String
+  phoneNumber: String
+  location: String
+  karmaPoints: Int!
+  preferences: JSON
+
+  """User's personal website"""
+  personalSite: String
+}
+
+type Post {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  title: String!
+  content: String!
+  author: Member!
+  authorId: String!
+  viewCount: Int!
+  isPublished: Boolean!
+  comments: [Comment!]!
+  likes: [Reaction!]!
+  tags: [TagsOnPosts!]!
+  latitude: Float
+  longitude: Float
+}
+
+type Comment {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  content: String!
+  author: Member!
+  authorId: String!
+  post: Post!
+  postId: String!
+  isApproved: Boolean!
+  parentId: String
+  parent: Comment
+  replies: [Comment!]!
+  likes: [Reaction!]!
+}
+
+type Reaction {
+  id: String!
+  createdAt: DateTime!
+  user: Member!
+  userId: String!
+  post: Post
+  postId: String
+  comment: Comment
+  commentId: String
+  type: ReactionType!
+}
+
+type Follow {
+  id: String!
+  follower: Member!
+  followerId: String!
+  following: Member!
+  followingId: String!
+  createdAt: DateTime!
   isActive: Boolean!
 }
 
-type Category {
+type Tag {
   id: String!
   name: String!
-  products: [Merchandise!]!
-  parent: Category
-  parentId: String
-  children: [Category!]!
+  color: String
+  posts: [TagsOnPosts!]!
+  useCount: Int!
 }
 
-type Review {
-  id: String!
-  createdAt: DateTime!
-  product: Merchandise!
-  productId: String!
-  reviewer: String!
-  rating: Int!
-
-  """User feedback"""
-  comment: String
-  isVerified: Boolean!
-}
-
-type User {
-  id: String!
-  email: String!
-  name: String
-  role: UserRole!
-  profile: Profile
-  orders: [Order!]!
-}
-
-type Profile {
-  id: String!
-  userId: String!
-  user: User!
-  bio: String
-  profilePicture: String
-}
-
-type Order {
-  id: String!
-  createdAt: DateTime!
-  user: User!
-  userId: String!
-  status: String!
-  items: [OrderItem!]!
-  totalAmount: Float!
-}
-
-type OrderItem {
-  id: String!
-  order: Order!
-  orderId: String!
-  productId: String!
-  quantity: Int!
-  price: Float!
+type TagsOnPosts {
+  post: Post!
+  postId: String!
+  tag: Tag!
+  tagId: String!
+  addedAt: DateTime!
 }
 
 """Information about pagination in a connection."""
@@ -144,148 +197,169 @@ input PaginationInput {
   before: String
 }
 
-"""An edge in a Merchandise connection."""
-type MerchandiseEdge {
-  """The Merchandise at the end of the edge."""
-  node: Merchandise!
+"""An edge in a Member connection."""
+type MemberEdge {
+  """The Member at the end of the edge."""
+  node: Member!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Merchandise items."""
-type MerchandiseConnection {
+"""A connection to a list of Member items."""
+type MemberConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Merchandise edges."""
-  edges: [MerchandiseEdge!]!
+  """A list of Member edges."""
+  edges: [MemberEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Category connection."""
-type CategoryEdge {
-  """The Category at the end of the edge."""
-  node: Category!
+"""An edge in a UserProfile connection."""
+type UserProfileEdge {
+  """The UserProfile at the end of the edge."""
+  node: UserProfile!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Category items."""
-type CategoryConnection {
+"""A connection to a list of UserProfile items."""
+type UserProfileConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Category edges."""
-  edges: [CategoryEdge!]!
+  """A list of UserProfile edges."""
+  edges: [UserProfileEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Review connection."""
-type ReviewEdge {
-  """The Review at the end of the edge."""
-  node: Review!
+"""An edge in a Post connection."""
+type PostEdge {
+  """The Post at the end of the edge."""
+  node: Post!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Review items."""
-type ReviewConnection {
+"""A connection to a list of Post items."""
+type PostConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Review edges."""
-  edges: [ReviewEdge!]!
+  """A list of Post edges."""
+  edges: [PostEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a User connection."""
-type UserEdge {
-  """The User at the end of the edge."""
-  node: User!
+"""An edge in a Comment connection."""
+type CommentEdge {
+  """The Comment at the end of the edge."""
+  node: Comment!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of User items."""
-type UserConnection {
+"""A connection to a list of Comment items."""
+type CommentConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of User edges."""
-  edges: [UserEdge!]!
+  """A list of Comment edges."""
+  edges: [CommentEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Profile connection."""
-type ProfileEdge {
-  """The Profile at the end of the edge."""
-  node: Profile!
+"""An edge in a Reaction connection."""
+type ReactionEdge {
+  """The Reaction at the end of the edge."""
+  node: Reaction!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Profile items."""
-type ProfileConnection {
+"""A connection to a list of Reaction items."""
+type ReactionConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Profile edges."""
-  edges: [ProfileEdge!]!
+  """A list of Reaction edges."""
+  edges: [ReactionEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Order connection."""
-type OrderEdge {
-  """The Order at the end of the edge."""
-  node: Order!
+"""An edge in a Follow connection."""
+type FollowEdge {
+  """The Follow at the end of the edge."""
+  node: Follow!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Order items."""
-type OrderConnection {
+"""A connection to a list of Follow items."""
+type FollowConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Order edges."""
-  edges: [OrderEdge!]!
+  """A list of Follow edges."""
+  edges: [FollowEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a OrderItem connection."""
-type OrderItemEdge {
-  """The OrderItem at the end of the edge."""
-  node: OrderItem!
+"""An edge in a Tag connection."""
+type TagEdge {
+  """The Tag at the end of the edge."""
+  node: Tag!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of OrderItem items."""
-type OrderItemConnection {
+"""A connection to a list of Tag items."""
+type TagConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of OrderItem edges."""
-  edges: [OrderItemEdge!]!
+  """A list of Tag edges."""
+  edges: [TagEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a TagsOnPosts connection."""
+type TagsOnPostsEdge {
+  """The TagsOnPosts at the end of the edge."""
+  node: TagsOnPosts!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of TagsOnPosts items."""
+type TagsOnPostsConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of TagsOnPosts edges."""
+  edges: [TagsOnPostsEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
@@ -300,53 +374,59 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for Merchandise connections"""
-input MerchandiseSortInput {
+"""Sort input for Member connections"""
+input MemberSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
-  """Sort by price"""
-  price: SortDirection
+  """Sort by birthdate"""
+  birthdate: SortDirection
 }
 
-"""Sort input for Category connections"""
-input CategorySortInput {
-  """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+"""Sort input for UserProfile connections"""
+input UserProfileSortInput {
+  """Sort by karmaPoints"""
+  karmaPoints: SortDirection
 }
 
-"""Sort input for Review connections"""
-input ReviewSortInput {
+"""Sort input for Post connections"""
+input PostSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
-  """Sort by rating"""
-  rating: SortDirection
+  """Sort by viewCount"""
+  viewCount: SortDirection
+
+  """Sort by latitude"""
+  latitude: SortDirection
 }
 
-"""Sort input for User connections"""
-input UserSortInput {
-  """Placeholder field when no sortable fields are available"""
-  _placeholder: String
-}
-
-"""Sort input for Profile connections"""
-input ProfileSortInput {
-  """Placeholder field when no sortable fields are available"""
-  _placeholder: String
-}
-
-"""Sort input for Order connections"""
-input OrderSortInput {
+"""Sort input for Comment connections"""
+input CommentSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
-
-  """Sort by totalAmount"""
-  totalAmount: SortDirection
 }
 
-"""Sort input for OrderItem connections"""
-input OrderItemSortInput {
+"""Sort input for Reaction connections"""
+input ReactionSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+}
+
+"""Sort input for Follow connections"""
+input FollowSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+}
+
+"""Sort input for Tag connections"""
+input TagSortInput {
+  """Sort by useCount"""
+  useCount: SortDirection
+}
+
+"""Sort input for TagsOnPosts connections"""
+input TagsOnPostsSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: String
 }
@@ -414,53 +494,86 @@ input BooleanFilterInput {
   not: Boolean
 }
 
-"""Filter input type for Merchandise"""
-input MerchandiseFilterInput {
+"""Filter input type for Member"""
+input MemberFilterInput {
+  """Filter by username"""
+  username: StringFilterInput
+
+  """Filter by fullName"""
+  fullName: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [MemberFilterInput!]
+
+  """Logical OR operation"""
+  OR: [MemberFilterInput!]
+}
+
+"""Filter input type for UserProfile"""
+input UserProfileFilterInput {
+  """Filter by location"""
+  location: StringFilterInput
+
+  """Filter by karmaPoints"""
+  karmaPoints: NumericFilterInput
+
+  """Logical AND operation"""
+  AND: [UserProfileFilterInput!]
+
+  """Logical OR operation"""
+  OR: [UserProfileFilterInput!]
+}
+
+"""Filter input type for Post"""
+input PostFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
+  """Filter by title"""
+  title: StringFilterInput
+
+  """Filter by isPublished"""
+  isPublished: BooleanFilterInput
+
+  """Logical AND operation"""
+  AND: [PostFilterInput!]
+
+  """Logical OR operation"""
+  OR: [PostFilterInput!]
+}
+
+"""Filter input type for Comment"""
+input CommentFilterInput {
+  """Filter by isApproved"""
+  isApproved: BooleanFilterInput
+
+  """Logical AND operation"""
+  AND: [CommentFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CommentFilterInput!]
+}
+
+"""Filter input type for Follow"""
+input FollowFilterInput {
+  """Filter by isActive"""
+  isActive: BooleanFilterInput
+
+  """Logical AND operation"""
+  AND: [FollowFilterInput!]
+
+  """Logical OR operation"""
+  OR: [FollowFilterInput!]
+}
+
+"""Filter input type for Tag"""
+input TagFilterInput {
   """Filter by name"""
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [MerchandiseFilterInput!]
+  AND: [TagFilterInput!]
 
   """Logical OR operation"""
-  OR: [MerchandiseFilterInput!]
-}
-
-"""Filter input type for Category"""
-input CategoryFilterInput {
-  """Filter by name"""
-  name: StringFilterInput
-
-  """Logical AND operation"""
-  AND: [CategoryFilterInput!]
-
-  """Logical OR operation"""
-  OR: [CategoryFilterInput!]
-}
-
-"""Filter input type for Review"""
-input ReviewFilterInput {
-  """Filter by rating"""
-  rating: NumericFilterInput
-
-  """Logical AND operation"""
-  AND: [ReviewFilterInput!]
-
-  """Logical OR operation"""
-  OR: [ReviewFilterInput!]
-}
-
-"""Filter input type for Order"""
-input OrderFilterInput {
-  """Filter by status"""
-  status: StringFilterInput
-
-  """Logical AND operation"""
-  AND: [OrderFilterInput!]
-
-  """Logical OR operation"""
-  OR: [OrderFilterInput!]
+  OR: [TagFilterInput!]
 }

@@ -18,10 +18,10 @@ attribute @@graphql.ignore()
  * model User {
  *   id Int @id
  *
- *   @@graphql.name(name: "Member")
+ *   @@graphql.name("Member")
  * }
  */
-attribute @@graphql.name(name: String)
+attribute @@graphql.name(_ name: String)
 
 /**
  * Set description for a model in GraphQL schema
@@ -30,10 +30,10 @@ attribute @@graphql.name(name: String)
  * model Post {
  *   id Int @id
  *
- *   @@graphql.description(description: "Blog post content")
+ *   @@graphql.description("Blog post content")
  * }
  */
-attribute @@graphql.description(description: String)
+attribute @@graphql.description(_ description: String)
 
 /**
  * Configure connection options for this model
@@ -66,10 +66,10 @@ attribute @graphql.ignore()
  * @example
  * model User {
  *   id Int @id
- *   emailAddress String @graphql.name(name: "email")
+ *   emailAddress String @graphql.name("email")
  * }
  */
-attribute @graphql.name(name: String)
+attribute @graphql.name(_ name: String)
 
 /**
  * Set description for a field in GraphQL schema
@@ -77,10 +77,10 @@ attribute @graphql.name(name: String)
  * @example
  * model User {
  *   id Int @id
- *   fullName String @graphql.description(description: "User's full name")
+ *   fullName String @graphql.description("User's full name")
  * }
  */
-attribute @graphql.description(description: String)
+attribute @graphql.description(_ description: String)
 
 /**
  * Mark a field as sortable in connection queries

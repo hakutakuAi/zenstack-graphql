@@ -13,47 +13,109 @@ scalar JSON
 """An arbitrary-precision Decimal type"""
 scalar Decimal
 
-enum PostStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
-type UserAccount {
+type Customer {
   id: String!
   first_name: String!
   last_name: String!
   email_address: String!
-  created_at: DateTime!
-  last_login_time: DateTime
-  profile_settings: JSON
-  is_active: Boolean!
-  user_posts: [Article!]!
-  contact_phone: String
+  registration_date: DateTime!
+  loyalty_points: Int!
+  shipping_address: Address
+  shipping_address_id: String
+  billing_address: Address
+  billing_address_id: String
+  orders: [Order!]!
+  contact_number: String
 
-  """Relation to BlogPost via author"""
-  userPosts: [Article!]!
+  """Relation to Address via customerShipping"""
+  shippingAddress: Address
+
+  """Relation to Address via customerShipping"""
+  billingAddress: Address
 }
 
-type Article {
+type Product {
   id: String!
-  title: String!
-  content: String!
-  author: UserAccount!
-  author_id: String!
-  publish_date: DateTime!
-  tags: [String!]!
+  name: String!
+  description: String!
+  price: Decimal!
+  stock_quantity: Int!
+  categories: [Category!]!
+  order_items: [OrderItem!]!
+
+  """Relation to OrderItem via product"""
+  orderItems: [OrderItem!]!
 }
 
-"""User comments on blog posts"""
-type Comment {
+"""Shipping or billing address information"""
+type Address {
   id: String!
+  street_line1: String!
+  street_line2: String
+  city: String!
+  state_province: String!
+  postal_code: String!
+  country: String!
+  customer_shipping: [Customer!]!
+  customer_billing: [Customer!]!
 
-  """The comment text content"""
-  content: String!
-  post_id: String!
-  author_name: String!
-  created_at: DateTime!
+  """Relation to Customer via shippingAddress"""
+  customerShipping: [Customer!]!
+
+  """Relation to Customer via shippingAddress"""
+  customerBilling: [Customer!]!
+}
+
+type Order {
+  id: String!
+  order_date: DateTime!
+  customer: Customer!
+  customer_id: String!
+  order_status: OrderStatus!
+  order_items: [OrderItem!]!
+  total_amount: Decimal!
+  payment_method: String!
+
+  """Special delivery instructions"""
+  special_instructions: String
+
+  """Relation to OrderItem via order"""
+  orderItems: [OrderItem!]!
+}
+
+type OrderItem {
+  id: String!
+  order: Order!
+  order_id: String!
+  product: Product!
+  product_id: String!
+  quantity: Int!
+  unit_price: Decimal!
+  discount_amount: Decimal!
+}
+
+type Category {
+  id: String!
+  name: String!
+  description: String!
+  products: [Product!]!
+  parent_category: Category
+  parent_id: String
+  sub_categories: [Category!]!
+
+  """Relation to Category via parentCategory"""
+  parentCategory: Category
+
+  """Relation to Category via parentCategory"""
+  subCategories: [Category!]!
 }
 
 """Information about pagination in a connection."""
@@ -108,64 +170,127 @@ input PaginationInput {
   before: String
 }
 
-"""An edge in a UserAccount connection."""
-type UserAccountEdge {
-  """The UserAccount at the end of the edge."""
-  node: UserAccount!
+"""An edge in a Customer connection."""
+type CustomerEdge {
+  """The Customer at the end of the edge."""
+  node: Customer!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of UserAccount items."""
-type UserAccountConnection {
+"""A connection to a list of Customer items."""
+type CustomerConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of UserAccount edges."""
-  edges: [UserAccountEdge!]!
+  """A list of Customer edges."""
+  edges: [CustomerEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Article connection."""
-type ArticleEdge {
-  """The Article at the end of the edge."""
-  node: Article!
+"""An edge in a Product connection."""
+type ProductEdge {
+  """The Product at the end of the edge."""
+  node: Product!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Article items."""
-type ArticleConnection {
+"""A connection to a list of Product items."""
+type ProductConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Article edges."""
-  edges: [ArticleEdge!]!
+  """A list of Product edges."""
+  edges: [ProductEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
 }
 
-"""An edge in a Comment connection."""
-type CommentEdge {
-  """The Comment at the end of the edge."""
-  node: Comment!
+"""An edge in a Address connection."""
+type AddressEdge {
+  """The Address at the end of the edge."""
+  node: Address!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-"""A connection to a list of Comment items."""
-type CommentConnection {
+"""A connection to a list of Address items."""
+type AddressConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """A list of Comment edges."""
-  edges: [CommentEdge!]!
+  """A list of Address edges."""
+  edges: [AddressEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Order connection."""
+type OrderEdge {
+  """The Order at the end of the edge."""
+  node: Order!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Order items."""
+type OrderConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Order edges."""
+  edges: [OrderEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a OrderItem connection."""
+type OrderItemEdge {
+  """The OrderItem at the end of the edge."""
+  node: OrderItem!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of OrderItem items."""
+type OrderItemConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of OrderItem edges."""
+  edges: [OrderItemEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Category connection."""
+type CategoryEdge {
+  """The Category at the end of the edge."""
+  node: Category!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Category items."""
+type CategoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Category edges."""
+  edges: [CategoryEdge!]!
 
   """The total count of items in the connection."""
   totalCount: Int!
@@ -180,20 +305,38 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for UserAccount connections"""
-input UserAccountSortInput {
+"""Sort input for Customer connections"""
+input CustomerSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: String
 }
 
-"""Sort input for Article connections"""
-input ArticleSortInput {
+"""Sort input for Product connections"""
+input ProductSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: String
 }
 
-"""Sort input for Comment connections"""
-input CommentSortInput {
+"""Sort input for Address connections"""
+input AddressSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Order connections"""
+input OrderSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for OrderItem connections"""
+input OrderItemSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Category connections"""
+input CategorySortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: String
 }

@@ -7,7 +7,6 @@ generator js {
     provider = 'prisma-client-js'
 }
 
-// Custom configuration to demonstrate snake_case field naming
 plugin graphql {
     provider = '../../dist'
     output = './schema.graphql'
@@ -15,51 +14,99 @@ plugin graphql {
     typeNaming = 'PascalCase'   // Keep PascalCase for type names
 }
 
-// Model with mixed case fields to demonstrate snake_case conversion
-model UserAccount {
-    id              String         @id @default(uuid())
-    firstName       String         // Will become first_name in GraphQL
-    lastName        String         // Will become last_name in GraphQL
-    emailAddress    String         @unique // Will become email_address in GraphQL
-    createdAt       DateTime       @default(now()) 
-    lastLoginTime   DateTime?      // Will become last_login_time in GraphQL
-    profileSettings Json?          // Will become profile_settings in GraphQL
-    isActive        Boolean        @default(true) // Will become is_active in GraphQL
-    userPosts       BlogPost[]     // Will become user_posts in GraphQL
-    
-    // A field with custom name that overrides the snake_case convention
-    phoneNumber     String?        @graphql.name(name: "contact_phone")
+// Model demonstrating snake_case field conversion
+model Customer {
+    id                String      @id @default(uuid())
+    firstName         String      // Will become first_name in GraphQL
+    lastName          String      // Will become last_name in GraphQL
+    emailAddress      String      @unique // Will become email_address in GraphQL
+    registrationDate  DateTime    @default(now()) // Will become registration_date
+    loyaltyPoints     Int         @default(0) // Will become loyalty_points
+    shippingAddress   Address?    @relation("CustomerShipping", fields: [shippingAddressId], references: [id])
+    shippingAddressId String?     // Will become shipping_address_id
+    billingAddress    Address?    @relation("CustomerBilling", fields: [billingAddressId], references: [id])
+    billingAddressId  String?     // Will become billing_address_id
+    orders            Order[]     // Will become orders (no change needed)
+
+    // Custom field name that overrides snake_case
+    phoneNumber       String?     @graphql.name("contact_number")
 }
 
-// Model with custom name that overrides the PascalCase convention
-model BlogPost {
-    id          String       @id @default(uuid())
-    title       String       // Will become title in GraphQL (already snake_case)
-    content     String       // Will become content in GraphQL (already snake_case)
-    author      UserAccount  @relation(fields: [authorId], references: [id])
-    authorId    String       // Will become author_id in GraphQL
-    publishDate DateTime     @default(now()) // Will become publish_date in GraphQL
-    tags        String[]     // Will become tags in GraphQL
-    
-    @@graphql.name(name: "Article")
+// Model with custom GraphQL type name
+model ProductItem {
+    id            String      @id @default(uuid())
+    name          String      // Will become name (already snake_case)
+    description   String      // Will become description (already snake_case)
+    price         Decimal     // Will become price (already snake_case)
+    stockQuantity Int         // Will become stock_quantity
+    categories    Category[]  // Will become categories (already snake_case)
+    orderItems    OrderItem[] // Will become order_items
+
+    // Custom type name in GraphQL schema
+    @@graphql.name("Product")
 }
 
-// Enum with custom value mappings
-enum PostStatus {
-    DRAFT
-    PUBLISHED
-    ARCHIVED
-    
-    @@graphql.name(name: "ContentStatus")
+// Address model with descriptive field names
+model Address {
+    id              String     @id @default(uuid())
+    streetLine1     String     // Will become street_line1
+    streetLine2     String?    // Will become street_line2
+    city            String     // Will become city (already snake_case)
+    stateProvince   String     // Will become state_province
+    postalCode      String     // Will become postal_code
+    country         String     // Will become country (already snake_case)
+    customerShipping Customer[] @relation("CustomerShipping")
+    customerBilling  Customer[] @relation("CustomerBilling")
+
+    // Custom description for GraphQL schema
+    @@graphql.description("Shipping or billing address information")
 }
 
-// Model with custom field descriptions
-model Comment {
-    id          String    @id @default(uuid())
-    content     String    @graphql.description(description: "The comment text content")
-    postId      String    // Will become post_id in GraphQL
-    authorName  String    // Will become author_name in GraphQL
-    createdAt   DateTime  @default(now())
-    
-    @@graphql.description(description: "User comments on blog posts")
+// Order model with related items
+model Order {
+    id              String      @id @default(uuid())
+    orderDate       DateTime    @default(now()) // Will become order_date
+    customer        Customer    @relation(fields: [customerId], references: [id])
+    customerId      String      // Will become customer_id
+    orderStatus     OrderStatus // Will become order_status
+    orderItems      OrderItem[] // Will become order_items
+    totalAmount     Decimal     // Will become total_amount
+    paymentMethod   String      // Will become payment_method
+
+    // Field with custom description
+    specialInstructions String? @graphql.description("Special delivery instructions")
+}
+
+// Join model for order items
+model OrderItem {
+    id          String      @id @default(uuid())
+    order       Order       @relation(fields: [orderId], references: [id])
+    orderId     String      // Will become order_id
+    product     ProductItem @relation(fields: [productId], references: [id])
+    productId   String      // Will become product_id
+    quantity    Int         // Will become quantity (already snake_case)
+    unitPrice   Decimal     // Will become unit_price
+
+    // Custom name that overrides the snake_case convention
+    itemDiscount Decimal @default(0) @graphql.name("discount_amount")
+}
+
+// Category model with custom field name
+model Category {
+    id          String        @id @default(uuid())
+    name        String        // Will become name (already snake_case)
+    description String        // Will become description (already snake_case)
+    products    ProductItem[] // Will become products (already snake_case)
+    parentCategory Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+    parentId    String?       // Will become parent_id
+    subCategories Category[]  @relation("CategoryHierarchy") // Will become sub_categories
+}
+
+// Enum with custom value name overrides
+enum OrderStatus {
+    PENDING
+    PROCESSING
+    SHIPPED
+    DELIVERED
+    CANCELLED
 }

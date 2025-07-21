@@ -12,104 +12,211 @@ plugin graphql {
     output = './schema.graphql'
     fieldNaming = 'camelCase'
     typeNaming = 'PascalCase'
+    generateFilters = true
+    generateSorts = true
+    connectionTypes = true
 }
 
-// Example of custom enum description
-/// Role levels for system users
-enum UserRole {
-    ADMIN
-    USER
-    GUEST
-}
-
-// Example of ignoring a model completely from GraphQL schema
-model InternalConfig {
-    id        Int      @id @default(autoincrement())
-    key       String   @unique
-    value     String
-    sensitive Boolean  @default(true)
+// System-internal model that should not be exposed in GraphQL
+model SystemConfig {
+    id          String  @id @default(uuid())
+    key         String  @unique
+    value       String
+    isEncrypted Boolean @default(false)
+    lastUpdated DateTime @default(now())
 
     @@graphql.ignore
 }
 
-// Example of custom model name and description
-model Product {
-    id          String       @id @default(uuid())
-    createdAt   DateTime     @default(now()) @graphql.sortable @graphql.filterable
-    updatedAt   DateTime     @updatedAt
-    name        String       @graphql.filterable
-    description String?
-    price       Float        @graphql.sortable
-    inventory   Int          @default(0)
-    categories  Category[]
-    reviews     Review[]
-    isActive    Boolean      @default(true)
-
-    // Custom model name and description
-    @@graphql.name(name: "Merchandise")
-    @@graphql.description(description: "A product available for purchase")
-    @@graphql.connection(pageSize: 10)
-}
-
-// Example of a standard model with sortable/filterable fields
-model Category {
-    id        String    @id @default(uuid())
-    name      String    @graphql.filterable
-    products  Product[]
-    parent    Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-    parentId  String?
-    children  Category[] @relation("CategoryHierarchy")
-}
-
-// Example of a model with custom field names
-model Review {
-    id            String    @id @default(uuid())
-    createdAt     DateTime  @default(now()) @graphql.sortable
-    product       Product   @relation(fields: [productId], references: [id])
-    productId     String
-    authorName    String    @graphql.name(name: "reviewer") // Custom field name
-    rating        Int       @graphql.sortable @graphql.filterable
-    comment       String?   @graphql.description(description: "User feedback") // Field description
-    isVerified    Boolean   @default(false)
-}
-
-// Example of a model with complex relations
+// User profile model with various field types and attributes
 model User {
-    id        String    @id @default(uuid())
-    email     String    @unique
-    name      String?
-    role      UserRole  @default(USER)
-    profile   Profile?
-    orders    Order[]
+    id              String         @id @default(uuid())
+    createdAt       DateTime       @default(now()) @graphql.sortable
+    updatedAt       DateTime       @updatedAt
+    username        String         @unique @graphql.filterable
+    email           String         @unique
+    fullName        String?        @graphql.filterable
+    bio             String?
+    birthdate       DateTime?      @graphql.sortable
+
+    // Field with custom name via explicit attribute
+    ipAddress       String?        @graphql.name("signupIPAddress")
+
+    // Field with custom description
+    lastActive      DateTime?      @graphql.description("User's last activity timestamp")
+
+    // Fields to be ignored in GraphQL schema
+    passwordHash    String?        @graphql.ignore
+    securityAnswers Json?          @graphql.ignore
+
+    // Relations
+    posts           Post[]
+    comments        Comment[]
+    follows         Follow[]       @relation("UserFollows")
+    followers       Follow[]       @relation("UserFollowers")
+    likes           Like[]
+    profile         UserProfile?
+
+    // Custom name in GraphQL schema
+    @@graphql.name("Member")
+
+    // Custom model description
+    @@graphql.description("Platform member with social interactions")
 }
 
-// Example of one-to-one relation
-model Profile {
+// One-to-one relationship with User
+model UserProfile {
+    id              String    @id @default(uuid())
+    userId          String    @unique
+    user            User      @relation(fields: [userId], references: [id])
+    avatarUrl       String?
+    coverImageUrl   String?
+    phoneNumber     String?
+
+    // Fields with filter and sort capabilities
+    location        String?   @graphql.filterable
+    karmaPoints     Int       @default(0) @graphql.sortable @graphql.filterable
+
+    // Custom JSON settings
+    preferences     Json?
+
+    // Field with custom name and description
+    websiteUrl      String?   @graphql.name("personalSite") @graphql.description("User's personal website")
+}
+
+// Post model with various field attributes
+model Post {
+    id          String      @id @default(uuid())
+    createdAt   DateTime    @default(now()) @graphql.sortable @graphql.filterable
+    updatedAt   DateTime    @updatedAt
+    title       String      @graphql.filterable
+    content     String
+    author      User        @relation(fields: [authorId], references: [id])
+    authorId    String
+
+    // Fields for sorting and filtering
+    viewCount   Int         @default(0) @graphql.sortable
+    isPublished Boolean     @default(true) @graphql.filterable
+
+    // Relations with cascade delete
+    comments    Comment[]
+    likes       Like[]
+
+    // Many-to-many relation
+    tags        TagsOnPosts[]
+
+    // Additional metadata fields
+    latitude    Float?      @graphql.sortable
+    longitude   Float?
+
+    // Custom connection type
+    @@graphql.connection(pageSize: 20)
+}
+
+// Comment model
+model Comment {
     id          String    @id @default(uuid())
-    userId      String    @unique
-    user        User      @relation(fields: [userId], references: [id])
-    bio         String?
-    avatarUrl   String?   @graphql.name(name: "profilePicture") // Custom field name
-    preferences Json?     @graphql.ignore // Ignored field
+    createdAt   DateTime  @default(now()) @graphql.sortable
+    updatedAt   DateTime  @updatedAt
+    content     String
+    author      User      @relation(fields: [authorId], references: [id])
+    authorId    String
+    post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+    postId      String
+
+    // Fields with filter capabilities
+    isApproved  Boolean   @default(true) @graphql.filterable
+
+    // Parent-child relationship for nested comments
+    parentId    String?
+    parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+    replies     Comment[] @relation("CommentReplies")
+
+    likes       Like[]
 }
 
-// Example of a model with many-to-many relation
-model Order {
+// Like model for polymorphic reactions
+model Like {
     id          String    @id @default(uuid())
     createdAt   DateTime  @default(now()) @graphql.sortable
     user        User      @relation(fields: [userId], references: [id])
     userId      String
-    status      String    @graphql.filterable
-    items       OrderItem[]
-    totalAmount Float     @graphql.sortable
+
+    // Optional relations for different likeable types
+    post        Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+    postId      String?
+    comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    commentId   String?
+
+    // Enum field for reaction type
+    type        ReactionType @default(LIKE)
+
+    // Custom name in GraphQL schema
+    @@graphql.name("Reaction")
 }
 
-// Example of a join model
-model OrderItem {
-    id        String    @id @default(uuid())
-    order     Order     @relation(fields: [orderId], references: [id])
-    orderId   String
-    productId String    
-    quantity  Int
-    price     Float
+// Follow relationship between users
+model Follow {
+    id              String    @id @default(uuid())
+    follower        User      @relation("UserFollows", fields: [followerId], references: [id])
+    followerId      String
+    following       User      @relation("UserFollowers", fields: [followingId], references: [id])
+    followingId     String
+    createdAt       DateTime  @default(now()) @graphql.sortable
+
+    // Fields for filtering
+    isActive        Boolean   @default(true) @graphql.filterable
+
+    // Composite unique constraint
+    @@unique([followerId, followingId])
+}
+
+// Tag model for categorizing posts
+model Tag {
+    id          String        @id @default(uuid())
+    name        String        @unique @graphql.filterable
+    color       String?
+    posts       TagsOnPosts[]
+
+    // Fields for sorting
+    useCount    Int           @default(0) @graphql.sortable
+}
+
+// Many-to-many join model between Post and Tag
+model TagsOnPosts {
+    post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+    postId      String
+    tag         Tag       @relation(fields: [tagId], references: [id])
+    tagId       String
+    addedAt     DateTime  @default(now())
+
+    @@id([postId, tagId])
+}
+
+/// Types of reactions users can leave
+enum ReactionType {
+    LIKE
+    LOVE
+    HAHA
+    WOW
+    SAD
+    ANGRY
+
+	@@graphql.description("Types of reactions users can leave")
+}
+
+// User role enum
+enum UserRole {
+    ADMIN
+    MODERATOR
+    USER
+    GUEST
+}
+
+// Content format enum
+enum ContentFormat {
+    TEXT
+    MARKDOWN
+    HTML
+    RICHTEXT
 }

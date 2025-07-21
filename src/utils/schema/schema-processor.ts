@@ -1,7 +1,8 @@
 import { AttributeArg, DataModel, DataModelField, DataModelAttribute, DataModelFieldAttribute } from '@zenstackhq/sdk/ast'
 import { TypeFormatter } from './type-formatter'
 
-type ExpressionValue = { $type: string; value: any }
+type AttributeType = DataModelAttribute | DataModelFieldAttribute | undefined
+type AttributeGetter<T> = (attr: AttributeType, argName?: string) => T | undefined
 
 export interface ModelAttributeChain {
 	getString(argName: string): string | undefined
@@ -42,252 +43,122 @@ export class SchemaProcessor {
 	}
 
 	model(model: DataModel): ModelAttributeChain {
+		const getAttrValue = <T>(attrName: string, getter: AttributeGetter<T>, argName?: string): T | undefined => {
+			const attr = this.findAttribute(model.attributes, attrName)
+			return getter(attr, argName)
+		}
+
 		return {
 			getString: (argName: string): string | undefined => {
-				if (argName === 'name') {
-					return this.getModelStringArg(model, '@@graphql.name', 'name')
-				} else if (argName === 'description') {
-					return this.getModelStringArg(model, '@@graphql.description', 'description')
-				}
-				return undefined
+				const attrName = argName === 'name' ? '@@graphql.name' : argName === 'description' ? '@@graphql.description' : null
+				return attrName ? getAttrValue(attrName, this.getStringValue) : undefined
 			},
-
-			getBoolean: (argName: string): boolean | undefined => this.getModelBooleanArg(model, '@@graphql.connection', argName),
-
-			getNumber: (argName: string): number | undefined => this.getModelNumberArg(model, '@@graphql.connection', argName),
-
+			getBoolean: (argName: string): boolean | undefined => getAttrValue('@@graphql.connection', this.getBooleanValue, argName),
+			getNumber: (argName: string): number | undefined => getAttrValue('@@graphql.connection', this.getNumberValue, argName),
 			exists: (): boolean => true,
-
-			isIgnored: (): boolean => this.modelHasAttribute(model, '@@graphql.ignore'),
-
-			name: (): string => {
-				const customName = this.getModelStringArg(model, '@@graphql.name', 'name')
-				return customName !== undefined ? customName : model.name
-			},
-
-			description: (): string | undefined => {
-				return this.getModelStringArg(model, '@@graphql.description', 'description')
-			},
-
+			isIgnored: (): boolean => this.hasAttribute(model.attributes, '@@graphql.ignore'),
+			name: (): string => getAttrValue('@@graphql.name', this.getStringValue) ?? model.name,
+			description: (): string | undefined => getAttrValue('@@graphql.description', this.getStringValue),
 			model,
-
 			field: (fieldName: string): FieldAttributeChain => this.field(model, fieldName),
-
 			getFormattedTypeName: (formatter: TypeFormatter): string => {
-				const customName = this.getModelStringArg(model, '@@graphql.name', 'name')
-				const nameToFormat = customName !== undefined ? customName : model.name
-				return formatter.formatTypeName(nameToFormat)
+				const customName = getAttrValue('@@graphql.name', this.getStringValue)
+				return formatter.formatTypeName(customName ?? model.name)
 			},
 		}
 	}
 
 	field(model: DataModel, fieldName: string): FieldAttributeChain {
-		const field = this.findField(model, fieldName)
+		const field = model.fields?.find((f) => f.name === fieldName)
+
+		const getAttrValue = <T>(attrName: string, getter: AttributeGetter<T>, argName?: string): T | undefined => {
+			if (!field) return undefined
+			const attr = this.findAttribute(field.attributes, attrName)
+			return getter(attr, argName)
+		}
+
+		const hasAttr = (attrName: string): boolean => (field ? this.hasAttribute(field.attributes, attrName) : false)
+
+		const fieldType = field?.type.type
 
 		return {
 			getString: (argName: string): string | undefined => {
-				if (!field) return undefined
-
-				if (argName === 'name') {
-					return this.getFieldStringArg(field, '@graphql.name', 'name')
-				} else if (argName === 'description') {
-					return this.getFieldStringArg(field, '@graphql.description', 'description')
-				}
-				return undefined
+				const attrName = argName === 'name' ? '@graphql.name' : argName === 'description' ? '@graphql.description' : null
+				return attrName ? getAttrValue(attrName, this.getStringValue) : undefined
 			},
-
 			getBoolean: (argName: string): boolean | undefined =>
-				field ? this.getFieldBooleanArg(field, '@graphql.sortable', argName) || this.getFieldBooleanArg(field, '@graphql.filterable', argName) : undefined,
-
+				field ? getAttrValue('@graphql.sortable', this.getBooleanValue, argName) || getAttrValue('@graphql.filterable', this.getBooleanValue, argName) : undefined,
 			getNumber: (argName: string): number | undefined =>
-				field ? this.getFieldNumberArg(field, '@graphql.sortable', argName) || this.getFieldNumberArg(field, '@graphql.filterable', argName) : undefined,
-
-			attr: (attrName: string): boolean => (field ? this.fieldHasAttribute(field, attrName) : false),
-
+				field ? getAttrValue('@graphql.sortable', this.getNumberValue, argName) || getAttrValue('@graphql.filterable', this.getNumberValue, argName) : undefined,
+			attr: (attrName: string): boolean => hasAttr(attrName),
 			exists: (): boolean => !!field,
-
-			isIgnored: (): boolean => (field ? this.fieldHasAttribute(field, '@graphql.ignore') : false),
-
-			isSortable: (): boolean => (field ? this.fieldHasAttribute(field, '@graphql.sortable') : false),
-
-			isFilterable: (): boolean => (field ? this.fieldHasAttribute(field, '@graphql.filterable') : false),
-
+			isIgnored: (): boolean => hasAttr('@graphql.ignore'),
+			isSortable: (): boolean => hasAttr('@graphql.sortable'),
+			isFilterable: (): boolean => hasAttr('@graphql.filterable'),
 			name: (): string => {
 				if (!field) return fieldName
-
-				const customName = this.getFieldStringArg(field, '@graphql.name', 'name')
-
-				return customName !== undefined && customName !== null ? customName : fieldName
+				return getAttrValue('@graphql.name', this.getStringValue) ?? fieldName
 			},
-
-			description: (): string | undefined => {
-				if (!field) return undefined
-
-				const description = this.getFieldStringArg(field, '@graphql.description', 'description')
-
-				return description
-			},
-
+			description: (): string | undefined => getAttrValue('@graphql.description', this.getStringValue),
 			shouldInclude: (includeRelations: boolean): boolean => {
 				if (!field) return false
 
-				const isRelation = field.type.reference && field.type.reference.ref?.name && !field.type.type
+				const isRelation = field.type.reference?.ref?.name && !field.type.type
+				if (isRelation && !includeRelations) return false
 
-				if (isRelation && !includeRelations) {
-					return false
-				}
-
-				return !this.fieldHasAttribute(field, '@graphql.ignore')
+				return !hasAttr('@graphql.ignore')
 			},
-
 			isSortableType: (): boolean => {
-				if (!field || !field.type.type) return false
-
-				switch (field.type.type) {
-					case 'Int':
-					case 'Float':
-					case 'Decimal':
-					case 'DateTime':
-					case 'String':
-					case 'Boolean':
-						return true
-					default:
-						return false
-				}
+				if (!fieldType) return false
+				return ['Int', 'Float', 'Decimal', 'DateTime', 'String', 'Boolean'].includes(fieldType)
 			},
-
 			isRangeFilterableType: (): boolean => {
-				if (!field || !field.type.type) return false
-
-				switch (field.type.type) {
-					case 'Int':
-					case 'Float':
-					case 'Decimal':
-					case 'DateTime':
-						return true
-					default:
-						return false
-				}
+				if (!fieldType) return false
+				return ['Int', 'Float', 'Decimal', 'DateTime'].includes(fieldType)
 			},
-
-			isStringSearchableType: (): boolean => {
-				return field?.type.type === 'String' || false
-			},
-
+			isStringSearchableType: (): boolean => fieldType === 'String',
 			field,
 			model,
-
 			getFormattedFieldName: (formatter: TypeFormatter): string => {
 				if (!field) return formatter.formatFieldName(fieldName)
-				const customName = this.getFieldStringArg(field, '@graphql.name', 'name')
-				const nameToFormat = customName !== undefined && customName !== null ? customName : field.name
-				return formatter.formatFieldName(nameToFormat)
+				const customName = getAttrValue('@graphql.name', this.getStringValue)
+				return formatter.formatFieldName(customName ?? field.name)
 			},
 		}
 	}
 
-	private modelHasAttribute(model: DataModel, attrName: string): boolean {
-		if (!model.attributes || model.attributes.length === 0) return false
-		return model.attributes.some((attr) => {
-			return attr.decl && attr.decl.ref && attr.decl.ref.name === attrName
-		})
+	private findAttribute(attributes: readonly (DataModelAttribute | DataModelFieldAttribute)[] | undefined, attrName: string): AttributeType {
+		return attributes?.find((attr) => attr.decl?.ref?.name === attrName)
 	}
 
-	private fieldHasAttribute(field: DataModelField, attrName: string): boolean {
-		if (!field.attributes || field.attributes.length === 0) return false
-		return field.attributes.some((attr) => {
-			return attr.decl && attr.decl.ref && attr.decl.ref.name === attrName
-		})
+	private hasAttribute(attributes: readonly (DataModelAttribute | DataModelFieldAttribute)[] | undefined, attrName: string): boolean {
+		return !!this.findAttribute(attributes, attrName)
 	}
 
-	private findModelAttribute(model: DataModel, attrName: string): DataModelAttribute | undefined {
-		if (!model.attributes || model.attributes.length === 0) {
-			return undefined
-		}
-
-		return model.attributes.find((attr) => attr.decl?.ref?.name === attrName)
+	private getAttributeArg(attr: AttributeType, argName?: string): AttributeArg | undefined {
+		if (!attr?.args?.length) return undefined
+		return argName ? attr.args.find((arg) => arg.name === argName) : attr.args[0]
 	}
 
-	private findFieldAttribute(field: DataModelField, attrName: string): DataModelFieldAttribute | undefined {
-		if (!field.attributes || field.attributes.length === 0) {
-			return undefined
-		}
-
-		return field.attributes.find((attr) => attr.decl?.ref?.name === attrName)
-	}
-
-	private findField(model: DataModel, fieldName: string): DataModelField | undefined {
-		return model.fields?.find((f) => f.name === fieldName)
-	}
-
-	private getAttributeArg(attr: DataModelAttribute | DataModelFieldAttribute | undefined, argName: string): AttributeArg | undefined {
-		if (!attr?.args?.length) {
-			return undefined
-		}
-
-		return attr.args.find((arg) => arg.name === argName)
-	}
-
-	private getStringAttributeArg(attr: DataModelAttribute | DataModelFieldAttribute | undefined, argName: string): string | undefined {
+	private getStringValue: AttributeGetter<string> = (attr, argName) => {
 		const arg = this.getAttributeArg(attr, argName)
-		if (!arg?.value) {
-			return undefined
-		}
-
-		const exprValue = arg.value as ExpressionValue
-		if (exprValue.$type === 'StringLiteral') {
-			return exprValue.value as string
-		}
-
-		return undefined
+		const exprValue = arg?.value
+		return exprValue?.$type === 'StringLiteral' ? (exprValue.value as string) : undefined
 	}
 
-	private getBooleanAttributeArg(attr: DataModelAttribute | DataModelFieldAttribute | undefined, argName: string): boolean | undefined {
+	private getBooleanValue: AttributeGetter<boolean> = (attr, argName) => {
 		const arg = this.getAttributeArg(attr, argName)
-		if (!arg?.value) return undefined
-
-		const exprValue = arg.value as ExpressionValue
-		if (exprValue.$type === 'BooleanLiteral') {
-			return exprValue.value as boolean
-		}
-
-		return undefined
+		const exprValue = arg?.value
+		return exprValue?.$type === 'BooleanLiteral' ? (exprValue.value as boolean) : undefined
 	}
 
-	private getNumberAttributeArg(attr: DataModelAttribute | DataModelFieldAttribute | undefined, argName: string): number | undefined {
+	private getNumberValue: AttributeGetter<number> = (attr, argName) => {
 		const arg = this.getAttributeArg(attr, argName)
-		if (!arg?.value) return undefined
-
-		const exprValue = arg.value as ExpressionValue
-		if (exprValue.$type === 'NumberLiteral') {
+		const exprValue = arg?.value
+		if (exprValue?.$type === 'NumberLiteral') {
 			const value = exprValue.value
 			return typeof value === 'number' ? value : Number(value)
 		}
-
 		return undefined
-	}
-
-	private getModelStringArg(model: DataModel, attrName: string, argName: string): string | undefined {
-		return this.getStringAttributeArg(this.findModelAttribute(model, attrName), argName)
-	}
-
-	private getModelBooleanArg(model: DataModel, attrName: string, argName: string): boolean | undefined {
-		return this.getBooleanAttributeArg(this.findModelAttribute(model, attrName), argName)
-	}
-
-	private getModelNumberArg(model: DataModel, attrName: string, argName: string): number | undefined {
-		return this.getNumberAttributeArg(this.findModelAttribute(model, attrName), argName)
-	}
-
-	private getFieldStringArg(field: DataModelField, attrName: string, argName: string): string | undefined {
-		return this.getStringAttributeArg(this.findFieldAttribute(field, attrName), argName)
-	}
-
-	private getFieldBooleanArg(field: DataModelField, attrName: string, argName: string): boolean | undefined {
-		return this.getBooleanAttributeArg(this.findFieldAttribute(field, attrName), argName)
-	}
-
-	private getFieldNumberArg(field: DataModelField, attrName: string, argName: string): number | undefined {
-		return this.getNumberAttributeArg(this.findFieldAttribute(field, attrName), argName)
 	}
 }

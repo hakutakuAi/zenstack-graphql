@@ -4,82 +4,74 @@ import { join } from 'path'
 import { SchemaComposer } from 'graphql-compose'
 
 describe('Basic Example', () => {
-	const schemaPath = join(__dirname, './schema.graphql')
-	const schemaComposer = new SchemaComposer()
+    const schemaPath = join(__dirname, './schema.graphql')
+    const schemaComposer = new SchemaComposer()
 
-	beforeAll(() => {
-		expect(existsSync(schemaPath)).toBe(true)
-		schemaComposer.add(readFileSync(schemaPath, 'utf8'))
-	})
+    beforeAll(() => {
+        expect(existsSync(schemaPath)).toBe(true)
+        schemaComposer.add(readFileSync(schemaPath, 'utf8'))
+    })
 
-	test('Schema contains all expected object types', () => {
-		const expectedTypes = ['Space', 'SpaceUser', 'User', 'List', 'Todo', 'ActivityLog', 'Tag']
+    test('Schema contains all expected object types', () => {
+        const expectedTypes = ['Author', 'Book', 'Review', 'Article', 'Publisher']
 
-		for (const typeName of expectedTypes) {
-			expect(schemaComposer.has(typeName)).toBe(true)
-			expect(schemaComposer.getOTC(typeName)).toBeTruthy()
-		}
-	})
+        for (const typeName of expectedTypes) {
+            expect(schemaComposer.has(typeName)).toBe(true)
+            expect(schemaComposer.getOTC(typeName)).toBeTruthy()
+        }
+    })
 
-	test('Object types have expected fields', () => {
-		const spaceType = schemaComposer.getOTC('Space')
-		expect(spaceType.hasField('id')).toBe(true)
-		expect(spaceType.hasField('name')).toBe(true)
-		expect(spaceType.hasField('slug')).toBe(true)
-		expect(spaceType.hasField('members')).toBe(true)
-		expect(spaceType.hasField('lists')).toBe(true)
+    test('Object types have expected fields', () => {
+        const authorType = schemaComposer.getOTC('Author')
+        expect(authorType.hasField('id')).toBe(true)
+        expect(authorType.hasField('name')).toBe(true)
+        expect(authorType.hasField('books')).toBe(true)
+        expect(authorType.getFieldType('books').toString()).toBe('[Book!]!')
 
-		expect(spaceType.getFieldType('id').toString()).toBe('String!')
-		expect(spaceType.getFieldType('members').toString()).toBe('[SpaceUser!]!')
+        const bookType = schemaComposer.getOTC('Book')
+        expect(bookType.hasField('title')).toBe(true)
+        expect(bookType.hasField('category')).toBe(true)
+        expect(bookType.hasField('author')).toBe(true)
+        expect(bookType.getFieldType('author').toString()).toBe('Author!')
 
-		const userType = schemaComposer.getOTC('User')
-		expect(userType.hasField('email')).toBe(true)
-		expect(userType.hasField('spaces')).toBe(true)
-		expect(userType.hasField('lists')).toBe(true)
-		expect(userType.hasField('todos')).toBe(true)
-		expect(userType.getFieldType('email').toString()).toBe('String!')
+        const reviewType = schemaComposer.getOTC('Review')
+        expect(reviewType.hasField('rating')).toBe(true)
+        expect(reviewType.hasField('book')).toBe(true)
+        expect(reviewType.getFieldType('book').toString()).toBe('Book!')
+    })
 
-		const todoType = schemaComposer.getOTC('Todo')
-		expect(todoType.hasField('title')).toBe(true)
-		expect(todoType.hasField('priority')).toBe(true)
-		expect(todoType.hasField('owner')).toBe(true)
-		expect(todoType.getFieldType('title').toString()).toBe('String!')
-		expect(todoType.getFieldType('owner').toString()).toBe('User!')
-	})
+    test('Enum types are properly defined', () => {
+        expect(schemaComposer.has('BookCategory')).toBe(true)
+        const categoryEnum = schemaComposer.getETC('BookCategory')
 
-	test('Enum types are properly defined', () => {
-		expect(schemaComposer.has('SpaceUserRole')).toBe(true)
-		const roleEnum = schemaComposer.getETC('SpaceUserRole')
+        const enumValues = categoryEnum.getFields()
+        expect(Object.keys(enumValues)).toContain('FICTION')
+        expect(Object.keys(enumValues)).toContain('NONFICTION')
+        expect(Object.keys(enumValues)).toContain('SCIENCE')
+    })
 
-		const enumValues = roleEnum.getFields()
-		expect(Object.keys(enumValues)).toContain('USER')
-		expect(Object.keys(enumValues)).toContain('ADMIN')
-		expect(Object.keys(enumValues)).toContain('GUEST')
-	})
+    test('Scalar types are properly defined', () => {
+        expect(schemaComposer.has('DateTime')).toBe(true)
+        expect(schemaComposer.has('Decimal')).toBe(true)
+        expect(schemaComposer.getSTC('DateTime')).toBeTruthy()
+        expect(schemaComposer.getSTC('Decimal')).toBeTruthy()
+    })
 
-	test('Scalar types are properly defined', () => {
-		expect(schemaComposer.has('DateTime')).toBe(true)
-		expect(schemaComposer.has('JSON')).toBe(true)
-		expect(schemaComposer.getSTC('DateTime')).toBeTruthy()
-		expect(schemaComposer.getSTC('JSON')).toBeTruthy()
-	})
+    test('Relation fields are properly defined', () => {
+        const authorType = schemaComposer.getOTC('Author')
+        expect(authorType.getFieldType('books').toString()).toBe('[Book!]!')
+        expect(authorType.getFieldType('articles').toString()).toBe('[Article!]!')
 
-	test('Relation fields are properly defined', () => {
-		const spaceType = schemaComposer.getOTC('Space')
-		expect(spaceType.getFieldType('members').toString()).toBe('[SpaceUser!]!')
+        const bookType = schemaComposer.getOTC('Book')
+        expect(bookType.getFieldType('author').toString()).toBe('Author!')
+        expect(bookType.getFieldType('reviews').toString()).toBe('[Review!]!')
 
-		const spaceUserType = schemaComposer.getOTC('SpaceUser')
-		expect(spaceUserType.getFieldType('space').toString()).toBe('Space!')
+        const articleType = schemaComposer.getOTC('Article')
+        expect(articleType.getFieldType('author').toString()).toBe('Author!')
+    })
 
-		const listType = schemaComposer.getOTC('List')
-		expect(listType.getFieldType('todos').toString()).toBe('[Todo!]!')
-
-		const todoType = schemaComposer.getOTC('Todo')
-		expect(todoType.getFieldType('list').toString()).toBe('List!')
-	})
-
-	test('All types and fields in schema are valid', () => {
-		const schema = schemaComposer.buildSchema()
-		expect(schema).toBeTruthy()
-	})
+    test('All types and fields in schema are valid', () => {
+        const schema = schemaComposer.buildSchema()
+        expect(schema).toBeTruthy()
+    })
 })
