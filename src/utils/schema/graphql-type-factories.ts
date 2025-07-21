@@ -1,6 +1,6 @@
 import { SchemaComposer, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from 'graphql-compose'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { logWarning, ErrorCategory } from '@utils/error'
+import { warning, ErrorCategory } from '@utils/error'
 
 export class GraphQLTypeFactories {
 	private readonly schemaComposer: SchemaComposer<unknown>
@@ -43,7 +43,7 @@ export class GraphQLTypeFactories {
 			this.schemaComposer.set('PageInfo', pageInfoTC)
 			return pageInfoTC
 		} catch (error) {
-			logWarning(`Failed to create PageInfo type: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
+			warning(`Failed to create PageInfo type: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
 
 			const fallbackTC = this.schemaComposer.createObjectTC({
 				name: 'PageInfo',
@@ -139,7 +139,7 @@ export class GraphQLTypeFactories {
 
 			return createdTypesTC
 		} catch (error) {
-			logWarning(`Failed to create pagination input types: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
+			warning(`Failed to create pagination input types: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
 			return []
 		}
 	}
@@ -168,7 +168,7 @@ export class GraphQLTypeFactories {
 			this.schemaComposer.set('SortDirection', sortDirectionTC)
 			return sortDirectionTC
 		} catch (error) {
-			logWarning(`Failed to create SortDirection enum: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
+			warning(`Failed to create SortDirection enum: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, { error })
 
 			const fallbackEnum = this.schemaComposer.createEnumTC({
 				name: 'SortDirection',

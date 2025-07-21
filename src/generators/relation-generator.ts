@@ -1,7 +1,6 @@
 import { ObjectTypeComposer } from 'graphql-compose'
-import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
-import { ErrorCategory, logWarning } from '@utils/error'
+import { ErrorCategory, PluginError, warning } from '@utils/error'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 
 export interface RelationField {
@@ -38,7 +37,7 @@ export class RelationGenerator extends BaseGenerator {
 					const targetModel = this.findModelByName(targetModelName)
 
 					if (!targetModel) {
-						logWarning(`Target model ${targetModelName} not found for relation ${model.name}.${field.name}`, ErrorCategory.SCHEMA, {
+						warning(`Target model ${targetModelName} not found for relation ${model.name}.${field.name}`, ErrorCategory.SCHEMA, {
 							modelName: model.name,
 							fieldName: field.name,
 							targetModelName,
@@ -90,22 +89,25 @@ export class RelationGenerator extends BaseGenerator {
 		}
 
 		if (relation.targetFieldName && !targetType.hasField(relation.targetFieldName)) {
-			const backReferenceResult = this.createBackReferenceRelation(relation)
-			if (backReferenceResult.isErr()) {
-				logWarning(backReferenceResult.error, ErrorCategory.SCHEMA, { relation })
+			try {
+				const backReferenceRelation = this.createBackReferenceRelation(relation)
+				const fieldType = this.getRelationFieldType(backReferenceRelation)
+				const fieldDescription = this.getRelationFieldDescription(backReferenceRelation)
+
+				targetType.addFields({
+					[relation.targetFieldName]: {
+						type: fieldType,
+						description: fieldDescription,
+					},
+				})
+			} catch (error) {
+				if (error instanceof PluginError) {
+					warning(error.message, error.category, { relation })
+				} else {
+					warning(`Failed to create back reference for relation: ${relation.modelName}.${relation.fieldName}`, ErrorCategory.SCHEMA, { relation, error })
+				}
 				return
 			}
-
-			const backReferenceRelation = backReferenceResult.value
-			const fieldType = this.getRelationFieldType(backReferenceRelation)
-			const fieldDescription = this.getRelationFieldDescription(backReferenceRelation)
-
-			targetType.addFields({
-				[relation.targetFieldName]: {
-					type: fieldType,
-					description: fieldDescription,
-				},
-			})
 		}
 
 		this.registry.addProcessedRelation(relationKey)
@@ -131,19 +133,19 @@ export class RelationGenerator extends BaseGenerator {
 		return `Relation to ${relation.targetModelName}${relation.targetFieldName ? ` via ${relation.targetFieldName}` : ''}`
 	}
 
-	private createBackReferenceRelation(relation: RelationField): Result<RelationField, string> {
+	private createBackReferenceRelation(relation: RelationField): RelationField {
 		if (!relation.targetFieldName) {
-			return err(`Cannot create back reference for relation without target field: ${relation.modelName}.${relation.fieldName}`)
+			throw new PluginError(`Cannot create back reference for relation without target field: ${relation.modelName}.${relation.fieldName}`, ErrorCategory.SCHEMA, { relation })
 		}
 
-		return ok({
+		return {
 			modelName: relation.targetModelName,
 			fieldName: relation.targetFieldName,
 			targetModelName: relation.modelName,
 			targetFieldName: relation.fieldName,
 			isList: !relation.isList,
 			isRequired: false,
-		})
+		}
 	}
 
 	private shouldSkipModel(model: DataModel): boolean {

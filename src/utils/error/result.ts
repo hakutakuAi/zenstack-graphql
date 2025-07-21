@@ -1,5 +1,3 @@
-import { Result, ok, err } from 'neverthrow'
-
 export enum ErrorCategory {
 	VALIDATION = 'VALIDATION',
 	SCHEMA = 'SCHEMA',
@@ -9,13 +7,6 @@ export enum ErrorCategory {
 }
 
 export type PluginErrorContext = Record<string, unknown>
-
-export interface PluginErrorData {
-	message: string
-	category: ErrorCategory
-	context?: PluginErrorContext
-	suggestions?: string[]
-}
 
 export class PluginError extends Error {
 	public readonly category: ErrorCategory
@@ -39,11 +30,14 @@ export class PluginError extends Error {
 	}
 }
 
-export function throwError(message: string, category: ErrorCategory, context?: Record<string, unknown>, suggestions?: string[]): never {
-	throw new PluginError(message, category, context, suggestions)
+interface ErrorMessageData {
+	message: string
+	category: ErrorCategory
+	context?: PluginErrorContext
+	suggestions?: string[]
 }
 
-export function formatErrorMessage(errorData: PluginErrorData): string {
+function formatErrorMessage(errorData: ErrorMessageData): string {
 	let formattedMessage = `[${errorData.category}] ${errorData.message}`
 
 	if (errorData.context && Object.keys(errorData.context).length > 0) {
@@ -63,25 +57,6 @@ export function formatErrorMessage(errorData: PluginErrorData): string {
 	return formattedMessage
 }
 
-export function createError(message: string, category: ErrorCategory, context?: PluginErrorContext, suggestions?: string[]): Result<never, PluginErrorData> {
-	return err({
-		message,
-		category,
-		context,
-		suggestions,
-	})
-}
-
-export function logWarning(message: string, category: ErrorCategory, context?: PluginErrorContext): void {
+export function warning(message: string, category: ErrorCategory, context?: PluginErrorContext): void {
 	console.warn(formatErrorMessage({ message, category, context }))
 }
-
-export function fromThrowable<T, E extends PluginErrorData>(fn: () => T, errorMapper: (error: unknown) => E): Result<T, E> {
-	try {
-		return ok(fn())
-	} catch (error) {
-		return err(errorMapper(error))
-	}
-}
-
-export type PluginResult<T> = Result<T, PluginErrorData>

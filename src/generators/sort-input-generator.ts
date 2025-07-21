@@ -1,8 +1,7 @@
-import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
 import { TypeKind } from '@/utils/registry/registry'
 import { DataModel } from '@zenstackhq/sdk/ast'
-import { ErrorCategory, logWarning } from '@utils/error'
+import { ErrorCategory, PluginError, warning } from '@utils/error'
 
 export class SortInputGenerator extends BaseGenerator {
 	generate(): string[] {
@@ -10,12 +9,20 @@ export class SortInputGenerator extends BaseGenerator {
 
 		for (const model of this.models) {
 			if (!this.attributeProcessor.model(model).isIgnored()) {
-				const result = this.generateSortInputType(model)
-				if (result.isErr()) {
-					logWarning(`Failed to generate sort input for model ${model.name}: ${result.error}`, ErrorCategory.GENERATION, {
-						model: model.name,
-						error: result.error,
-					})
+				try {
+					this.generateSortInputType(model)
+				} catch (error) {
+					if (error instanceof PluginError) {
+						warning(`Failed to generate sort input for model ${model.name}: ${error.message}`, error.category, {
+							model: model.name,
+							error,
+						})
+					} else {
+						warning(`Failed to generate sort input for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, {
+							model: model.name,
+							error,
+						})
+					}
 				}
 			}
 		}
@@ -23,26 +30,25 @@ export class SortInputGenerator extends BaseGenerator {
 		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('SortInput'))
 	}
 
-	private createSortDirectionEnum(): Result<void, string> {
+	private createSortDirectionEnum(): void {
 		if (this.registry.isTypeOfKind('SortDirection', TypeKind.ENUM)) {
-			return ok(undefined)
+			return
 		}
 
 		try {
 			const sortDirectionTC = this.typeFactories.createSortDirectionEnum()
 			this.registry.registerType('SortDirection', TypeKind.ENUM, sortDirectionTC, true)
-			return ok(undefined)
 		} catch (error) {
-			return err(`Failed to create SortDirection enum: ${error instanceof Error ? error.message : String(error)}`)
+			throw new PluginError(`Failed to create SortDirection enum`, ErrorCategory.GENERATION, { originalError: error }, ['Check if SortDirection enum is already defined elsewhere'])
 		}
 	}
 
-	private generateSortInputType(model: DataModel): Result<void, string> {
+	private generateSortInputType(model: DataModel): void {
 		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 		const sortInputName = this.typeFormatter.formatSortInputTypeName(typeName)
 
 		if (this.schemaComposer.has(sortInputName)) {
-			return ok(undefined)
+			return
 		}
 
 		const fields = model.fields
@@ -65,9 +71,8 @@ export class SortInputGenerator extends BaseGenerator {
 		try {
 			const sortInputTC = this.typeFactories.createSortInputType(typeName, fields)
 			this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
-			return ok(undefined)
 		} catch (error) {
-			return err(`Error creating sort input type for ${model.name}: ${error instanceof Error ? error.message : String(error)}`)
+			throw new PluginError(`Error creating sort input type for ${model.name}`, ErrorCategory.GENERATION, { modelName: model.name, error }, ['Check if the model fields are defined correctly'])
 		}
 	}
 }

@@ -1,7 +1,6 @@
 import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer, ScalarTypeComposer, InputTypeComposer, InterfaceTypeComposer, UnionTypeComposer } from 'graphql-compose'
 import { printSchema, GraphQLSchema } from 'graphql'
-import { Result, ok } from 'neverthrow'
-import { ErrorCategory, logWarning } from '@utils/error'
+import { ErrorCategory, PluginError, warning } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export enum TypeKind {
@@ -75,7 +74,7 @@ export class Registry {
 		if (this.types.has(typeName)) {
 			const existing = this.types.get(typeName)!
 			if (existing.kind !== kind) {
-				logWarning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
+				warning(`Type ${typeName} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
 					typeName,
 					existingKind: existing.kind,
 					newKind: kind,
@@ -119,7 +118,7 @@ export class Registry {
 					return composer as ComposerTypeMap[K]
 				} else {
 					const actualKind = this.determineComposerKind(composer)
-					logWarning(`Type ${typeName} exists but is of kind ${actualKind}, not ${kind}`, ErrorCategory.SCHEMA, {
+					warning(`Type ${typeName} exists but is of kind ${actualKind}, not ${kind}`, ErrorCategory.SCHEMA, {
 						typeName,
 						requestedKind: kind,
 						actualKind,
@@ -131,7 +130,7 @@ export class Registry {
 		}
 
 		if (typeInfo.kind !== kind) {
-			logWarning(`Type ${typeName} is registered with kind ${typeInfo.kind}, not ${kind}`, ErrorCategory.SCHEMA, {
+			warning(`Type ${typeName} is registered with kind ${typeInfo.kind}, not ${kind}`, ErrorCategory.SCHEMA, {
 				typeName,
 				requestedKind: kind,
 				actualKind: typeInfo.kind,
@@ -299,7 +298,7 @@ export class Registry {
 		} catch (error) {
 			const errorMessage = `Schema validation failed: ${error instanceof Error ? error.message : String(error)}`
 
-			logWarning(errorMessage, ErrorCategory.SCHEMA, {
+			warning(errorMessage, ErrorCategory.SCHEMA, {
 				validationError: error,
 				errorType: 'SchemaValidation',
 			})
@@ -309,7 +308,15 @@ export class Registry {
 	}
 
 	buildSchema(): GraphQLSchema {
-		return this.schemaComposer.buildSchema({ keepUnusedTypes: true })
+		try {
+			return this.schemaComposer.buildSchema({ keepUnusedTypes: true })
+		} catch (error) {
+			throw new PluginError(`Failed to build GraphQL schema`, ErrorCategory.SCHEMA, { originalError: error }, [
+				'Check for circular references in your schema',
+				'Verify all required types are properly defined',
+				'Ensure type names are unique across the schema',
+			])
+		}
 	}
 
 	generateSDL(): string {

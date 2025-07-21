@@ -1,12 +1,12 @@
 import { ObjectTypeComposer } from 'graphql-compose'
-import { Result, ok, err } from 'neverthrow'
 import { BaseGenerator } from '@generators/base-generator'
 import { TypeKind } from '@/utils/registry/registry'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
-import { ErrorCategory, logWarning } from '@utils/error'
+import { ErrorCategory, PluginError, warning } from '@utils/error'
 
 export interface FieldConfig {
 	type: string
+	description?: string
 	resolve?: any
 }
 
@@ -27,75 +27,72 @@ export class ObjectTypeGenerator extends BaseGenerator {
 			return
 		}
 
-		const fieldsResult = this.createObjectFields(model)
-		if (fieldsResult.isErr()) {
-			logWarning(`Failed to create fields for model ${model.name}: ${fieldsResult.error}`, ErrorCategory.GENERATION, {
-				modelName: model.name,
-				error: fieldsResult.error,
+		try {
+			const fields = this.createObjectFields(model)
+			const description = this.attributeProcessor.model(model).description()
+
+			const objectComposer = this.schemaComposer.createObjectTC({
+				name: typeName,
+				description,
+				fields,
 			})
-			return
+
+			this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
+		} catch (error) {
+			if (error instanceof PluginError) {
+				warning(`Failed to create fields for model ${model.name}: ${error.message}`, error.category, {
+					modelName: model.name,
+					error: error,
+				})
+			} else {
+				warning(`Failed to create fields for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, {
+					modelName: model.name,
+					error: error,
+				})
+			}
 		}
-
-		const description = this.attributeProcessor.model(model).description()
-
-		const objectComposer = this.schemaComposer.createObjectTC({
-			name: typeName,
-			description,
-			fields: fieldsResult.value,
-		})
-
-		this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
 	}
 
-	private createObjectFields(model: DataModel): Result<Record<string, FieldConfig>, string> {
+	private createObjectFields(model: DataModel): Record<string, FieldConfig> {
 		const fields: Record<string, FieldConfig> = {}
 
 		for (const field of model.fields) {
 			if (this.attributeProcessor.field(model, field.name).shouldInclude(this.options.includeRelations)) {
 				const fieldName = this.attributeProcessor.field(model, field.name).getFormattedFieldName(this.typeFormatter)
-				const fieldConfigResult = this.createFieldConfig(field)
-
-				if (fieldConfigResult.isErr()) {
-					return err(fieldConfigResult.error)
-				}
-
-				fields[fieldName] = fieldConfigResult.value
+				const fieldConfig = this.createFieldConfig(field)
+				fields[fieldName] = fieldConfig
 			}
 		}
 
-		return ok(fields)
+		return fields
 	}
 
-	private createFieldConfig(field: DataModelField): Result<FieldConfig, string> {
-		const graphqlTypeResult = this.mapFieldType(field)
-
-		if (graphqlTypeResult.isErr()) {
-			return err(graphqlTypeResult.error)
-		}
+	private createFieldConfig(field: DataModelField): FieldConfig {
+		const graphqlType = this.mapFieldType(field)
 
 		const model = this.models.find((m) => m.fields.includes(field))
 		if (!model) {
-			return err(`Could not find model for field ${field.name}`)
+			throw new PluginError(`Could not find model for field ${field.name}`, ErrorCategory.SCHEMA, { fieldName: field.name })
 		}
 
 		const description = this.attributeProcessor.field(model, field.name).description()
 
-		return ok({
-			type: graphqlTypeResult.value,
+		return {
+			type: graphqlType,
 			description,
-		})
+		}
 	}
 
-	private mapFieldType(field: DataModelField): Result<string, string> {
+	private mapFieldType(field: DataModelField): string {
 		if (this.typeMapper.isRelationField(field)) {
-			return ok(this.typeMapper.getRelationFieldType(field))
+			return this.typeMapper.getRelationFieldType(field)
 		}
 
 		const mappedType = this.typeMapper.mapFieldType(field)
 		if (!mappedType) {
-			return err(`Unsupported field type: ${field.type}`)
+			throw new PluginError(`Unsupported field type: ${field.type}`, ErrorCategory.SCHEMA, { field: field.name, type: field.type })
 		}
 
-		return ok(mappedType)
+		return mappedType
 	}
 }

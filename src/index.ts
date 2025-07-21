@@ -5,7 +5,7 @@ import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
 
 import { CoreGenerator } from '@generators'
-import { ErrorCategory, PluginError, throwError } from '@utils/error'
+import { ErrorCategory, PluginError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
 import { FileWriter } from '@utils/io/file-writer'
 
@@ -27,7 +27,7 @@ export interface PluginMetadata {
 
 export default async function run(model: Model, options: SdkPluginOptions): Promise<{ metadata: PluginMetadata }> {
 	if (!model) {
-		throwError(
+		throw new PluginError(
 			'Model is required',
 			ErrorCategory.VALIDATION,
 			{
@@ -38,12 +38,7 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 	}
 
 	try {
-		const optionsResult = validateOptions(options as PluginOptions)
-		if (optionsResult.isErr()) {
-			throw new PluginError(optionsResult.error.message, optionsResult.error.category, optionsResult.error.context, optionsResult.error.suggestions)
-		}
-
-		const normalizedOptions = optionsResult.value
+		const normalizedOptions = validateOptions(options as PluginOptions)
 		const models = model.declarations.filter((x) => isDataModel(x) && !x.isAbstract) as DataModel[]
 		const enums = model.declarations.filter((x) => isEnum(x)) as Enum[]
 
@@ -57,9 +52,6 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 		const fileWriter = FileWriter.create()
 
 		const writeResult = await fileWriter.writeSchema(result.sdl, normalizedOptions.output)
-		if (writeResult.isErr()) {
-			throw new PluginError(writeResult.error.message, writeResult.error.category, writeResult.error.context, writeResult.error.suggestions)
-		}
 
 		return {
 			metadata: {

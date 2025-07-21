@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { Result, ok } from 'neverthrow'
-import { ErrorCategory, PluginErrorData, createError } from '@utils/error'
+import { ErrorCategory, PluginError } from '@utils/error'
 import { VALID_SCALAR_VALUES, scalarTypesSchema } from './constants'
 
 export type FieldNaming = 'camelCase' | 'snake_case' | 'preserve'
@@ -75,7 +74,7 @@ const optionsSchema = z.object(
 	Object.fromEntries(Object.entries(optionDefinitions).map(([key, def]) => [key, def.schema.optional()])) as { [K in OptionKey]: z.ZodOptional<OptionDefinitions[K]['schema']> }
 )
 
-export function validateOptions(options: PluginOptions = {}): Result<NormalizedOptions, PluginErrorData> {
+export function validateOptions(options: PluginOptions = {}): NormalizedOptions {
 	try {
 		const validatedOptions = optionsSchema.parse(options)
 
@@ -94,7 +93,7 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 				})
 		) as NormalizedOptions
 
-		return ok(normalized)
+		return normalized
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			const errorMessages = error.issues.map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`).join('\n')
@@ -114,7 +113,7 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 				return `Check the ${path} option value`
 			})
 
-			return createError(
+			throw new PluginError(
 				`Invalid plugin options:\n${errorMessages}`,
 				ErrorCategory.VALIDATION,
 				{
@@ -127,7 +126,7 @@ export function validateOptions(options: PluginOptions = {}): Result<NormalizedO
 		}
 
 		const errorMessage = error instanceof Error ? error.message : String(error)
-		return createError(`Error during options validation: ${errorMessage}`, ErrorCategory.VALIDATION, { originalError: error })
+		throw new PluginError(`Error during options validation: ${errorMessage}`, ErrorCategory.VALIDATION, { originalError: error })
 	}
 }
 
