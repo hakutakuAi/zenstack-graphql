@@ -9,6 +9,9 @@
 		"type": "git",
 		"url": "https://github.com/hakutakuAi/zenstack-graphql"
 	},
+	"engines": {
+		"bun": "^1.0.0"
+	},
 	"files": [
 		"**/*",
 		"!**/*.test.{ts,js}",

@@ -113,10 +113,9 @@ export function validateOptions(options: PluginOptions = {}): NormalizedOptions 
 				return `Check the ${path} option value`
 			})
 
-			// Format options and validation errors for better debugging
-			const formattedOptions = JSON.stringify(options, null, 2);
-			const formattedErrors = JSON.stringify(error.issues, null, 2);
-			
+			const formattedOptions = JSON.stringify(options, null, 2)
+			const formattedErrors = JSON.stringify(error.issues, null, 2)
+
 			throw new PluginError(
 				`Invalid plugin options:\n${errorMessages}`,
 				ErrorCategory.VALIDATION,

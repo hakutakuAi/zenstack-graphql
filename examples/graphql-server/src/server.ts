@@ -47,14 +47,13 @@ const yoga = createYoga({
 export const server = createServer(yoga)
 export const prismaClient = prisma
 
-// Only start the server if this file is run directly
 if (require.main === module) {
 	const port = process.env.PORT || 4000
-	
+
 	server.listen(port, () => {
 		console.log(`🔎 Explore the schema at http://localhost:${port}/graphql`)
 	})
-	
+
 	process.on('SIGINT', async () => {
 		console.log('Shutting down gracefully...')
 		await prisma.$disconnect()
