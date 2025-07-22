@@ -1,45 +1,35 @@
 # ZenStack GraphQL Plugin
 
-A ZenStack plugin for automatically generating GraphQL schemas from your ZModel definitions. This plugin transforms your data models into a fully-featured GraphQL API schema with support for relations, filtering, pagination, and more.
+This plugin generates a complete GraphQL schema with relations, filtering, sorting, and pagination. Saving you hours of boilerplate code to match your database models with you graphql server.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
-## 🌟 Features
+## Why Use This Plugin?
 
-- **Complete Type Generation**: Automatically generates GraphQL types from your ZModel schema
-- **Relation Support**: Maintains model relationships in the GraphQL schema
-- **Relay-Compatible**: Generates Relay-compliant connections for paginated queries
-- **Filtering & Sorting**: Built-in support for filter and sort input types
-- **Customization**: Extensive configuration options for type naming and field generation
-- **Attributes**: Schema customization via ZModel attributes
+- **Zero Boilerplate**: Go from data model to full GraphQL API schema using the [Zenstack](https://zenstack.dev/)
+- **Relationship Handling**: All your model relations become GraphQL connections automatically
+- **Modern API Features**: Built-in filtering, sorting and Relay-compatible pagination
+- **Customization That Makes Sense**: Rename fields, customize types, hide sensitive data, ignore generations...
 
-## 📋 Table of Contents
+## 🚀 How to use
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Schema Customization](#schema-customization)
-- [Architecture](#architecture)
-- [Examples](#examples)
-- [Contributing](#contributing)
-- [License](#license)
-
-## 📦 Installation
+Install with your favorite package manager:
 
 ```bash
+# Using bun
+bun add zenstack-graphql -D
+
 # Using npm
 npm install zenstack-graphql --save-dev
 
 # Using yarn
 yarn add zenstack-graphql -D
 
-# Using bun
-bun add zenstack-graphql -D
+#...
 ```
 
-## 🚀 Usage
-
-1. Add the plugin to your ZModel schema file:
+Add to your schema.zmodel file:
+> Just a base example
 
 ```zmodel
 plugin graphql {
@@ -48,50 +38,75 @@ plugin graphql {
 }
 ```
 
-2. Generate your schema:
+Generate your GraphQL schema:
 
 ```bash
 zenstack generate
 ```
 
-3. Use the generated GraphQL schema with your preferred GraphQL server implementation.
+That's it! Your GraphQL schema is ready to use with any GraphQL server.
 
-## ⚙️ Configuration
+## ⚙️ Customization Options
 
-The plugin supports various configuration options to customize the generated schema:
+Keep your GraphQL schema clean to your needs:
 
 ```zmodel
 plugin graphql {
-    provider = 'zenstack-graphql'
+    // Basic settings
     output = './schema.graphql'
-    
+
+    // Use your preferred naming style
+    fieldNaming = 'snake_case'  // Fields become like_this
+    typeNaming = 'PascalCase'   // Types become LikeThis
+
     // Customize scalar type mappings
     scalarTypes = {
-        DateTime: 'Date',
-        Json: 'JSONObject'
+        DateTime: 'Date',      // Use Date instead of DateTime
+        Json: 'JSONObject'     // Use JSONObject instead of JSON
     }
-    
-    // Control feature generation
-    connectionTypes = true
-    generateEnums = true
-    generateScalars = true
-    generateFilters = true
-    generateSorts = true
-    
-    // Customize naming conventions
-    fieldNaming = 'camelCase'  // 'camelCase', 'snake_case', or 'preserve'
-    typeNaming = 'PascalCase'  // 'PascalCase', 'camelCase', or 'preserve'
-    
-    // Control relation handling
-    includeRelations = true
+
+    // Turn features on/off as needed
+    connectionTypes = true     // Add Relay pagination support
+    generateFilters = true     // Add filtering capabilities
+    generateSorts = true       // Add sorting functionality
 }
 ```
 
-### Configuration Options
+### 🔧 Fine-tune with Attributes
+
+Control exactly what appears in your API:
+
+```zmodel
+model User {
+    id          Int      @id
+    email       String   @unique
+
+    // Hide sensitive fields from the API
+    password    String   @graphql.ignore
+
+    // Rename fields for better API design
+    emailAddress String  @graphql.name("email")
+
+    // Add clear descriptions for your API docs
+    fullName    String   @graphql.description("User's complete name")
+
+    // Mark fields for filtering and sorting
+    createdAt   DateTime @graphql.sortable @graphql.filterable
+
+    // Model-level customization
+    @@graphql.name("Member")                  // Rename the type
+    @@graphql.description("Platform member")  // Add type description
+    @@graphql.connection(pageSize: 20)        // Configure pagination
+}
+```
+
+## 📋 Configuration Reference
+
+Here's a complete reference of all available options:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `output` | `string` | `'./schema.graphql'` | Output path for the generated GraphQL schema |
+| `output` | `string` | `'./schema.graphql'` | Output path for the generated schema |
 | `scalarTypes` | `object` | *See below* | Custom mappings for scalar types |
 | `connectionTypes` | `boolean` | `true` | Generate Relay-compatible connection types |
 | `generateEnums` | `boolean` | `true` | Generate GraphQL enum types |
@@ -112,78 +127,28 @@ Default scalar mappings:
 }
 ```
 
-## 🎨 Schema Customization
+> You can see a example on [custom-naming](examples/custom-naming)
 
-The plugin provides several attributes to customize the GraphQL schema at the model and field level.
+## 🏗️ How It Works
 
-### Model Attributes
+The plugin transforms your ZModel schema into a GraphQL schema through these steps:
 
-```zmodel
-model User {
-  id Int @id
-  
-  // Ignore this model in GraphQL schema
-  @@graphql.ignore
-  
-  // Set a custom name for this model
-  @@graphql.name("Member")
-  
-  // Add a description for this model
-  @@graphql.description("User account information")
-  
-  // Configure connection options
-  @@graphql.connection(pageSize: 10)
-}
-```
+1. **Parsing**: Reads your data models and extracts entities, relationships, and attributes
+2. **Type Generation**: Creates GraphQL types that match your data structure
+3. **Relation Processing**: Maps your model relationships to GraphQL connections
+4. **Connection Generation**: Builds Relay-compatible pagination support
+5. **Schema Assembly**: Puts everything together into a complete GraphQL schema
+6. **Output**: Writes the final schema to your specified location
 
-### Field Attributes
+> All this happens automatically when you run `zenstack generate`, you can see more about on [Zenstack Plugin System](https://zenstack.dev/docs/the-complete-guide/part2/)!
 
-```zmodel
-model User {
-  id Int @id
-  
-  // Ignore this field in GraphQL schema
-  password String @graphql.ignore
-  
-  // Set a custom name for this field
-  emailAddress String @graphql.name("email")
-  
-  // Add a description for this field
-  fullName String @graphql.description("User's full name")
-  
-  // Make the field sortable in connection queries
-  score Float @graphql.sortable
-  
-  // Make the field filterable in queries
-  name String @graphql.filterable
-}
-```
+## 📝 Use case example: Blog Schema
 
-## 🏗️ Architecture
+Here's how easy it is to create a blog API:
 
-The ZenStack GraphQL plugin transforms your ZModel schema into a GraphQL schema through several steps:
+### ZModel Input
 
-1. **Parsing**: Reads your ZModel schema and extracts models, enums, and relations.
-2. **Type Generation**: Generates corresponding GraphQL types (objects, inputs, enums, scalars).
-3. **Relation Processing**: Maps model relationships to GraphQL relations.
-4. **Connection Generation**: Creates Relay-compatible connection types when enabled.
-5. **Schema Composition**: Assembles all types into a complete GraphQL schema.
-6. **SDL Output**: Writes the schema in SDL format to the specified output file.
-
-### Key Components
-
-- **Core Generator**: Orchestrates the schema generation process
-- **Type Mapper**: Maps ZModel data types to GraphQL types
-- **Registry**: Manages all GraphQL types and validates the final schema
-- **Generators**: Specialized generators for different GraphQL type categories
-  - Object Type Generator: Creates GraphQL object types from models
-  - Relation Generator: Handles model relationships
-  - Connection Generator: Builds Relay-compatible connection types
-  - Filter/Sort Input Generators: Create input types for filtering and sorting
-
-## 📝 Examples
-
-### Basic Schema
+First, define your data models:
 
 ```zmodel
 datasource db {
@@ -191,7 +156,7 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
-generator js {
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -217,20 +182,113 @@ model Post {
 }
 ```
 
-This generates GraphQL types for `User` and `Post` with their relationships, along with connection types for pagination, and filter/sort inputs when those options are enabled.
+### Generated GraphQL Schema
 
-Check the `/examples` directory for more sample use cases.
+Running `zenstack generate` automatically produces this GraphQL schema:
+
+```graphql
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+# Base model types
+type User {
+  id: Int!
+  email: String!
+  name: String
+  posts: [Post!]!
+}
+
+type Post {
+  id: Int!
+  title: String!
+  content: String
+  published: Boolean!
+  author: User!
+  authorId: Int!
+}
+
+# Pagination support (Relay-compatible)
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Connection types for related lists
+type UserConnection {
+  pageInfo: PageInfo!
+  edges: [UserEdge!]!
+  totalCount: Int!
+}
+
+type UserEdge {
+  node: User!
+  cursor: String!
+}
+
+type PostConnection {
+  pageInfo: PageInfo!
+  edges: [PostEdge!]!
+  totalCount: Int!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: String!
+}
+
+# Filtering and sorting inputs
+input StringFilterInput {
+  equals: String
+  not: String
+  in: [String!]
+  notIn: [String!]
+  contains: String
+  startsWith: String
+  endsWith: String
+}
+
+input BooleanFilterInput {
+  equals: Boolean
+  not: Boolean
+}
+
+# ... and more generated types for complete API functionality
+```
+
+This simple schema definition gives you a GraphQL API with:
+
+- **Custom Scalars**: DateTime, JSON, and Decimal scalar types
+- **Base Types**: User and Post types with their relationships
+- **Relay Connections**: Connection types for efficient pagination
+- **Filtering**: Filter inputs for complex data queries
+- **Sorting**: Sort inputs for ordering results
+- **Standard Interfaces**: Node interface for unified type handling
+
+No need to write connection types, or filtering logic, everything is automatically generated from your data model.
+
+> Check the [examples](./examples/) directory for more sample use cases!
 
 ## 🤝 Contributing
 
-Contributions are welcome! To contribute:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Liked this plugin? Want to make it better? Contributions are always welcome! You can open a issue or pull requests on this repository 🧡
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details.
+
+
+### Built with 🧡 by the Hakutaku team.
