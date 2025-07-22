@@ -108,17 +108,21 @@ export function validateOptions(options: PluginOptions = {}): NormalizedOptions 
 					return `${path} must be one of: ${issue.options.join(', ')}`
 				}
 				if (issue.code === 'custom' && path.includes('scalarTypes')) {
-					return `Use valid GraphQL scalar types: ${VALID_SCALAR_VALUES.join(', ')}`
+					return `Use valid GraphQL scalar types: Standard types are ${VALID_SCALAR_VALUES.join(', ')}. Custom types must start with an uppercase letter or underscore and contain only letters, numbers, and underscores.`
 				}
 				return `Check the ${path} option value`
 			})
 
+			// Format options and validation errors for better debugging
+			const formattedOptions = JSON.stringify(options, null, 2);
+			const formattedErrors = JSON.stringify(error.issues, null, 2);
+			
 			throw new PluginError(
 				`Invalid plugin options:\n${errorMessages}`,
 				ErrorCategory.VALIDATION,
 				{
-					originalOptions: options,
-					validationErrors: error.issues,
+					originalOptions: formattedOptions,
+					validationErrors: formattedErrors,
 					errorCount: error.issues.length,
 				},
 				suggestions.length ? suggestions : ['Review the plugin documentation for valid option values']

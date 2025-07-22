@@ -42,7 +42,8 @@ function formatErrorMessage(errorData: ErrorMessageData): string {
 	if (errorData.context && Object.keys(errorData.context).length > 0) {
 		formattedMessage += '\n\nContext:'
 		for (const [key, value] of Object.entries(errorData.context)) {
-			formattedMessage += `\n- ${key}: ${value}`
+			const formattedValue = typeof value === 'object' && value !== null ? JSON.stringify(value, null, 2) : value
+			formattedMessage += `\n- ${key}: ${formattedValue}`
 		}
 	}
 

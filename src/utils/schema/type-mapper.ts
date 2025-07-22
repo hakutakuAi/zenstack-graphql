@@ -1,6 +1,7 @@
 import { SCALAR_TYPES } from '@utils/config/constants'
 import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
 import { SchemaProcessor } from './schema-processor'
+import { NormalizedOptions } from '@utils/config/options-validator'
 
 export enum FieldTypeCategory {
 	SCALAR = 'scalar',
@@ -13,12 +14,16 @@ export class TypeMapper {
 	private readonly customModelNameMap: Map<string, string>
 	private readonly enumMap: ReadonlyMap<string, Enum>
 	private readonly schemaProcessor: SchemaProcessor
+	private readonly options: NormalizedOptions
+	private readonly customScalarTypes: Record<string, string>
 
-	constructor(models: DataModel[], enums: Enum[]) {
+	constructor(models: DataModel[], enums: Enum[], options: NormalizedOptions) {
 		this.modelMap = new Map(models.map((model) => [model.name, model]))
 		this.enumMap = new Map(enums.map((enum_) => [enum_.name, enum_]))
 		this.customModelNameMap = new Map()
 		this.schemaProcessor = new SchemaProcessor()
+		this.options = options
+		this.customScalarTypes = options.scalarTypes
 
 		for (const model of models) {
 			const processor = this.schemaProcessor.model(model)
@@ -29,8 +34,8 @@ export class TypeMapper {
 		}
 	}
 
-	static createFromModelsAndEnums(models: DataModel[], enums: Enum[]): TypeMapper {
-		return new TypeMapper(models, enums)
+	static createFromModelsAndEnums(models: DataModel[], enums: Enum[], options: NormalizedOptions): TypeMapper {
+		return new TypeMapper(models, enums, options)
 	}
 
 	mapFieldType(field: DataModelField): string | null {
@@ -41,8 +46,15 @@ export class TypeMapper {
 	}
 
 	private resolveBaseType(field: DataModelField): string | null {
-		if (field.type.type && field.type.type in SCALAR_TYPES) {
-			return SCALAR_TYPES[field.type.type]
+		if (field.type.type) {
+			if (field.type.type in this.customScalarTypes) {
+				const customType = this.customScalarTypes[field.type.type]
+				return customType || null
+			}
+
+			if (field.type.type in SCALAR_TYPES) {
+				return SCALAR_TYPES[field.type.type]
+			}
 		}
 
 		if (field.type.reference) {
@@ -64,6 +76,11 @@ export class TypeMapper {
 	}
 
 	mapScalarType(typeStr: string): string | null {
+		if (typeStr in this.customScalarTypes) {
+			const customType = this.customScalarTypes[typeStr]
+			return customType || null
+		}
+
 		if (typeStr in SCALAR_TYPES) {
 			return SCALAR_TYPES[typeStr as keyof typeof SCALAR_TYPES]
 		}

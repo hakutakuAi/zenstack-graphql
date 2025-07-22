@@ -23,7 +23,8 @@ export class FilterInputGenerator extends BaseGenerator {
 	}
 
 	private createDateTimeFilterType(): void {
-		this.createFilterType('DateTimeFilterInput', 'datetime', 'DateTime', false)
+		const dateTimeType = this.options.scalarTypes['DateTime'] || 'DateTime'
+		this.createFilterType(`${dateTimeType}FilterInput`, 'datetime', dateTimeType, false)
 	}
 
 	private createStringFilterType(): void {
@@ -114,7 +115,8 @@ export class FilterInputGenerator extends BaseGenerator {
 
 				if (fieldProcessor.isRangeFilterableType()) {
 					if (field.type.type === 'DateTime') {
-						filterType = 'DateTimeFilterInput'
+						const dateTimeType = this.options.scalarTypes['DateTime'] || 'DateTime'
+						filterType = `${dateTimeType}FilterInput`
 					} else {
 						filterType = 'NumericFilterInput'
 					}

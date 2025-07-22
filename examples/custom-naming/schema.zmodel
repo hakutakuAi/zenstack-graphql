@@ -12,6 +12,12 @@ plugin graphql {
     output = './schema.graphql'
     fieldNaming = 'snake_case'  // Use snake_case for field names
     typeNaming = 'PascalCase'   // Keep PascalCase for type names
+	scalarTypes = {
+		"DateTime": 'Time',
+		"Json": 'json',
+		"Decimal": 'Decimal',
+		"Bytes": 'String'
+	}
 }
 
 // Model demonstrating snake_case field conversion

@@ -4,8 +4,10 @@ interface Node {
   id: ID!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
-scalar DateTime
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z (custom scalar type: Time)
+"""
+scalar Time
 
 """The `JSON` scalar type represents JSON values as specified by ECMA-404"""
 scalar JSON
@@ -26,7 +28,7 @@ type Customer {
   first_name: String!
   last_name: String!
   email_address: String!
-  registration_date: DateTime!
+  registration_date: Time!
   loyalty_points: Int!
   shipping_address: Address
   shipping_address_id: String
@@ -76,7 +78,7 @@ type Address {
 
 type Order {
   id: String!
-  order_date: DateTime!
+  order_date: Time!
   customer: Customer!
   customer_id: String!
   order_status: OrderStatus!
@@ -357,18 +359,18 @@ input NumericFilterInput {
 }
 
 """Input type for datetime filtering operations"""
-input DateTimeFilterInput {
+input TimeFilterInput {
   """Equal to the given value"""
-  equals: DateTime
+  equals: Time
 
   """Not equal to the given value"""
-  not: DateTime
+  not: Time
 
   """Greater than the given value"""
-  gt: DateTime
+  gt: Time
 
   """Less than the given value"""
-  lt: DateTime
+  lt: Time
 }
 
 """Input type for string filtering operations"""

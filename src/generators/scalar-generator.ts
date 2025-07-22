@@ -25,16 +25,38 @@ export class ScalarGenerator extends BaseGenerator {
 	}
 
 	private registerBuiltInScalars(): void {
-		const builtInScalars = [this.createDateTimeScalar(), this.createJSONScalar(), this.createDecimalScalar()]
-		builtInScalars.forEach((scalar) => this.registerScalar(scalar))
+		const scalarImplementations = {
+			DateTime: this.createDateTimeScalar(),
+			JSON: this.createJSONScalar(),
+			Decimal: this.createDecimalScalar(),
+		}
+
+		Object.entries(scalarImplementations).forEach(([scalarType, implementation]) => {
+			const customName = this.options.scalarTypes[scalarType]
+
+			if (customName && customName !== scalarType) {
+				const customScalar = {
+					...implementation,
+					name: customName,
+					description: `${implementation.description} (custom scalar type: ${customName})`,
+				}
+				this.registerScalar(customScalar)
+			} else {
+				this.registerScalar(implementation)
+			}
+		})
 	}
 
 	private registerCustomScalars(): void {
+		const builtInPrismaTypes = ['DateTime', 'Json', 'Decimal', 'Bytes']
+
 		Object.entries(this.options.scalarTypes).forEach(([prismaType, graphqlType]) => {
-			if (!this.isBuiltInScalar(graphqlType) && !this.hasScalar(graphqlType)) {
-				const customScalar = this.createCustomScalar(graphqlType, prismaType)
-				this.registerScalar(customScalar)
+			if (builtInPrismaTypes.includes(prismaType) || this.isBuiltInScalar(graphqlType) || this.hasScalar(graphqlType)) {
+				return
 			}
+
+			const customScalar = this.createCustomScalar(graphqlType, prismaType)
+			this.registerScalar(customScalar)
 		})
 	}
 
