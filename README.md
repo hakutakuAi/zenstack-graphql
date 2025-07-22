@@ -18,7 +18,7 @@ This plugin generates a complete GraphQL schema with relations, filtering, sorti
 Install with your favorite package manager:
 
 ```bash
-# Using bun
+# Using bun (Recommended)
 bun add @hakutakuai/zenstack-graphql -D
 
 # Using npm
