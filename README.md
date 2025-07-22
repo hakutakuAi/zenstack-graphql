@@ -4,14 +4,14 @@ This plugin generates a complete GraphQL schema with relations, filtering, sorti
 
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
-## Why Use This Plugin?
+## Features
 
 - **Zero Boilerplate**: Go from data model to full GraphQL API schema using the [Zenstack](https://zenstack.dev/)
 - **Relationship Handling**: All your model relations become GraphQL connections automatically
 - **Modern API Features**: Built-in filtering, sorting and Relay-compatible pagination
 - **Customization That Makes Sense**: Rename fields, customize types, hide sensitive data, ignore generations...
 
-## 🚀 How to use
+## How to use
 
 > TL;DR - See the [graphql-server example](./examples/graphql-server/) with full code example
 
@@ -48,7 +48,7 @@ zenstack generate
 
 That's it! Your GraphQL schema is ready to use with any GraphQL server.
 
-## ⚙️ Customization Options
+## Customization Options
 
 Keep your GraphQL schema clean to your needs:
 
@@ -74,7 +74,7 @@ plugin graphql {
 }
 ```
 
-### 🔧 Fine-tune with Attributes
+### Fine-tune with Attributes
 
 Control exactly what appears in your API:
 
@@ -102,7 +102,7 @@ model User {
 }
 ```
 
-## 📋 Configuration Reference
+## Configuration Reference
 
 Here's a complete reference of all available options:
 
@@ -131,7 +131,7 @@ Default scalar mappings:
 
 > You can see a example on [custom-naming](examples/custom-naming)
 
-## 🏗️ How It Works
+## How It Works
 
 The plugin transforms your ZModel schema into a GraphQL schema through these steps:
 
@@ -144,7 +144,7 @@ The plugin transforms your ZModel schema into a GraphQL schema through these ste
 
 > All this happens automatically when you run `zenstack generate`, you can see more about on [Zenstack Plugin System](https://zenstack.dev/docs/the-complete-guide/part2/)!
 
-## 📝 Use case example: Blog Schema
+## Use case example: Blog Schema
 
 Here's how easy it is to create a blog API:
 
@@ -284,11 +284,11 @@ No need to write connection types, or filtering logic, everything is automatical
 
 > Check the [examples](./examples/) directory for more sample use cases!
 
-## 🤝 Contributing
+## Contributing
 
 Liked this plugin? Want to make it better? Contributions are always welcome! You can open a issue or pull requests on this repository 🧡
 
-## 📄 License
+## License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details.
 
