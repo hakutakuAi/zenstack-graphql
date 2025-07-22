@@ -1,6 +1,7 @@
 {
-	"name": "zenstack-graphql",
+	"name": "@hakutakuai/zenstack-graphql",
 	"module": "src/index.ts",
+	"version": "1.0.0",
 	"scripts": {
 		"build": "rm -rf dist && tsc && tsc-alias && cp ./src/plugin.zmodel ./dist/plugin.zmodel ",
 		"generate:basic": "cd ./examples/basic && zenstack generate",

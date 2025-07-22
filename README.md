@@ -19,13 +19,13 @@ Install with your favorite package manager:
 
 ```bash
 # Using bun
-bun add zenstack-graphql -D
+bun add @hakutakuai/zenstack-graphql -D
 
 # Using npm
-npm install zenstack-graphql --save-dev
+npm install @hakutakuai/zenstack-graphql --save-dev
 
 # Using yarn
-yarn add zenstack-graphql -D
+yarn add @hakutakuai/zenstack-graphql -D
 
 #...
 ```
@@ -35,7 +35,7 @@ Add to your schema.zmodel file:
 
 ```zmodel
 plugin graphql {
-    provider = 'zenstack-graphql'
+    provider = '@hakutakuai/zenstack-graphql'
     output = './schema.graphql'
 }
 ```
@@ -163,7 +163,7 @@ generator client {
 }
 
 plugin graphql {
-  provider = "zenstack-graphql"
+  provider = "@hakutakuai/zenstack-graphql"
   output = "./schema.graphql"
 }
 
