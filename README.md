@@ -13,6 +13,8 @@ This plugin generates a complete GraphQL schema with relations, filtering, sorti
 
 ## 🚀 How to use
 
+> TL;DR - See the [graphql-server example](./examples/graphql-server/) with full code example
+
 Install with your favorite package manager:
 
 ```bash

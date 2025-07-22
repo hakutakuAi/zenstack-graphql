@@ -1,0 +1,385 @@
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+"""User of the blog system"""
+type User {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  email: String!
+  name: String!
+  bio: String
+  posts: [Post!]!
+  comments: [Comment!]!
+}
+
+"""Blog post"""
+type Post {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  title: String!
+  content: String!
+  published: Boolean!
+  viewCount: Int!
+  author: User!
+  authorId: String!
+  categories: [PostCategory!]!
+  comments: [Comment!]!
+}
+
+"""Post category"""
+type Category {
+  id: String!
+  name: String!
+  description: String
+  posts: [PostCategory!]!
+}
+
+"""Relation between Post and Category"""
+type PostCategory {
+  post: Post!
+  postId: String!
+  category: Category!
+  categoryId: String!
+  assignedAt: DateTime!
+}
+
+"""Comment on a blog post"""
+type Comment {
+  id: String!
+  createdAt: DateTime!
+  content: String!
+  post: Post!
+  postId: String!
+  author: User!
+  authorId: String!
+}
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""Pagination input for forward pagination"""
+input ForwardPaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+}
+
+"""Pagination input for backward pagination"""
+input BackwardPaginationInput {
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Combined pagination input"""
+input PaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""An edge in a User connection."""
+type UserEdge {
+  """The User at the end of the edge."""
+  node: User!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of User items."""
+type UserConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of User edges."""
+  edges: [UserEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Post connection."""
+type PostEdge {
+  """The Post at the end of the edge."""
+  node: Post!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Post items."""
+type PostConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Post edges."""
+  edges: [PostEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Category connection."""
+type CategoryEdge {
+  """The Category at the end of the edge."""
+  node: Category!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Category items."""
+type CategoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Category edges."""
+  edges: [CategoryEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a PostCategory connection."""
+type PostCategoryEdge {
+  """The PostCategory at the end of the edge."""
+  node: PostCategory!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of PostCategory items."""
+type PostCategoryConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of PostCategory edges."""
+  edges: [PostCategoryEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Comment connection."""
+type CommentEdge {
+  """The Comment at the end of the edge."""
+  node: Comment!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Comment items."""
+type CommentConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Comment edges."""
+  edges: [CommentEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""Sort input for User connections"""
+input UserSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+}
+
+"""Sort input for Post connections"""
+input PostSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by viewCount"""
+  viewCount: SortDirection
+}
+
+"""Sort input for Category connections"""
+input CategorySortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for PostCategory connections"""
+input PostCategorySortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: String
+}
+
+"""Sort input for Comment connections"""
+input CommentSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+}
+
+"""Input type for numeric filtering operations"""
+input NumericFilterInput {
+  """Equal to the given value"""
+  equals: Float
+
+  """Not equal to the given value"""
+  not: Float
+
+  """Greater than the given value"""
+  gt: Float
+
+  """Less than the given value"""
+  lt: Float
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
+}
+
+"""Input type for string filtering operations"""
+input StringFilterInput {
+  """Equal to the given value"""
+  equals: String
+
+  """Not equal to the given value"""
+  not: String
+
+  """In the given list of values"""
+  in: [String!]
+
+  """Not in the given list of values"""
+  notIn: [String!]
+
+  """Contains the given value"""
+  contains: String
+
+  """Starts with the given value"""
+  startsWith: String
+
+  """Ends with the given value"""
+  endsWith: String
+}
+
+"""Input type for boolean filtering operations"""
+input BooleanFilterInput {
+  """Equal to the given value"""
+  equals: Boolean
+
+  """Not equal to the given value"""
+  not: Boolean
+}
+
+"""Filter input type for User"""
+input UserFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by email"""
+  email: StringFilterInput
+
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [UserFilterInput!]
+
+  """Logical OR operation"""
+  OR: [UserFilterInput!]
+}
+
+"""Filter input type for Post"""
+input PostFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by title"""
+  title: StringFilterInput
+
+  """Filter by published"""
+  published: BooleanFilterInput
+
+  """Logical AND operation"""
+  AND: [PostFilterInput!]
+
+  """Logical OR operation"""
+  OR: [PostFilterInput!]
+}
+
+"""Filter input type for Category"""
+input CategoryFilterInput {
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [CategoryFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CategoryFilterInput!]
+}

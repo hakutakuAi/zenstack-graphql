@@ -1,0 +1,26 @@
+{
+	"name": "graphql-server-example",
+	"version": "1.0.0",
+	"description": "GraphQL server example using ZenStack GraphQL plugin with GraphQL Yoga",
+	"main": "src/server.ts",
+	"scripts": {
+		"generate": "zenstack generate",
+		"db:setup": "node scripts/generate-prisma.js",
+		"db:migrate": "prisma migrate dev",
+		"start": "bun run src/server.ts",
+		"test": "bun test",
+		"setup": "bun run generate && bun run db:migrate"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.12.0",
+		"@zenstackhq/runtime": "^2.17.1",
+		"graphql": "^16.11.0",
+		"graphql-yoga": "^5.15.1"
+	},
+	"devDependencies": {
+		"@types/node": "^24.1.0",
+		"prisma": "^6.12.0",
+		"typescript": "^5.8.3",
+		"zenstack": "^2.17.1"
+	}
+}

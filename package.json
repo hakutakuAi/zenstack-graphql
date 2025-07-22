@@ -6,10 +6,12 @@
 		"generate:basic": "cd ./examples/basic && zenstack generate",
 		"generate:full": "cd ./examples/full-features && zenstack generate",
 		"generate:custom": "cd ./examples/custom-naming && zenstack generate",
-		"generate:all": "bun run generate:basic && bun run generate:full && bun run generate:custom",
+		"generate:graphql-server": "cd ./examples/graphql-server && bun run setup",
+		"generate:all": "bun run generate:basic && bun run generate:full && bun run generate:custom && bun run generate:graphql-server",
 		"test:basic": "cd ./examples/basic && bun test",
 		"test:full": "cd ./examples/full-features && bun test",
 		"test:custom": "cd ./examples/custom-naming && bun test",
+		"test:graphql-server": "cd ./examples/graphql-server && bun test",
 		"test:all": "cd ./examples && bun test",
 		"e2e": "bun run build && bun generate:all && bun test:all"
 	},

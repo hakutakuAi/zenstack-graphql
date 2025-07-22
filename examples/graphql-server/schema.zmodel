@@ -1,0 +1,80 @@
+datasource db {
+	provider = 'sqlite'
+	url = 'file:./dev.db'
+}
+
+generator client {
+	provider = 'prisma-client-js'
+	binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+plugin graphql {
+	provider = '../../dist'
+	output = './src/schema.graphql'
+}
+
+model User {
+	id          String    @id @default(uuid())
+	createdAt   DateTime  @default(now()) @graphql.sortable @graphql.filterable
+	updatedAt   DateTime  @updatedAt @graphql.sortable
+	email       String    @unique @graphql.filterable
+	name        String    @graphql.filterable
+	bio         String?
+	posts       Post[]
+	comments    Comment[]
+
+	@@graphql.description("User of the blog system")
+	@@graphql.connection(pageSize: 10)
+}
+
+model Post {
+	id          String    @id @default(uuid())
+	createdAt   DateTime  @default(now()) @graphql.sortable @graphql.filterable
+	updatedAt   DateTime  @updatedAt @graphql.sortable
+	title       String    @graphql.filterable
+	content     String
+	published   Boolean   @default(false) @graphql.filterable
+	viewCount   Int       @default(0) @graphql.sortable
+	author      User      @relation(fields: [authorId], references: [id])
+	authorId    String
+	categories  CategoryOnPost[]
+	comments    Comment[]
+	
+	@@graphql.description("Blog post")
+	@@graphql.connection(pageSize: 10)
+}
+
+model Category {
+	id          String          @id @default(uuid())
+	name        String          @unique @graphql.filterable
+	description String?
+	posts       CategoryOnPost[]
+	
+	@@graphql.description("Post category")
+	@@graphql.connection(pageSize: 20)
+}
+
+model CategoryOnPost {
+	post        Post      @relation(fields: [postId], references: [id])
+	postId      String
+	category    Category  @relation(fields: [categoryId], references: [id])
+	categoryId  String
+	assignedAt  DateTime  @default(now())
+	
+	@@id([postId, categoryId])
+	@@graphql.name("PostCategory")
+	@@graphql.description("Relation between Post and Category")
+}
+
+model Comment {
+	id          String    @id @default(uuid())
+	createdAt   DateTime  @default(now()) @graphql.sortable
+	content     String
+	post        Post      @relation(fields: [postId], references: [id])
+	postId      String
+	author      User      @relation(fields: [authorId], references: [id])
+	authorId    String
+	
+	@@graphql.description("Comment on a blog post")
+	@@graphql.connection(pageSize: 15)
+}
