@@ -63,8 +63,8 @@ plugin graphql {
 
     // Customize scalar type mappings
     scalarTypes = {
-        DateTime: 'Date',      // Use Date instead of DateTime
-        Json: 'JSONObject'     // Use JSONObject instead of JSON
+        "DateTime": 'Date',      // Use Date instead of DateTime
+        "Json": 'JSONObject'     // Use JSONObject instead of JSON
     }
 
     // Turn features on/off as needed
@@ -122,10 +122,10 @@ Here's a complete reference of all available options:
 Default scalar mappings:
 ```
 {
-  DateTime: 'DateTime',
-  Json: 'JSON',
-  Decimal: 'Decimal',
-  Bytes: 'String'
+  "DateTime": 'DateTime',
+  "Json": 'JSON',
+  "Decimal": 'Decimal',
+  "Bytes": 'String'
 }
 ```
 
