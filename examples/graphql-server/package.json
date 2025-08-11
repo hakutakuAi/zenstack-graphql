@@ -9,18 +9,18 @@
 		"db:migrate": "prisma migrate dev",
 		"start": "bun run src/server.ts",
 		"test": "bun test",
-		"setup": "bun run generate && bun run db:migrate"
+		"setup": "bun i && bun run generate && bun run db:migrate"
 	},
 	"dependencies": {
-		"@prisma/client": "^6.12.0",
-		"@zenstackhq/runtime": "^2.17.1",
+		"@prisma/client": "^6.13.0",
+		"@zenstackhq/runtime": "^2.18.0",
 		"graphql": "^16.11.0",
 		"graphql-yoga": "^5.15.1"
 	},
 	"devDependencies": {
-		"@types/node": "^24.1.0",
-		"prisma": "^6.12.0",
-		"typescript": "^5.8.3",
-		"zenstack": "^2.17.1"
+		"@types/node": "^24.2.1",
+		"prisma": "^6.13.0",
+		"typescript": "^5.9.2",
+		"zenstack": "^2.18.0"
 	}
 }
