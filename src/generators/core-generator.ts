@@ -1,11 +1,11 @@
 import { GeneratorFactoryContext } from '@types'
-import { GeneratorFactory } from '@/generators/generator-factory'
+import { GeneratorFactory } from '@generators/generator-factory'
 import { ScalarGenerator } from '@generators/scalar-generator'
 import { EnumGenerator } from '@generators/enum-generator'
 import { ObjectTypeGenerator } from '@generators/object-type-generator'
 import { RelationGenerator } from '@generators/relation-generator'
 import { ConnectionGenerator } from '@generators/connection-generator'
-import { SortInputGenerator } from '@/generators/sort-input-generator'
+import { SortInputGenerator } from '@generators/sort-input-generator'
 import { FilterInputGenerator } from '@generators/filter-input-generator'
 
 export interface GenerationStats {
@@ -24,7 +24,6 @@ export interface GenerationResult {
 }
 
 export class CoreGenerator {
-	private warnings: string[] = []
 	private generatorFactory: GeneratorFactory
 
 	constructor(context: GeneratorFactoryContext) {
@@ -32,50 +31,26 @@ export class CoreGenerator {
 	}
 
 	generate(): GenerationResult {
-		this.generatorFactory.context.registry.addRelayRequirements()
+		const { options, registry } = this.generatorFactory.context
+		registry.addRelayRequirements()
 
 		const stats: GenerationStats = {
-			objectTypes: [],
-			enumTypes: [],
-			scalarTypes: [],
-			relationFields: [],
-			connectionTypes: [],
-			sortInputTypes: [],
-			filterInputTypes: [],
+			objectTypes: this.generatorFactory.create(ObjectTypeGenerator).generate(),
+			enumTypes: options.generateEnums ? this.generatorFactory.create(EnumGenerator).generate() : [],
+			scalarTypes: options.generateScalars ? this.generatorFactory.create(ScalarGenerator).generate() : [],
+			relationFields: options.includeRelations ? this.generatorFactory.create(RelationGenerator).generate() : [],
+			connectionTypes: options.connectionTypes ? this.generatorFactory.create(ConnectionGenerator).generate() : [],
+			sortInputTypes: options.connectionTypes && options.generateSorts ? this.generatorFactory.create(SortInputGenerator).generate() : [],
+			filterInputTypes: options.connectionTypes && options.generateFilters ? this.generatorFactory.create(FilterInputGenerator).generate() : [],
 		}
 
-		if (this.generatorFactory.context.options.generateScalars) {
-			stats.scalarTypes = this.generatorFactory.create(ScalarGenerator).generate()
+		const warnings = registry.validateSchema()
+		if (warnings.length > 0) {
+			console.warn('Schema validation warnings:', warnings)
 		}
-
-		if (this.generatorFactory.context.options.generateEnums) {
-			stats.enumTypes = this.generatorFactory.create(EnumGenerator).generate()
-		}
-
-		stats.objectTypes = this.generatorFactory.create(ObjectTypeGenerator).generate()
-
-		if (this.generatorFactory.context.options.includeRelations) {
-			stats.relationFields = this.generatorFactory.create(RelationGenerator).generate()
-		}
-
-		if (this.generatorFactory.context.options.connectionTypes) {
-			stats.connectionTypes = this.generatorFactory.create(ConnectionGenerator).generate()
-
-			if (this.generatorFactory.context.options.generateSorts) {
-				stats.sortInputTypes = this.generatorFactory.create(SortInputGenerator).generate()
-			}
-
-			if (this.generatorFactory.context.options.generateFilters) {
-				stats.filterInputTypes = this.generatorFactory.create(FilterInputGenerator).generate()
-			}
-		}
-
-		this.warnings.push(...this.generatorFactory.context.registry.validateSchema())
-
-		const sdl = this.generatorFactory.context.registry.generateSDL()
 
 		return {
-			sdl,
+			sdl: registry.generateSDL(),
 			stats,
 		}
 	}

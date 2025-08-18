@@ -1,4 +1,4 @@
-import { FieldNaming, TypeNaming } from '@utils/config/options-validator'
+import { FieldNaming, TypeNaming } from '@utils/config'
 import { pascalCase, camelCase, snakeCase, constantCase } from 'change-case'
 
 export class TypeFormatter {

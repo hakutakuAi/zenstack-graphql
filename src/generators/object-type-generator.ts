@@ -1,6 +1,5 @@
-import { ObjectTypeComposer } from 'graphql-compose'
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { ErrorCategory, PluginError, warning } from '@utils/error'
 
@@ -12,7 +11,7 @@ export interface FieldConfig {
 
 export class ObjectTypeGenerator extends BaseGenerator {
 	generate(): string[] {
-		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateObjectType(model))
+		this.forEachValidModel((model) => this.generateObjectType(model))
 		return this.registry.getObjectTypes()
 	}
 
@@ -45,10 +44,14 @@ export class ObjectTypeGenerator extends BaseGenerator {
 					error: error,
 				})
 			} else {
-				warning(`Failed to create fields for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, {
-					modelName: model.name,
-					error: error,
-				})
+				warning(
+					`Failed to create fields for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`,
+					ErrorCategory.GENERATION,
+					{
+						modelName: model.name,
+						error: error,
+					},
+				)
 			}
 		}
 	}

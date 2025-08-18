@@ -1,12 +1,12 @@
 import { SchemaComposer } from 'graphql-compose'
-import { NormalizedOptions } from '@utils/config/options-validator'
+import { NormalizedOptions } from '@utils/config'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { TypeMapper } from '@utils/schema/type-mapper'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { Registry } from '@/utils/registry/registry'
+import { Registry } from '@utils/registry'
 import { GeneratorContext } from '@types'
 import { DataModel, Enum } from '@zenstackhq/sdk/ast'
-import { GraphQLTypeFactories } from '@/utils'
+import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 
 export abstract class BaseGenerator<T = void> {
 	protected readonly options: NormalizedOptions
@@ -29,6 +29,14 @@ export abstract class BaseGenerator<T = void> {
 		this.typeFormatter = context.typeFormatter
 		this.typeMapper = context.typeMapper
 		this.typeFactories = context.typeFactories
+	}
+
+	protected get validModels() {
+		return this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored())
+	}
+
+	protected forEachValidModel(callback: (model: DataModel) => void): void {
+		this.validModels.forEach(callback)
 	}
 
 	abstract generate(): T

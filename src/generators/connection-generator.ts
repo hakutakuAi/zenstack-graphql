@@ -1,12 +1,11 @@
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
 export class ConnectionGenerator extends BaseGenerator {
 	generate(): string[] {
 		this.createCommonTypes()
-		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateConnectionType(model))
-
+		this.forEachValidModel((model) => this.generateConnectionType(model))
 		return this.registry.getConnectionTypes()
 	}
 

@@ -104,7 +104,10 @@ export class RelationGenerator extends BaseGenerator {
 				if (error instanceof PluginError) {
 					warning(error.message, error.category, { relation })
 				} else {
-					warning(`Failed to create back reference for relation: ${relation.modelName}.${relation.fieldName}`, ErrorCategory.SCHEMA, { relation, error })
+					warning(`Failed to create back reference for relation: ${relation.modelName}.${relation.fieldName}`, ErrorCategory.SCHEMA, {
+						relation,
+						error,
+					})
 				}
 				return
 			}
@@ -120,7 +123,9 @@ export class RelationGenerator extends BaseGenerator {
 	private getRelationFieldType(relation: RelationField): string {
 		const targetModel = this.findModelByName(relation.targetModelName)
 
-		const typeName = targetModel ? this.attributeProcessor.model(targetModel).getFormattedTypeName(this.typeFormatter) : this.typeFormatter.formatTypeName(relation.targetModelName)
+		const typeName = targetModel
+			? this.attributeProcessor.model(targetModel).getFormattedTypeName(this.typeFormatter)
+			: this.typeFormatter.formatTypeName(relation.targetModelName)
 
 		if (relation.isList) {
 			return `[${typeName}!]!`
@@ -135,7 +140,11 @@ export class RelationGenerator extends BaseGenerator {
 
 	private createBackReferenceRelation(relation: RelationField): RelationField {
 		if (!relation.targetFieldName) {
-			throw new PluginError(`Cannot create back reference for relation without target field: ${relation.modelName}.${relation.fieldName}`, ErrorCategory.SCHEMA, { relation })
+			throw new PluginError(
+				`Cannot create back reference for relation without target field: ${relation.modelName}.${relation.fieldName}`,
+				ErrorCategory.SCHEMA,
+				{ relation },
+			)
 		}
 
 		return {

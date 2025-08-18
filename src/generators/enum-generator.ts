@@ -1,5 +1,5 @@
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 import { Enum } from '@zenstackhq/sdk/ast'
 
 export interface EnumValueConfig {

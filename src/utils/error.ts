@@ -60,3 +60,17 @@ function formatErrorMessage(errorData: ErrorMessageData): string {
 export function warning(message: string, category: ErrorCategory, context?: PluginErrorContext): void {
 	console.warn(formatErrorMessage({ message, category, context }))
 }
+
+export function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error)
+}
+
+export function getErrorCategory(error: unknown): ErrorCategory {
+	return error instanceof PluginError ? error.category : ErrorCategory.GENERATION
+}
+
+export function handleError(error: unknown, operation: string, context?: PluginErrorContext): void {
+	const message = getErrorMessage(error)
+	const category = getErrorCategory(error)
+	warning(`Failed to ${operation}: ${message}`, category, { ...context, error })
+}

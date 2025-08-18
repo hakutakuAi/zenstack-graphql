@@ -2,7 +2,7 @@ import { ScalarTypeComposer, SchemaComposer } from 'graphql-compose'
 import { GraphQLScalarType, GraphQLError } from 'graphql'
 import { Kind } from 'graphql/language'
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 
 export interface ScalarConfig {
 	name: string

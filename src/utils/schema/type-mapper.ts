@@ -1,7 +1,7 @@
-import { SCALAR_TYPES } from '@utils/config/constants'
+import { SCALAR_TYPES } from '@utils/config'
 import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
 import { SchemaProcessor } from './schema-processor'
-import { NormalizedOptions } from '@utils/config/options-validator'
+import { NormalizedOptions } from '@utils/config'
 
 export enum FieldTypeCategory {
 	SCALAR = 'scalar',

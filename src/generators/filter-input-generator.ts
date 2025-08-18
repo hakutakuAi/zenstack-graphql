@@ -1,13 +1,11 @@
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 
 export class FilterInputGenerator extends BaseGenerator {
 	generate(): string[] {
 		this.createCommonFilterTypes()
-
-		this.models.filter((model) => !this.attributeProcessor.model(model).isIgnored()).forEach((model) => this.generateFilterInputType(model))
-
+		this.forEachValidModel((model) => this.generateFilterInputType(model))
 		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
 	}
 

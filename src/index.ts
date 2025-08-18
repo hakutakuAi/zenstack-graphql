@@ -1,13 +1,12 @@
 export * from '@generators'
-export * from '@utils'
 
 import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
 
-import { CoreGenerator } from '@generators'
+import { CoreGenerator } from '@generators/core-generator'
 import { ErrorCategory, PluginError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
-import { FileWriter } from '@utils/io/file-writer'
+import { FileWriter } from '@utils/file-writer'
 
 export const name = 'ZenStack GraphQL'
 export const description = 'Generates GraphQL schemas'

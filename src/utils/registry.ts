@@ -1,7 +1,16 @@
-import { SchemaComposer, ObjectTypeComposer, EnumTypeComposer, ScalarTypeComposer, InputTypeComposer, InterfaceTypeComposer, UnionTypeComposer } from 'graphql-compose'
+import {
+	SchemaComposer,
+	ObjectTypeComposer,
+	EnumTypeComposer,
+	ScalarTypeComposer,
+	InputTypeComposer,
+	InterfaceTypeComposer,
+	UnionTypeComposer,
+} from 'graphql-compose'
 import { printSchema, GraphQLSchema } from 'graphql'
 import { ErrorCategory, PluginError, warning } from '@utils/error'
 import { TypeFormatter } from '@utils/schema/type-formatter'
+import { BUILTIN_SCALARS, COMMON_TYPES } from '@utils/constants'
 
 export enum TypeKind {
 	OBJECT = 'object',
@@ -40,7 +49,14 @@ export class Registry {
 	private readonly schemaComposer: SchemaComposer<unknown>
 	private processedRelations: Set<string> = new Set()
 	private edgeTypes: Set<string> = new Set()
-	private warnings: string[] = []
+	private readonly composerToKindMap = new Map<any, TypeKind>([
+		[ObjectTypeComposer, TypeKind.OBJECT],
+		[ScalarTypeComposer, TypeKind.SCALAR],
+		[EnumTypeComposer, TypeKind.ENUM],
+		[InterfaceTypeComposer, TypeKind.INTERFACE],
+		[InputTypeComposer, TypeKind.INPUT],
+		[UnionTypeComposer, TypeKind.UNION]
+	])
 
 	constructor(schemaComposer: SchemaComposer<unknown>) {
 		this.schemaComposer = schemaComposer
@@ -52,17 +68,9 @@ export class Registry {
 			const composer = this.schemaComposer.get(typeName)
 			if (!composer) continue
 
-			let kind = TypeKind.UNKNOWN
-			if (composer instanceof ObjectTypeComposer) kind = TypeKind.OBJECT
-			if (composer instanceof ScalarTypeComposer) kind = TypeKind.SCALAR
-			if (composer instanceof EnumTypeComposer) kind = TypeKind.ENUM
-			if (composer instanceof InterfaceTypeComposer) kind = TypeKind.INTERFACE
-			if (composer instanceof InputTypeComposer) kind = TypeKind.INPUT
-			if (composer instanceof UnionTypeComposer) kind = TypeKind.UNION
-
 			this.types.set(typeName, {
 				name: typeName,
-				kind,
+				kind: this.determineComposerKind(composer),
 				description: this.getComposerDescription(composer),
 				composer,
 				isGenerated: false,
@@ -143,37 +151,20 @@ export class Registry {
 	}
 
 	private determineComposerKind(composer: any): TypeKind {
-		if (composer instanceof ObjectTypeComposer) return TypeKind.OBJECT
-		if (composer instanceof ScalarTypeComposer) return TypeKind.SCALAR
-		if (composer instanceof EnumTypeComposer) return TypeKind.ENUM
-		if (composer instanceof InterfaceTypeComposer) return TypeKind.INTERFACE
-		if (composer instanceof InputTypeComposer) return TypeKind.INPUT
-		if (composer instanceof UnionTypeComposer) return TypeKind.UNION
+		for (const [ComposerClass, kind] of this.composerToKindMap) {
+			if (composer instanceof ComposerClass) return kind
+		}
 		return TypeKind.UNKNOWN
 	}
 
 	private isComposerOfKind(composer: any, kind: TypeKind): boolean {
 		if (!composer) return false
-
-		switch (kind) {
-			case TypeKind.OBJECT:
-				return composer instanceof ObjectTypeComposer
-			case TypeKind.SCALAR:
-				return composer instanceof ScalarTypeComposer
-			case TypeKind.ENUM:
-				return composer instanceof EnumTypeComposer
-			case TypeKind.INTERFACE:
-				return composer instanceof InterfaceTypeComposer
-			case TypeKind.INPUT:
-				return composer instanceof InputTypeComposer
-			case TypeKind.UNION:
-				return composer instanceof UnionTypeComposer
-			case TypeKind.CONNECTION:
-			case TypeKind.EDGE:
-				return composer instanceof ObjectTypeComposer
-			default:
-				return true
+		
+		if (kind === TypeKind.CONNECTION || kind === TypeKind.EDGE) {
+			return composer instanceof ObjectTypeComposer
 		}
+		
+		return this.determineComposerKind(composer) === kind
 	}
 
 	getTypesByKind(kind: TypeKind): string[] {
@@ -237,8 +228,7 @@ export class Registry {
 	}
 
 	isBuiltInScalar(typeName: string): boolean {
-		const builtInScalars = ['String', 'Int', 'Float', 'Boolean', 'ID']
-		return builtInScalars.includes(typeName)
+		return BUILTIN_SCALARS.includes(typeName as any)
 	}
 
 	registerEdgeType(name: string, composer: ObjectTypeComposer<any, any>): void {
@@ -327,12 +317,12 @@ export class Registry {
 	}
 
 	addRelayRequirements(): void {
-		if (this.schemaComposer.has('Node')) {
+		if (this.schemaComposer.has(COMMON_TYPES.NODE)) {
 			return
 		}
 
 		const nodeInterface = this.schemaComposer.createInterfaceTC({
-			name: 'Node',
+			name: COMMON_TYPES.NODE,
 			description: 'An object with a unique identifier',
 			fields: {
 				id: {
@@ -342,6 +332,6 @@ export class Registry {
 			},
 		})
 
-		this.registerType('Node', TypeKind.INTERFACE, nodeInterface, true)
+		this.registerType(COMMON_TYPES.NODE, TypeKind.INTERFACE, nodeInterface, true)
 	}
 }

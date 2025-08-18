@@ -1,6 +1,40 @@
+import { BuiltinType } from '@zenstackhq/sdk/ast'
 import { z } from 'zod'
 import { ErrorCategory, PluginError } from '@utils/error'
-import { VALID_SCALAR_VALUES, scalarTypesSchema } from './constants'
+import { BUILTIN_SCALARS, GRAPHQL_NAMING_REGEX } from '@utils/constants'
+
+export const SCALAR_TYPES: Record<BuiltinType, string> = {
+	String: 'String',
+	Int: 'Int',
+	BigInt: 'Int',
+	Float: 'Float',
+	Boolean: 'Boolean',
+	DateTime: 'DateTime',
+	Json: 'JSON',
+	Decimal: 'Decimal',
+	Bytes: 'String',
+}
+
+export const DEFAULT_SCALAR_VALUES = Object.values(SCALAR_TYPES)
+
+export const VALID_SCALAR_VALUES = [...BUILTIN_SCALARS, ...DEFAULT_SCALAR_VALUES]
+
+function isValidGraphQLScalarName(name: string): boolean {
+	return GRAPHQL_NAMING_REGEX.test(name)
+}
+
+export const scalarTypesSchema = z.record(z.string(), z.string()).refine(
+	(types) => {
+		return Object.values(types).every((type) => {
+			const typeLC = type.toLowerCase()
+			const isStandardScalar = VALID_SCALAR_VALUES.some((valid) => valid.toLowerCase() === typeLC)
+			return isStandardScalar || isValidGraphQLScalarName(type)
+		})
+	},
+	{
+		message: `Invalid scalar type mapping. Scalar types must follow GraphQL naming conventions (start with uppercase letter or underscore, contain only letters, numbers, and underscores). Standard scalars are: ${VALID_SCALAR_VALUES.join(', ')}`,
+	},
+)
 
 export type FieldNaming = 'camelCase' | 'snake_case' | 'preserve'
 export type TypeNaming = 'PascalCase' | 'camelCase' | 'preserve'
@@ -60,19 +94,33 @@ const optionDefinitions = {
 type OptionDefinitions = typeof optionDefinitions
 type OptionKey = keyof OptionDefinitions
 
-export const DEFAULT_OPTIONS = Object.fromEntries(Object.entries(optionDefinitions).map(([key, def]) => [key, def.default])) as { [K in OptionKey]: OptionDefinitions[K]['default'] }
+export const DEFAULT_OPTIONS = Object.fromEntries(Object.entries(optionDefinitions).map(([key, def]) => [key, def.default])) as {
+	[K in OptionKey]: OptionDefinitions[K]['default']
+}
 
 export type PluginOptions = {
 	[K in OptionKey]?: z.input<OptionDefinitions[K]['schema']>
 }
 
 export type NormalizedOptions = {
-	[K in OptionKey as OptionDefinitions[K]['default'] extends undefined ? never : K]: z.output<OptionDefinitions[K]['schema']> extends infer T ? (T extends undefined ? never : NonNullable<T>) : never
+	[K in OptionKey as OptionDefinitions[K]['default'] extends undefined ? never : K]: z.output<OptionDefinitions[K]['schema']> extends infer T
+		? T extends undefined
+			? never
+			: NonNullable<T>
+		: never
 }
 
 const optionsSchema = z.object(
-	Object.fromEntries(Object.entries(optionDefinitions).map(([key, def]) => [key, def.schema.optional()])) as { [K in OptionKey]: z.ZodOptional<OptionDefinitions[K]['schema']> }
+	Object.fromEntries(Object.entries(optionDefinitions).map(([key, def]) => [key, def.schema.optional()])) as {
+		[K in OptionKey]: z.ZodOptional<OptionDefinitions[K]['schema']>
+	},
 )
+
+function mergeValue(key: string, value: any, defaultValue: any): any {
+	return key === 'scalarTypes' && typeof defaultValue === 'object' && defaultValue !== null && typeof value === 'object' && value !== null
+		? { ...defaultValue, ...value }
+		: value
+}
 
 export function validateOptions(options: PluginOptions = {}): NormalizedOptions {
 	try {
@@ -83,14 +131,8 @@ export function validateOptions(options: PluginOptions = {}): NormalizedOptions 
 				.filter(([_, def]) => def.default !== undefined)
 				.map(([key, def]) => {
 					const value = validatedOptions[key as OptionKey]
-					if (value !== undefined) {
-						if (key === 'scalarTypes' && typeof def.default === 'object' && def.default !== null && typeof value === 'object' && value !== null) {
-							return [key, { ...def.default, ...value }]
-						}
-						return [key, value]
-					}
-					return [key, def.default]
-				})
+					return [key, value !== undefined ? mergeValue(key, value, def.default) : def.default]
+				}),
 		) as NormalizedOptions
 
 		return normalized
@@ -124,7 +166,7 @@ export function validateOptions(options: PluginOptions = {}): NormalizedOptions 
 					validationErrors: formattedErrors,
 					errorCount: error.issues.length,
 				},
-				suggestions.length ? suggestions : ['Review the plugin documentation for valid option values']
+				suggestions.length ? suggestions : ['Review the plugin documentation for valid option values'],
 			)
 		}
 

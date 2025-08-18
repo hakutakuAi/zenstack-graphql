@@ -1,32 +1,18 @@
 import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@/utils/registry/registry'
+import { TypeKind } from '@utils/registry'
 import { DataModel } from '@zenstackhq/sdk/ast'
-import { ErrorCategory, PluginError, warning } from '@utils/error'
+import { ErrorCategory, PluginError, handleError } from '@utils/error'
 
 export class SortInputGenerator extends BaseGenerator {
 	generate(): string[] {
 		this.createSortDirectionEnum()
-
-		for (const model of this.models) {
-			if (!this.attributeProcessor.model(model).isIgnored()) {
-				try {
-					this.generateSortInputType(model)
-				} catch (error) {
-					if (error instanceof PluginError) {
-						warning(`Failed to generate sort input for model ${model.name}: ${error.message}`, error.category, {
-							model: model.name,
-							error,
-						})
-					} else {
-						warning(`Failed to generate sort input for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`, ErrorCategory.GENERATION, {
-							model: model.name,
-							error,
-						})
-					}
-				}
+		this.forEachValidModel((model) => {
+			try {
+				this.generateSortInputType(model)
+			} catch (error) {
+				handleError(error, `generate sort input for model ${model.name}`, { model: model.name })
 			}
-		}
-
+		})
 		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('SortInput'))
 	}
 
@@ -39,7 +25,9 @@ export class SortInputGenerator extends BaseGenerator {
 			const sortDirectionTC = this.typeFactories.createSortDirectionEnum()
 			this.registry.registerType('SortDirection', TypeKind.ENUM, sortDirectionTC, true)
 		} catch (error) {
-			throw new PluginError(`Failed to create SortDirection enum`, ErrorCategory.GENERATION, { originalError: error }, ['Check if SortDirection enum is already defined elsewhere'])
+			throw new PluginError(`Failed to create SortDirection enum`, ErrorCategory.GENERATION, { originalError: error }, [
+				'Check if SortDirection enum is already defined elsewhere',
+			])
 		}
 	}
 
@@ -65,14 +53,16 @@ export class SortInputGenerator extends BaseGenerator {
 					acc[fieldName] = { description: `Sort by ${fieldName}` }
 					return acc
 				},
-				{} as Record<string, { description: string }>
+				{} as Record<string, { description: string }>,
 			)
 
 		try {
 			const sortInputTC = this.typeFactories.createSortInputType(typeName, fields)
 			this.registry.registerType(sortInputName, TypeKind.INPUT, sortInputTC, true)
 		} catch (error) {
-			throw new PluginError(`Error creating sort input type for ${model.name}`, ErrorCategory.GENERATION, { modelName: model.name, error }, ['Check if the model fields are defined correctly'])
+			throw new PluginError(`Error creating sort input type for ${model.name}`, ErrorCategory.GENERATION, { modelName: model.name, error }, [
+				'Check if the model fields are defined correctly',
+			])
 		}
 	}
 }

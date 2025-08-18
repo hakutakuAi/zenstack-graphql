@@ -30,20 +30,7 @@
 			"@generators/*": ["./src/generators/*"],
 			"@utils": ["./src/utils"],
 			"@utils/*": ["./src/utils/*"],
-			"@types": ["./src/core/types"],
-			"@types/*": ["./src/core/types/*"],
-			"@core": ["./src/core"],
-			"@core/*": ["./src/core/*"],
-			"@utils/error": ["./src/utils/error"],
-			"@utils/error/*": ["./src/utils/error/*"],
-			"@utils/registry": ["./src/utils/registry"],
-			"@utils/registry/*": ["./src/utils/registry/*"],
-			"@utils/schema": ["./src/utils/schema"],
-			"@utils/schema/*": ["./src/utils/schema/*"],
-			"@utils/io": ["./src/utils/io"],
-			"@utils/io/*": ["./src/utils/io/*"],
-			"@utils/config": ["./src/utils/config"],
-			"@utils/config/*": ["./src/utils/config/*"]
+			"@types": ["./src/core/types"]
 		}
 	},
 	"include": ["./src/**/*.ts", "./src/**/*.tsx"],

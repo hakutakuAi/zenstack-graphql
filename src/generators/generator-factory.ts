@@ -1,32 +1,30 @@
 import { GeneratorContext, GeneratorFactoryContext } from '@types'
 import { BaseGenerator } from '@generators/base-generator'
 import { SchemaComposer } from 'graphql-compose'
-import { SchemaProcessor, GraphQLTypeFactories, Registry, TypeFormatter, TypeMapper } from '@/utils'
+import { SchemaProcessor } from '@utils/schema/schema-processor'
+import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
+import { Registry } from '@utils/registry'
+import { TypeFormatter } from '@utils/schema/type-formatter'
+import { TypeMapper } from '@utils/schema/type-mapper'
 
 type GeneratorConstructor<T extends BaseGenerator> = new (context: GeneratorContext) => T
 
 export class GeneratorFactory {
-	private readonly baseContext: GeneratorContext
+	readonly context: GeneratorContext
 
 	constructor(context: GeneratorFactoryContext) {
-		const dummyContext: Partial<GeneratorContext> = {
-			options: context.options,
-			models: context.models,
-			enums: context.enums,
+		const schemaComposer = new SchemaComposer()
+		const typeFormatter = TypeFormatter.fromOptions(context.options.typeNaming, context.options.fieldNaming)
+
+		this.context = {
+			...context,
+			schemaComposer,
+			attributeProcessor: new SchemaProcessor(),
+			registry: new Registry(schemaComposer),
+			typeFormatter,
+			typeMapper: TypeMapper.createFromModelsAndEnums(context.models, context.enums, context.options),
+			typeFactories: new GraphQLTypeFactories(schemaComposer, typeFormatter),
 		}
-
-		dummyContext.schemaComposer = new SchemaComposer()
-		dummyContext.attributeProcessor = new SchemaProcessor()
-		dummyContext.registry = new Registry(dummyContext.schemaComposer)
-		dummyContext.typeFormatter = TypeFormatter.fromOptions(context.options.typeNaming, context.options.fieldNaming)
-		dummyContext.typeMapper = TypeMapper.createFromModelsAndEnums(context.models, context.enums, context.options)
-		dummyContext.typeFactories = new GraphQLTypeFactories(dummyContext.schemaComposer, dummyContext.typeFormatter)
-
-		this.baseContext = dummyContext as GeneratorContext
-	}
-
-	get context(): GeneratorContext {
-		return this.baseContext
 	}
 
 	create<T extends BaseGenerator>(generatorClass: GeneratorConstructor<T>): T {

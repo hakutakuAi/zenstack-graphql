@@ -87,9 +87,13 @@ export class SchemaProcessor {
 				return attrName ? getAttrValue(attrName, this.getStringValue) : undefined
 			},
 			getBoolean: (argName: string): boolean | undefined =>
-				field ? getAttrValue('@graphql.sortable', this.getBooleanValue, argName) || getAttrValue('@graphql.filterable', this.getBooleanValue, argName) : undefined,
+				field
+					? getAttrValue('@graphql.sortable', this.getBooleanValue, argName) || getAttrValue('@graphql.filterable', this.getBooleanValue, argName)
+					: undefined,
 			getNumber: (argName: string): number | undefined =>
-				field ? getAttrValue('@graphql.sortable', this.getNumberValue, argName) || getAttrValue('@graphql.filterable', this.getNumberValue, argName) : undefined,
+				field
+					? getAttrValue('@graphql.sortable', this.getNumberValue, argName) || getAttrValue('@graphql.filterable', this.getNumberValue, argName)
+					: undefined,
 			attr: (attrName: string): boolean => hasAttr(attrName),
 			exists: (): boolean => !!field,
 			isIgnored: (): boolean => hasAttr('@graphql.ignore'),
