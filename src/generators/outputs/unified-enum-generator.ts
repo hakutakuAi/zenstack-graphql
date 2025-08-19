@@ -4,6 +4,7 @@ import { Enum } from '@zenstackhq/sdk/ast'
 import { createGenerationContext, executeSafely } from '@utils/generator-utils'
 import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
 import { OutputFormat } from '@utils/constants'
+import { TypeFormatter } from '@utils/schema/type-formatter'
 
 export interface EnumValueConfig {
 	value: string
@@ -18,13 +19,19 @@ export interface EnumGenerationResult {
 export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult> {
 	private astFactory?: TypeScriptASTFactory
 	private format: OutputFormat
+	private typeFormatterOverride?: TypeFormatter
 
-	constructor(context: any, format: OutputFormat = OutputFormat.GRAPHQL) {
+	constructor(context: any, format: OutputFormat = OutputFormat.GRAPHQL, typeFormatter?: TypeFormatter) {
 		super(context)
 		this.format = format
+		this.typeFormatterOverride = typeFormatter
 
 		if (format === OutputFormat.TYPE_GRAPHQL) {
-			this.astFactory = new TypeScriptASTFactory(this.typeFormatter)
+			const formatter = this.typeFormatterOverride || this.typeFormatter
+			if (!formatter) {
+				throw new Error('TypeFormatter is required for TypeScript enum generation')
+			}
+			this.astFactory = new TypeScriptASTFactory(formatter)
 		}
 	}
 
@@ -108,7 +115,13 @@ export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult
 	}
 
 	private getEnumValueNameFromField(field: any): string {
-		return this.typeFormatter.formatEnumValueName(field.name)
+		const formatter = this.typeFormatterOverride || this.typeFormatter
+		return formatter.formatEnumValueName(field.name)
+	}
+
+	protected override getFormattedName(name: string): string {
+		const formatter = this.typeFormatterOverride || this.typeFormatter
+		return formatter.formatTypeName(name)
 	}
 
 	hasEnum(name: string): boolean {
@@ -123,8 +136,8 @@ export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult
 		return new UnifiedEnumGenerator(context, OutputFormat.GRAPHQL)
 	}
 
-	static createTypeScriptGenerator(context: any): UnifiedEnumGenerator {
-		return new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL)
+	static createTypeScriptGenerator(context: any, typeFormatter?: TypeFormatter): UnifiedEnumGenerator {
+		return new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL, typeFormatter)
 	}
 }
 
@@ -132,6 +145,6 @@ export function createGraphQLEnumGenerator(context: any): UnifiedEnumGenerator {
 	return UnifiedEnumGenerator.createGraphQLGenerator(context)
 }
 
-export function createTypeScriptEnumGenerator(context: any): UnifiedEnumGenerator {
-	return UnifiedEnumGenerator.createTypeScriptGenerator(context)
+export function createTypeScriptEnumGenerator(context: any, typeFormatter?: TypeFormatter): UnifiedEnumGenerator {
+	return UnifiedEnumGenerator.createTypeScriptGenerator(context, typeFormatter)
 }

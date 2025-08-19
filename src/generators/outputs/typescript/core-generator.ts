@@ -20,10 +20,12 @@ export interface TypeScriptGenerationResult {
 export class CoreGenerator {
 	private astFactory: TypeScriptASTFactory
 	private context: GeneratorFactoryContext
+	private typeFormatter: TypeFormatter
 
 	constructor(context: GeneratorFactoryContext) {
 		this.context = context
-		this.astFactory = new TypeScriptASTFactory(new TypeFormatter(context.options.typeNaming, context.options.fieldNaming))
+		this.typeFormatter = new TypeFormatter(context.options.typeNaming, context.options.fieldNaming)
+		this.astFactory = new TypeScriptASTFactory(this.typeFormatter)
 	}
 
 	generate(): TypeScriptGenerationResult {
@@ -34,7 +36,7 @@ export class CoreGenerator {
 		const scalarGenerator = new UnifiedScalarGenerator(this.context, OutputFormat.TYPE_GRAPHQL)
 		const scalarResult = options.generateScalars ? scalarGenerator.generate() : { typescriptTypes: [] }
 
-		const enumGenerator = new UnifiedEnumGenerator(this.context, OutputFormat.TYPE_GRAPHQL)
+		const enumGenerator = new UnifiedEnumGenerator(this.context, OutputFormat.TYPE_GRAPHQL, this.typeFormatter)
 		const enumResult = options.generateEnums ? enumGenerator.generate() : { typescriptTypes: [] }
 
 		const validModels = models.filter((model: DataModel) => !model.isAbstract)

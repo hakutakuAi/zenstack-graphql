@@ -11,6 +11,7 @@ import { ErrorCategory, PluginError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
 import { FileWriter } from '@utils/file-writer'
 import { OutputFormat } from '@utils/constants'
+import path from 'path'
 
 export const name = 'ZenStack GraphQL'
 export const description = 'Generates GraphQL schemas'
@@ -53,7 +54,11 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 			})
 
 			const result = typeScriptGenerator.generate()
-			const outputPath = normalizedOptions.output.split('.')[0] + '.ts'
+			const outputPath = path.join(
+				path.dirname(normalizedOptions.output),
+				path.basename(normalizedOptions.output, path.extname(normalizedOptions.output)) + '.ts',
+			)
+
 			await FileWriter.create().writeTypeGraphQL(result.code, outputPath)
 
 			return {
