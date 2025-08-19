@@ -3,12 +3,12 @@ import { buildSchema } from 'type-graphql'
 import { createYoga } from 'graphql-yoga'
 import { createServer } from 'node:http'
 import { PrismaClient } from '@prisma/client'
-import { UserResolver, PostResolver, CategoryResolver, CommentResolver } from './resolvers'
+import { UserResolver, PostResolver, CategoryResolver, CommentResolver, PostCategoryResolver } from './resolvers'
 
 const prisma = new PrismaClient()
 
 const schema = buildSchema({
-	resolvers: [UserResolver, PostResolver, CategoryResolver, CommentResolver],
+	resolvers: [UserResolver, PostResolver, CategoryResolver, CommentResolver, PostCategoryResolver],
 	emitSchemaFile: false,
 })
 

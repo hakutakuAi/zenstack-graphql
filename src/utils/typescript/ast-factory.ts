@@ -1,14 +1,24 @@
 import { Project, SourceFile, ClassDeclaration, EnumDeclaration } from 'ts-morph'
-import { DataModel, DataModelField, Enum } from '@zenstackhq/sdk/ast'
+import { DataModel, DataModelField, Enum, isDataModel } from '@zenstackhq/sdk/ast'
 import { TypeFormatter } from '@utils/schema/type-formatter'
+import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
+import { SchemaProcessor } from '@utils/schema/schema-processor'
 
 export class TypeScriptASTFactory {
 	private project: Project
 	private sourceFile: SourceFile
+	private typeMapper?: UnifiedTypeMapper
+	private schemaProcessor?: SchemaProcessor
 
-	constructor(private readonly typeFormatter: TypeFormatter) {
+	constructor(
+		private readonly typeFormatter: TypeFormatter,
+		typeMapper?: UnifiedTypeMapper,
+		schemaProcessor?: SchemaProcessor,
+	) {
 		this.project = new Project()
 		this.sourceFile = this.project.createSourceFile('generated.ts')
+		this.typeMapper = typeMapper
+		this.schemaProcessor = schemaProcessor
 		this.addImports()
 	}
 
@@ -30,7 +40,9 @@ export class TypeScriptASTFactory {
 	}
 
 	createObjectType(model: DataModel): ClassDeclaration {
-		const typeName = this.typeFormatter.formatTypeName(model.name)
+		const typeName = this.schemaProcessor
+			? this.schemaProcessor.model(model).getFormattedTypeName(this.typeFormatter)
+			: this.typeFormatter.formatTypeName(model.name)
 
 		const classDeclaration = this.sourceFile.addClass({
 			name: typeName,
@@ -43,7 +55,9 @@ export class TypeScriptASTFactory {
 			],
 		})
 
-		const validFields = model.fields.filter((field) => field.type.type)
+		const validFields = model.fields.filter((field) => {
+			return field.type.type || this.typeMapper?.isRelationField(field)
+		})
 
 		for (const field of validFields) {
 			this.addFieldToClass(classDeclaration, field)
@@ -148,6 +162,23 @@ registerEnumType(${typeName}, {
 	}
 
 	private getFieldType(field: DataModelField): string {
+		if (this.typeMapper?.isRelationField(field)) {
+			const referencedModel = field.type.reference?.ref
+			if (referencedModel && this.schemaProcessor && isDataModel(referencedModel)) {
+				const relationTypeName = this.schemaProcessor.model(referencedModel).getFormattedTypeName(this.typeFormatter)
+				if (field.type.array) {
+					return `[${relationTypeName}]`
+				}
+				return relationTypeName
+			} else {
+				const relationTypeName = this.typeFormatter.formatTypeName(field.type.reference?.ref?.name || 'String')
+				if (field.type.array) {
+					return `[${relationTypeName}]`
+				}
+				return relationTypeName
+			}
+		}
+
 		if (field.type.array) {
 			return `[${this.getScalarFieldType(field)}]`
 		}
@@ -179,6 +210,23 @@ registerEnumType(${typeName}, {
 	}
 
 	private getTypeScriptType(field: DataModelField): string {
+		if (this.typeMapper?.isRelationField(field)) {
+			const referencedModel = field.type.reference?.ref
+			if (referencedModel && this.schemaProcessor && isDataModel(referencedModel)) {
+				const relationTypeName = this.schemaProcessor.model(referencedModel).getFormattedTypeName(this.typeFormatter)
+				if (field.type.array) {
+					return `${relationTypeName}[]`
+				}
+				return relationTypeName
+			} else {
+				const relationTypeName = this.typeFormatter.formatTypeName(field.type.reference?.ref?.name || 'string')
+				if (field.type.array) {
+					return `${relationTypeName}[]`
+				}
+				return relationTypeName
+			}
+		}
+
 		const baseType = this.getTypeScriptBaseType(field)
 		if (field.type.array) {
 			return `${baseType}[]`
@@ -207,7 +255,366 @@ registerEnumType(${typeName}, {
 		}
 	}
 
-	createScalarType(name: string, nativeType: string): string {
+	createSortDirectionEnum(): EnumDeclaration {
+		const enumDeclaration = this.sourceFile.addEnum({
+			name: 'SortDirection',
+			isExported: true,
+			members: [
+				{ name: 'ASC', value: 'ASC' },
+				{ name: 'DESC', value: 'DESC' },
+			],
+		})
+
+		this.sourceFile.addStatements(`
+registerEnumType(SortDirection, {
+  name: 'SortDirection',
+  description: 'Sort direction for ordering results',
+})`)
+
+		return enumDeclaration
+	}
+
+	createFilterInputType(name: string, fields: Array<{ name: string; type: string; nullable?: boolean }>): ClassDeclaration {
+		const classDeclaration = this.sourceFile.addClass({
+			name,
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: [],
+				},
+			],
+		})
+
+		for (const field of fields) {
+			const decoratorArgs = [`() => ${field.type}`]
+			if (field.nullable) {
+				decoratorArgs.push('{ nullable: true }')
+			}
+
+			let tsType = this.convertGraphQLTypeToTypeScript(field.type)
+			if (field.nullable) {
+				tsType = `${tsType} | undefined`
+			}
+
+			classDeclaration.addProperty({
+				name: field.name,
+				type: tsType,
+				hasQuestionToken: field.nullable,
+				hasExclamationToken: !field.nullable,
+				decorators: [
+					{
+						name: 'Field',
+						arguments: decoratorArgs,
+					},
+				],
+			})
+		}
+
+		return classDeclaration
+	}
+
+	private convertGraphQLTypeToTypeScript(graphqlType: string): string {
+		if (graphqlType.startsWith('[') && graphqlType.endsWith(']')) {
+			const innerType = graphqlType.slice(1, -1).replace('!', '')
+			return `${this.convertGraphQLTypeToTypeScript(innerType)}[]`
+		}
+
+		switch (graphqlType.replace('!', '')) {
+			case 'String':
+				return 'string'
+			case 'Float':
+			case 'Int':
+				return 'number'
+			case 'Boolean':
+				return 'boolean'
+			case 'Date':
+				return 'Date'
+			default:
+				return graphqlType.replace('!', '')
+		}
+	}
+
+	createSortInputType(modelName: string, fields: Array<{ name: string; description?: string }>): ClassDeclaration {
+		const sortInputName = this.typeFormatter.formatTypeName(`${modelName}SortInput`)
+
+		const classDeclaration = this.sourceFile.addClass({
+			name: sortInputName,
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: [],
+				},
+			],
+		})
+
+		for (const field of fields) {
+			classDeclaration.addProperty({
+				name: field.name,
+				type: 'SortDirection | undefined',
+				hasQuestionToken: true,
+				decorators: [
+					{
+						name: 'Field',
+						arguments: ['() => SortDirection', '{ nullable: true }'],
+					},
+				],
+			})
+		}
+
+		return classDeclaration
+	}
+
+	private pageInfoCreated = false
+
+	createPageInfo(): void {
+		if (this.pageInfoCreated) {
+			return
+		}
+		this.pageInfoCreated = true
+
+		const pageInfoDeclaration = this.sourceFile.addClass({
+			name: 'PageInfo',
+			isExported: true,
+			decorators: [
+				{
+					name: 'ObjectType',
+					arguments: [],
+				},
+			],
+		})
+
+		const pageInfoFields = [
+			{ name: 'hasNextPage', type: 'Boolean', tsType: 'boolean' },
+			{ name: 'hasPreviousPage', type: 'Boolean', tsType: 'boolean' },
+			{ name: 'startCursor', type: 'String', tsType: 'string', nullable: true },
+			{ name: 'endCursor', type: 'String', tsType: 'string', nullable: true },
+		]
+
+		for (const field of pageInfoFields) {
+			const decoratorArgs = [`() => ${field.type}`]
+			if (field.nullable) {
+				decoratorArgs.push('{ nullable: true }')
+			}
+
+			pageInfoDeclaration.addProperty({
+				name: field.name,
+				type: field.nullable ? `${field.tsType} | undefined` : field.tsType,
+				hasQuestionToken: !!field.nullable,
+				hasExclamationToken: !field.nullable,
+				decorators: [
+					{
+						name: 'Field',
+						arguments: decoratorArgs,
+					},
+				],
+			})
+		}
+	}
+
+	createConnectionType(modelName: string): { edge: ClassDeclaration; connection: ClassDeclaration } {
+		this.createPageInfo()
+
+		const typeName = this.typeFormatter.formatTypeName(modelName)
+		const edgeName = `${typeName}Edge`
+		const connectionName = `${typeName}Connection`
+
+		const edgeDeclaration = this.sourceFile.addClass({
+			name: edgeName,
+			isExported: true,
+			decorators: [
+				{
+					name: 'ObjectType',
+					arguments: [],
+				},
+			],
+		})
+
+		edgeDeclaration.addProperty({
+			name: 'node',
+			type: typeName,
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: [`() => ${typeName}`],
+				},
+			],
+		})
+
+		edgeDeclaration.addProperty({
+			name: 'cursor',
+			type: 'string',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => String'],
+				},
+			],
+		})
+
+		const connectionDeclaration = this.sourceFile.addClass({
+			name: connectionName,
+			isExported: true,
+			decorators: [
+				{
+					name: 'ObjectType',
+					arguments: [],
+				},
+			],
+		})
+
+		connectionDeclaration.addProperty({
+			name: 'pageInfo',
+			type: 'PageInfo',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => PageInfo'],
+				},
+			],
+		})
+
+		connectionDeclaration.addProperty({
+			name: 'edges',
+			type: `${edgeName}[]`,
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: [`() => [${edgeName}]`],
+				},
+			],
+		})
+
+		connectionDeclaration.addProperty({
+			name: 'totalCount',
+			type: 'number',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => Int'],
+				},
+			],
+		})
+
+		return {
+			edge: edgeDeclaration,
+			connection: connectionDeclaration,
+		}
+	}
+
+	createPaginationInputTypes(): ClassDeclaration[] {
+		const forwardPagination = this.sourceFile.addClass({
+			name: 'ForwardPaginationInput',
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: [],
+				},
+			],
+		})
+
+		forwardPagination.addProperty({
+			name: 'first',
+			type: 'number | undefined',
+			hasQuestionToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => Int', '{ nullable: true }'],
+				},
+			],
+		})
+
+		forwardPagination.addProperty({
+			name: 'after',
+			type: 'string | undefined',
+			hasQuestionToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => String', '{ nullable: true }'],
+				},
+			],
+		})
+
+		const backwardPagination = this.sourceFile.addClass({
+			name: 'BackwardPaginationInput',
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: [],
+				},
+			],
+		})
+
+		backwardPagination.addProperty({
+			name: 'last',
+			type: 'number | undefined',
+			hasQuestionToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => Int', '{ nullable: true }'],
+				},
+			],
+		})
+
+		backwardPagination.addProperty({
+			name: 'before',
+			type: 'string | undefined',
+			hasQuestionToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: ['() => String', '{ nullable: true }'],
+				},
+			],
+		})
+
+		const combinedPagination = this.sourceFile.addClass({
+			name: 'PaginationInput',
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: [],
+				},
+			],
+		})
+
+		const paginationFields = [
+			{ name: 'first', type: 'Int', tsType: 'number' },
+			{ name: 'after', type: 'String', tsType: 'string' },
+			{ name: 'last', type: 'Int', tsType: 'number' },
+			{ name: 'before', type: 'String', tsType: 'string' },
+		]
+
+		for (const field of paginationFields) {
+			combinedPagination.addProperty({
+				name: field.name,
+				type: `${field.tsType} | undefined`,
+				hasQuestionToken: true,
+				decorators: [
+					{
+						name: 'Field',
+						arguments: [`() => ${field.type}`, '{ nullable: true }'],
+					},
+				],
+			})
+		}
+
+		return [forwardPagination, backwardPagination, combinedPagination]
+	}
+
+	createScalarType(name: string, _nativeType: string): string {
 		return `export const ${name}Scalar = new GraphQLScalarType({
   name: '${name}',
   description: '${name} scalar type',

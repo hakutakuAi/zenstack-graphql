@@ -2,13 +2,13 @@ import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:tes
 import { fetch } from 'bun'
 import { server, prismaClient } from './src/server'
 
-const TEST_PORT = 4567
+const TEST_PORT = 4568
 const GRAPHQL_ENDPOINT = `http://localhost:${TEST_PORT}/graphql`
 
 describe('TypeGraphQL Server Tests', () => {
 	beforeAll(() => {
 		server.listen(TEST_PORT, () => {
-			console.log(`Test server running at http://localhost:${TEST_PORT}/graphql`)
+			console.log(`TypeGraphQL test server running at http://localhost:${TEST_PORT}/graphql`)
 		})
 
 		return new Promise<void>((resolve) => {
@@ -346,5 +346,461 @@ describe('TypeGraphQL Server Tests', () => {
 		expect(commentResult.data.createComment.content).toBe('Test Comment')
 		expect(commentResult.data.createComment.author.name).toBe('Test Commenter')
 		expect(commentResult.data.createComment.post.title).toBe('Post for Comments')
+	})
+
+	describe('Filter Functionality', () => {
+		test('Can filter users by email', async () => {
+			const testEmail = `filter-test-${Date.now()}@example.com`
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "${testEmail}", name: "Filter Test User") { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query FilterUsers($filter: UserFilterInput) {
+							usersFiltered(filter: $filter) {
+								id
+								email
+								name
+							}
+						}
+					`,
+					variables: {
+						filter: {
+							email: { equals: testEmail },
+						},
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.usersFiltered).toBeDefined()
+			expect(result.data.usersFiltered.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.usersFiltered[0].email).toBe(testEmail)
+		})
+
+		test('Can filter posts by published status', async () => {
+			const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "post-filter-${Date.now()}@example.com", name: "Post Filter User") { id } }`,
+				}),
+			})
+			const userResult = await createUserResponse.json()
+			const authorId = userResult.data.createUser.id
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "Published Post", content: "Content", authorId: "${authorId}", published: true) { id } }`,
+				}),
+			})
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "Draft Post", content: "Content", authorId: "${authorId}", published: false) { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query FilterPosts($filter: PostFilterInput) {
+							postsFiltered(filter: $filter) {
+								id
+								title
+								published
+							}
+						}
+					`,
+					variables: {
+						filter: {
+							published: { equals: true },
+						},
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.postsFiltered).toBeDefined()
+			expect(result.data.postsFiltered.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.postsFiltered.every((post: any) => post.published)).toBe(true)
+		})
+
+		test('Can filter with string contains operation', async () => {
+			const uniqueName = `StringFilter${Date.now()}`
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "string-filter-${Date.now()}@example.com", name: "${uniqueName}") { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query FilterUsers($filter: UserFilterInput) {
+							usersFiltered(filter: $filter) {
+								id
+								name
+							}
+						}
+					`,
+					variables: {
+						filter: {
+							name: { contains: 'StringFilter' },
+						},
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.usersFiltered).toBeDefined()
+			expect(result.data.usersFiltered.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.usersFiltered.some((user: any) => user.name.includes('StringFilter'))).toBe(true)
+		})
+	})
+
+	describe('Sort Functionality', () => {
+		test('Can sort users by createdAt in ascending order', async () => {
+			const baseEmail = `sort-test-${Date.now()}`
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "${baseEmail}-1@example.com", name: "Sort User 1") { id } }`,
+				}),
+			})
+
+			await new Promise((resolve) => setTimeout(resolve, 100))
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "${baseEmail}-2@example.com", name: "Sort User 2") { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query SortUsers($sort: UserSortInput) {
+							usersSorted(sort: $sort) {
+								id
+								name
+								createdAt
+							}
+						}
+					`,
+					variables: {
+						sort: { createdAt: 'ASC' },
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.usersSorted).toBeDefined()
+			expect(result.data.usersSorted.length).toBeGreaterThanOrEqual(2)
+
+			const dates = result.data.usersSorted.map((user: any) => new Date(user.createdAt).getTime())
+			for (let i = 1; i < dates.length; i++) {
+				expect(dates[i]).toBeGreaterThanOrEqual(dates[i - 1])
+			}
+		})
+
+		test('Can sort posts by viewCount in descending order', async () => {
+			const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "sort-posts-${Date.now()}@example.com", name: "Sort Posts User") { id } }`,
+				}),
+			})
+			const userResult = await createUserResponse.json()
+			const authorId = userResult.data.createUser.id
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "Low Views Post", content: "Content", authorId: "${authorId}") { id } }`,
+				}),
+			})
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "High Views Post", content: "Content", authorId: "${authorId}") { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query SortPosts($sort: PostSortInput) {
+							postsSorted(sort: $sort) {
+								id
+								title
+								viewCount
+							}
+						}
+					`,
+					variables: {
+						sort: { viewCount: 'DESC' },
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.postsSorted).toBeDefined()
+			expect(result.data.postsSorted.length).toBeGreaterThanOrEqual(2)
+
+			const viewCounts = result.data.postsSorted.map((post: any) => post.viewCount)
+			for (let i = 1; i < viewCounts.length; i++) {
+				expect(viewCounts[i]).toBeLessThanOrEqual(viewCounts[i - 1])
+			}
+		})
+	})
+
+	describe('Connection/Pagination Functionality', () => {
+		test('Can query users with pagination (first/after)', async () => {
+			for (let i = 0; i < 5; i++) {
+				await fetch(GRAPHQL_ENDPOINT, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						query: `mutation { createUser(email: "pagination-${i}-${Date.now()}@example.com", name: "Pagination User ${i}") { id } }`,
+					}),
+				})
+			}
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query PaginateUsers($first: Int, $after: String) {
+							usersConnection(first: $first, after: $after) {
+								pageInfo {
+									hasNextPage
+									hasPreviousPage
+									startCursor
+									endCursor
+								}
+								edges {
+									node {
+										id
+										name
+									}
+									cursor
+								}
+								totalCount
+							}
+						}
+					`,
+					variables: {
+						first: 2,
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.usersConnection).toBeDefined()
+			expect(result.data.usersConnection.pageInfo).toBeDefined()
+			expect(result.data.usersConnection.edges).toBeDefined()
+			expect(result.data.usersConnection.edges.length).toBeLessThanOrEqual(2)
+			expect(result.data.usersConnection.totalCount).toBeGreaterThanOrEqual(5)
+			expect(typeof result.data.usersConnection.pageInfo.hasNextPage).toBe('boolean')
+		})
+
+		test('Can query posts connection with pagination', async () => {
+			const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "connection-posts-${Date.now()}@example.com", name: "Connection Posts User") { id } }`,
+				}),
+			})
+			const userResult = await createUserResponse.json()
+			const authorId = userResult.data.createUser.id
+
+			for (let i = 0; i < 3; i++) {
+				await fetch(GRAPHQL_ENDPOINT, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						query: `mutation { createPost(title: "Connection Post ${i}", content: "Content ${i}", authorId: "${authorId}") { id } }`,
+					}),
+				})
+			}
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query PaginatePosts($last: Int) {
+							postsConnection(last: $last) {
+								pageInfo {
+									hasNextPage
+									hasPreviousPage
+									startCursor
+									endCursor
+								}
+								edges {
+									node {
+										id
+										title
+									}
+									cursor
+								}
+								totalCount
+							}
+						}
+					`,
+					variables: {
+						last: 2,
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.postsConnection).toBeDefined()
+			expect(result.data.postsConnection.pageInfo).toBeDefined()
+			expect(result.data.postsConnection.edges).toBeDefined()
+			expect(result.data.postsConnection.edges.length).toBeLessThanOrEqual(2)
+			expect(typeof result.data.postsConnection.totalCount).toBe('number')
+		})
+
+		test('PageInfo provides correct pagination metadata', async () => {
+			const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "pageinfo-${Date.now()}@example.com", name: "PageInfo User") { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query TestPageInfo {
+							usersConnection(first: 1) {
+								pageInfo {
+									hasNextPage
+									hasPreviousPage
+									startCursor
+									endCursor
+								}
+								edges {
+									cursor
+								}
+							}
+						}
+					`,
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data.usersConnection.pageInfo).toBeDefined()
+			expect(typeof result.data.usersConnection.pageInfo.hasNextPage).toBe('boolean')
+			expect(typeof result.data.usersConnection.pageInfo.hasPreviousPage).toBe('boolean')
+			if (result.data.usersConnection.edges.length > 0) {
+				expect(result.data.usersConnection.pageInfo.startCursor).toBeDefined()
+				expect(result.data.usersConnection.pageInfo.endCursor).toBeDefined()
+			}
+		})
+	})
+
+	describe('Combined Filters and Sorts', () => {
+		test('Can combine filters and sorts in a single query', async () => {
+			const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createUser(email: "combined-${Date.now()}@example.com", name: "Combined User") { id } }`,
+				}),
+			})
+			const userResult = await createUserResponse.json()
+			const authorId = userResult.data.createUser.id
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "Published Combined", content: "Content", authorId: "${authorId}", published: true) { id } }`,
+				}),
+			})
+
+			await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `mutation { createPost(title: "Draft Combined", content: "Content", authorId: "${authorId}", published: false) { id } }`,
+				}),
+			})
+
+			const response = await fetch(GRAPHQL_ENDPOINT, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					query: `
+						query FilterAndSort($filter: PostFilterInput, $sort: PostSortInput) {
+							postsFilteredAndSorted(filter: $filter, sort: $sort) {
+								id
+								title
+								published
+								createdAt
+							}
+						}
+					`,
+					variables: {
+						filter: {
+							published: { equals: true },
+						},
+						sort: {
+							createdAt: 'DESC',
+						},
+					},
+				}),
+			})
+
+			const result = await response.json()
+			expect(response.status).toBe(200)
+			expect(result.data?.postsFilteredAndSorted).toBeDefined()
+			expect(result.data.postsFilteredAndSorted.every((post: any) => post.published)).toBe(true)
+		})
 	})
 })

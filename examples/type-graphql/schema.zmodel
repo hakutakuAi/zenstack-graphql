@@ -8,11 +8,14 @@ generator client {
 	binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-
 plugin graphql {
-    provider = '../../dist'
+	provider = '../../dist'
     output = './schema.ts'
 	outputFormat = 'type-graphql'
+	generateFilters = true
+	generateSorts = true
+	connectionTypes = true
+	includeRelations = true
 }
 
 model User {
