@@ -2,32 +2,36 @@ import 'reflect-metadata'
 import { buildSchema } from 'type-graphql'
 import { createYoga } from 'graphql-yoga'
 import { createServer } from 'node:http'
-import { UserResolver, PostResolver } from './resolvers'
+import { PrismaClient } from '@prisma/client'
+import { UserResolver, PostResolver, CategoryResolver, CommentResolver } from './resolvers'
 
-async function main() {
-	try {
-		const schema = await buildSchema({
-			resolvers: [UserResolver, PostResolver],
-			emitSchemaFile: true,
-		})
+const prisma = new PrismaClient()
 
-		const yoga = createYoga({
-			schema,
-		})
+const schema = buildSchema({
+	resolvers: [UserResolver, PostResolver, CategoryResolver, CommentResolver],
+	emitSchemaFile: false,
+})
 
-		const server = createServer(yoga)
+const yoga = createYoga({
+	schema,
+	context: () => ({
+		prisma,
+	}),
+})
 
-		const port = process.env.PORT || 4567
-
-		server.listen(port, () => {
-			console.log(`🔎 Explore the schema at http://localhost:${port}/graphql`)
-		})
-	} catch (error) {
-		console.error('Error starting server:', error)
-		process.exit(1)
-	}
-}
+export const server = createServer(yoga)
+export const prismaClient = prisma
 
 if (require.main === module) {
-	main()
+	const port = process.env.PORT || 4000
+
+	server.listen(port, () => {
+		console.log(`🔎 Explore the schema at http://localhost:${port}/graphql`)
+	})
+
+	process.on('SIGINT', async () => {
+		console.log('Shutting down gracefully...')
+		await prisma.$disconnect()
+		process.exit(0)
+	})
 }

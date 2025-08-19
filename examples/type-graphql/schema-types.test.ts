@@ -33,12 +33,10 @@ describe('TypeGraphQL Test Example', () => {
 		expect(schemaContent).toContain('published!: boolean')
 	})
 
-	test('Generated file contains Status enum', () => {
-		expect(schemaContent).toContain('export enum Status')
-		expect(schemaContent).toContain('DRAFT = "DRAFT"')
-		expect(schemaContent).toContain('PUBLISHED = "PUBLISHED"')
-		expect(schemaContent).toContain('ARCHIVED = "ARCHIVED"')
-		expect(schemaContent).toContain('registerEnumType(Status')
+	test('Generated file contains Category and Comment classes', () => {
+		expect(schemaContent).toContain('export class Category')
+		expect(schemaContent).toContain('export class Comment')
+		expect(schemaContent).toContain('export class CategoryOnPost')
 	})
 
 	test('Generated file contains proper Field decorators', () => {

@@ -1,116 +1,192 @@
-import { Resolver, Query, Mutation, Arg, ID } from 'type-graphql'
-import { User, Post } from '../schema'
+import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root } from 'type-graphql'
+import { PrismaClient } from '@prisma/client'
+import { User, Post, Category, Comment } from '../schema'
 
-@Resolver()
+export interface Context {
+	prisma: PrismaClient
+}
+
+@Resolver(() => User)
 export class UserResolver {
-	private users: User[] = [
-		{
-			id: '1',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			name: 'John Doe',
-			email: 'john@example.com',
-			bio: 'Software developer',
-		},
-		{
-			id: '2',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			name: 'Jane Smith',
-			email: 'jane@example.com',
-			bio: 'Designer',
-		},
-	]
-
 	@Query(() => [User])
-	getUsers(): User[] {
-		return this.users
+	async users(@Ctx() { prisma }: Context): Promise<User[]> {
+		return (await prisma.user.findMany()) as User[]
 	}
 
 	@Query(() => User, { nullable: true })
-	getUser(@Arg('id', () => ID) id: string): User | undefined {
-		return this.users.find((user) => user.id === id)
+	async user(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<User | null> {
+		return (await prisma.user.findUnique({
+			where: { id },
+		})) as User | null
 	}
 
 	@Mutation(() => User)
-	createUser(
+	async createUser(
 		@Arg('name', () => String) name: string,
 		@Arg('email', () => String) email: string,
-		@Arg('bio', () => String, { nullable: true }) bio?: string,
-	): User {
-		const newUser: User = {
-			id: (this.users.length + 1).toString(),
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			name,
-			email,
-			bio,
-		}
-		this.users.push(newUser)
-		return newUser
+		@Arg('bio', () => String, { nullable: true }) bio: string | undefined,
+		@Ctx() { prisma }: Context,
+	): Promise<User> {
+		return (await prisma.user.create({
+			data: {
+				name,
+				email,
+				bio,
+			},
+		})) as User
+	}
+
+	@FieldResolver(() => [Post])
+	async posts(@Root() user: User, @Ctx() { prisma }: Context): Promise<Post[]> {
+		return await prisma.post.findMany({
+			where: { authorId: user.id },
+		})
+	}
+
+	@FieldResolver(() => [Comment])
+	async comments(@Root() user: User, @Ctx() { prisma }: Context): Promise<Comment[]> {
+		return await prisma.comment.findMany({
+			where: { authorId: user.id },
+		})
 	}
 }
 
-@Resolver()
+@Resolver(() => Post)
 export class PostResolver {
-	private posts: Post[] = [
-		{
-			id: '1',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			title: 'First Post',
-			content: 'This is the first post content',
-			published: true,
-			authorId: '1',
-		},
-		{
-			id: '2',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			title: 'Second Post',
-			content: 'This is the second post content',
-			published: false,
-			authorId: '2',
-		},
-	]
-
 	@Query(() => [Post])
-	getPosts(): Post[] {
-		return this.posts
+	async posts(@Ctx() { prisma }: Context): Promise<Post[]> {
+		return await prisma.post.findMany()
 	}
 
 	@Query(() => Post, { nullable: true })
-	getPost(@Arg('id', () => ID) id: string): Post | undefined {
-		return this.posts.find((post) => post.id === id)
+	async post(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
+		return await prisma.post.findUnique({
+			where: { id },
+		})
 	}
 
 	@Mutation(() => Post)
-	createPost(
+	async createPost(
 		@Arg('title', () => String) title: string,
 		@Arg('content', () => String) content: string,
 		@Arg('authorId', () => String) authorId: string,
 		@Arg('published', () => Boolean, { defaultValue: false }) published: boolean = false,
-	): Post {
-		const newPost: Post = {
-			id: (this.posts.length + 1).toString(),
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			title,
-			content,
-			published,
-			authorId,
-		}
-		this.posts.push(newPost)
-		return newPost
+		@Ctx() { prisma }: Context,
+	): Promise<Post> {
+		return await prisma.post.create({
+			data: {
+				title,
+				content,
+				published,
+				authorId,
+			},
+		})
 	}
 
 	@Mutation(() => Post, { nullable: true })
-	publishPost(@Arg('id', () => ID) id: string): Post | undefined {
-		const post = this.posts.find((p) => p.id === id)
-		if (post) {
-			post.published = true
-			post.updatedAt = new Date()
-		}
-		return post
+	async publishPost(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
+		return await prisma.post.update({
+			where: { id },
+			data: { published: true },
+		})
+	}
+
+	@FieldResolver(() => User)
+	async author(@Root() post: Post, @Ctx() { prisma }: Context): Promise<User | null> {
+		return (await prisma.user.findUnique({
+			where: { id: post.authorId },
+		})) as User | null
+	}
+
+	@FieldResolver(() => [Category])
+	async categories(@Root() post: Post, @Ctx() { prisma }: Context): Promise<Category[]> {
+		const categoryOnPosts = await prisma.categoryOnPost.findMany({
+			where: { postId: post.id },
+			include: { category: true },
+		})
+		return categoryOnPosts.map((cop: any) => cop.category as Category)
+	}
+
+	@FieldResolver(() => [Comment])
+	async comments(@Root() post: Post, @Ctx() { prisma }: Context): Promise<Comment[]> {
+		return await prisma.comment.findMany({
+			where: { postId: post.id },
+		})
+	}
+}
+
+@Resolver(() => Category)
+export class CategoryResolver {
+	@Query(() => [Category])
+	async categories(@Ctx() { prisma }: Context): Promise<Category[]> {
+		return (await prisma.category.findMany()) as Category[]
+	}
+
+	@Query(() => Category, { nullable: true })
+	async category(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Category | null> {
+		return (await prisma.category.findUnique({
+			where: { id },
+		})) as Category | null
+	}
+
+	@Mutation(() => Category)
+	async createCategory(
+		@Arg('name', () => String) name: string,
+		@Arg('description', () => String, { nullable: true }) description: string | undefined,
+		@Ctx() { prisma }: Context,
+	): Promise<Category> {
+		return (await prisma.category.create({
+			data: {
+				name,
+				description,
+			},
+		})) as Category
+	}
+
+	@FieldResolver(() => [Post])
+	async posts(@Root() category: Category, @Ctx() { prisma }: Context): Promise<Post[]> {
+		const categoryOnPosts = await prisma.categoryOnPost.findMany({
+			where: { categoryId: category.id },
+			include: { post: true },
+		})
+		return categoryOnPosts.map((cop: any) => cop.post as Post)
+	}
+}
+
+@Resolver(() => Comment)
+export class CommentResolver {
+	@Query(() => [Comment])
+	async comments(@Ctx() { prisma }: Context): Promise<Comment[]> {
+		return await prisma.comment.findMany()
+	}
+
+	@Mutation(() => Comment)
+	async createComment(
+		@Arg('content', () => String) content: string,
+		@Arg('postId', () => String) postId: string,
+		@Arg('authorId', () => String) authorId: string,
+		@Ctx() { prisma }: Context,
+	): Promise<Comment> {
+		return await prisma.comment.create({
+			data: {
+				content,
+				postId,
+				authorId,
+			},
+		})
+	}
+
+	@FieldResolver(() => User)
+	async author(@Root() comment: Comment, @Ctx() { prisma }: Context): Promise<User | null> {
+		return (await prisma.user.findUnique({
+			where: { id: comment.authorId },
+		})) as User | null
+	}
+
+	@FieldResolver(() => Post)
+	async post(@Root() comment: Comment, @Ctx() { prisma }: Context): Promise<Post | null> {
+		return await prisma.post.findUnique({
+			where: { id: comment.postId },
+		})
 	}
 }

@@ -11,9 +11,9 @@ export class User {
     @Field(() => Date)
     updatedAt!: Date;
     @Field(() => String)
-    name!: string;
-    @Field(() => String)
     email!: string;
+    @Field(() => String)
+    name!: string;
     @Field(() => String, { nullable: true })
     bio?: string;
 }
@@ -32,16 +32,42 @@ export class Post {
     content!: string;
     @Field(() => Boolean)
     published!: boolean;
+    @Field(() => Int)
+    viewCount!: number;
     @Field(() => String)
     authorId!: string;
 }
 
-export enum Status {
-    DRAFT = "DRAFT",
-    PUBLISHED = "PUBLISHED",
-    ARCHIVED = "ARCHIVED"
+@ObjectType()
+export class Category {
+    @Field(() => String)
+    id!: string;
+    @Field(() => String)
+    name!: string;
+    @Field(() => String, { nullable: true })
+    description?: string;
 }
 
-registerEnumType(Status, {
-  name: 'Status',
-})
+@ObjectType()
+export class CategoryOnPost {
+    @Field(() => String)
+    postId!: string;
+    @Field(() => String)
+    categoryId!: string;
+    @Field(() => Date)
+    assignedAt!: Date;
+}
+
+@ObjectType()
+export class Comment {
+    @Field(() => String)
+    id!: string;
+    @Field(() => Date)
+    createdAt!: Date;
+    @Field(() => String)
+    content!: string;
+    @Field(() => String)
+    postId!: string;
+    @Field(() => String)
+    authorId!: string;
+}

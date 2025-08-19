@@ -4,37 +4,63 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 generator client {
-  provider = "prisma-client-js"
-}
-
-enum Status {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 model User {
-  id        String   @id() @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
+  id        String    @id() @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt()
+  email     String    @unique()
   name      String
-  email     String   @unique()
   bio       String?
   posts     Post[]
+  comments  Comment[]
 }
 
 model Post {
-  id        String   @id() @default(cuid())
+  id         String           @id() @default(uuid())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt()
+  title      String
+  content    String
+  published  Boolean          @default(false)
+  viewCount  Int              @default(0)
+  author     User             @relation(fields: [authorId], references: [id])
+  authorId   String
+  categories CategoryOnPost[]
+  comments   Comment[]
+}
+
+model Category {
+  id          String           @id() @default(uuid())
+  name        String           @unique()
+  description String?
+  posts       CategoryOnPost[]
+}
+
+model CategoryOnPost {
+  post       Post     @relation(fields: [postId], references: [id])
+  postId     String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  assignedAt DateTime @default(now())
+
+  @@id([postId, categoryId])
+}
+
+model Comment {
+  id        String   @id() @default(uuid())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-  title     String
   content   String
-  published Boolean  @default(false)
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
 }

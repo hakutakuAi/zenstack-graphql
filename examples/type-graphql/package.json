@@ -1,23 +1,29 @@
 {
-	"name": "type-graphql-test-example",
+	"name": "type-graphql",
 	"version": "1.0.0",
 	"description": "TypeGraphQL test example for ZenStack GraphQL plugin",
-	"main": "index.js",
+	"main": "src/server.ts",
 	"scripts": {
-		"setup": "bun install && zenstack generate",
+		"generate": "zenstack generate",
+		"db:setup": "node scripts/generate-prisma.js",
+		"db:migrate": "prisma migrate dev",
+		"start": "bun run src/server.ts",
 		"test": "bun test",
-		"dev": "bun run src/server.ts"
+		"setup": "bun i && bun run generate && bun run db:migrate"
 	},
 	"dependencies": {
+		"@prisma/client": "^6.14.0",
+		"@zenstackhq/runtime": "^2.18.1",
 		"graphql": "^16.11.0",
 		"graphql-scalars": "^1.24.2",
-		"type-graphql": "^2.0.0-rc.2",
+		"graphql-yoga": "^5.15.1",
 		"reflect-metadata": "^0.2.2",
-		"@prisma/client": "^6.14.0",
-		"graphql-yoga": "^5.15.1"
+		"type-graphql": "^2.0.0-rc.2"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.20",
+		"@types/node": "^24.3.0",
+		"prisma": "^6.14.0",
 		"typescript": "^5.9.2",
 		"zenstack": "^2.18.1"
 	}
