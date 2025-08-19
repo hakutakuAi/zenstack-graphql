@@ -1,5 +1,5 @@
 {
-	"name": "graphql-server-example",
+	"name": "graphql-server",
 	"version": "1.0.0",
 	"description": "GraphQL server example using ZenStack GraphQL plugin with GraphQL Yoga",
 	"main": "src/server.ts",

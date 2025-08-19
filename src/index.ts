@@ -53,7 +53,7 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 			})
 
 			const result = typeScriptGenerator.generate()
-			const outputPath = normalizedOptions.output.replace(/\.graphql$/, '.ts')
+			const outputPath = normalizedOptions.output.split('.')[0] + '.ts'
 			await FileWriter.create().writeTypeGraphQL(result.code, outputPath)
 
 			return {
