@@ -1,11 +1,11 @@
-import { GeneratorContext, GeneratorFactoryContext } from '@types'
+import { GeneratorContext, GeneratorFactoryContext } from '@core/types'
 import { BaseGenerator } from '@generators/base-generator'
 import { SchemaComposer } from 'graphql-compose'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Registry } from '@utils/registry'
+import { GraphQLRegistry } from '@utils/registry'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { TypeMapper } from '@utils/schema/type-mapper'
+import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
 
 type GeneratorConstructor<T extends BaseGenerator> = new (context: GeneratorContext) => T
 
@@ -20,9 +20,9 @@ export class GeneratorFactory {
 			...context,
 			schemaComposer,
 			attributeProcessor: new SchemaProcessor(),
-			registry: new Registry(schemaComposer),
+			registry: new GraphQLRegistry(schemaComposer),
 			typeFormatter,
-			typeMapper: TypeMapper.createFromModelsAndEnums(context.models, context.enums, context.options),
+			typeMapper: new UnifiedTypeMapper(typeFormatter, context.models, context.enums, context.options),
 			typeFactories: new GraphQLTypeFactories(schemaComposer, typeFormatter),
 		}
 	}

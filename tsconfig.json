@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"lib": ["ESNext"],
-		"target": "ES2018",
+		"target": "es2021",
 		"module": "CommonJS",
 		"moduleDetection": "force",
 		"allowJs": true,
@@ -11,6 +11,7 @@
 		"verbatimModuleSyntax": false,
 		"noEmit": false,
 		"esModuleInterop": true,
+		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
 		"strict": true,
 		"skipLibCheck": true,
@@ -26,11 +27,12 @@
 		"paths": {
 			"@": ["./src"],
 			"@/*": ["./src/*"],
+			"@core": ["./src/core"],
+			"@core/*": ["./src/core/*"],
 			"@generators": ["./src/generators"],
 			"@generators/*": ["./src/generators/*"],
 			"@utils": ["./src/utils"],
-			"@utils/*": ["./src/utils/*"],
-			"@types": ["./src/core/types"]
+			"@utils/*": ["./src/utils/*"]
 		}
 	},
 	"include": ["./src/**/*.ts", "./src/**/*.tsx"],

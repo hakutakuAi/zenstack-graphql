@@ -13,7 +13,7 @@ export class SortInputGenerator extends BaseGenerator {
 				handleError(error, `generate sort input for model ${model.name}`, { model: model.name })
 			}
 		})
-		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('SortInput'))
+		return this.registry.getTypeNamesByKind(TypeKind.INPUT).filter((name) => name.endsWith('SortInput'))
 	}
 
 	private createSortDirectionEnum(): void {

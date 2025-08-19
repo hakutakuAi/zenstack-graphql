@@ -1,12 +1,13 @@
-import { GeneratorFactoryContext } from '@types'
+import { GeneratorFactoryContext } from '@core/types'
 import { GeneratorFactory } from '@generators/generator-factory'
-import { ScalarGenerator } from '@generators/scalar-generator'
-import { EnumGenerator } from '@generators/enum-generator'
-import { ObjectTypeGenerator } from '@generators/object-type-generator'
-import { RelationGenerator } from '@generators/relation-generator'
-import { ConnectionGenerator } from '@generators/connection-generator'
-import { SortInputGenerator } from '@generators/sort-input-generator'
-import { FilterInputGenerator } from '@generators/filter-input-generator'
+import { UnifiedScalarGenerator } from '@generators/outputs/unified-scalar-generator'
+import { UnifiedEnumGenerator } from '@generators/outputs/unified-enum-generator'
+import { OutputFormat } from '@utils/constants'
+import { ObjectTypeGenerator } from '@generators/outputs/graphql/object-type-generator'
+import { RelationGenerator } from '@generators/outputs/graphql/relation-generator'
+import { ConnectionGenerator } from '@generators/outputs/graphql/connection-generator'
+import { SortInputGenerator } from '@generators/outputs/graphql/sort-input-generator'
+import { FilterInputGenerator } from '@generators/outputs/graphql/filter-input-generator'
 
 export interface GenerationStats {
 	objectTypes: string[]
@@ -34,10 +35,16 @@ export class CoreGenerator {
 		const { options, registry } = this.generatorFactory.context
 		registry.addRelayRequirements()
 
+		const scalarGenerator = new UnifiedScalarGenerator(this.generatorFactory.context, OutputFormat.GRAPHQL)
+		const scalarResult = options.generateScalars ? scalarGenerator.generate() : { graphqlTypes: [] }
+
+		const enumGenerator = new UnifiedEnumGenerator(this.generatorFactory.context, OutputFormat.GRAPHQL)
+		const enumResult = options.generateEnums ? enumGenerator.generate() : { graphqlTypes: [] }
+
 		const stats: GenerationStats = {
 			objectTypes: this.generatorFactory.create(ObjectTypeGenerator).generate(),
-			enumTypes: options.generateEnums ? this.generatorFactory.create(EnumGenerator).generate() : [],
-			scalarTypes: options.generateScalars ? this.generatorFactory.create(ScalarGenerator).generate() : [],
+			enumTypes: enumResult.graphqlTypes,
+			scalarTypes: scalarResult.graphqlTypes,
 			relationFields: options.includeRelations ? this.generatorFactory.create(RelationGenerator).generate() : [],
 			connectionTypes: options.connectionTypes ? this.generatorFactory.create(ConnectionGenerator).generate() : [],
 			sortInputTypes: options.connectionTypes && options.generateSorts ? this.generatorFactory.create(SortInputGenerator).generate() : [],

@@ -1,0 +1,24 @@
+{
+	"name": "type-graphql-test-example",
+	"version": "1.0.0",
+	"description": "TypeGraphQL test example for ZenStack GraphQL plugin",
+	"main": "index.js",
+	"scripts": {
+		"setup": "bun install && zenstack generate",
+		"test": "bun test",
+		"dev": "bun run src/server.ts"
+	},
+	"dependencies": {
+		"graphql": "^16.11.0",
+		"graphql-scalars": "^1.24.2",
+		"type-graphql": "^2.0.0-rc.2",
+		"reflect-metadata": "^0.2.2",
+		"@prisma/client": "^6.14.0",
+		"graphql-yoga": "^5.15.1"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.20",
+		"typescript": "^5.9.2",
+		"zenstack": "^2.18.1"
+	}
+}

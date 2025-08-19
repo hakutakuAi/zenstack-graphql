@@ -8,18 +8,28 @@ export class FileWriter {
 	}
 
 	async writeSchema(sdl: string, outputPath: string): Promise<void> {
+		return this.writeFile(sdl, outputPath, 'schema')
+	}
+
+	async writeTypeGraphQL(code: string, outputPath: string): Promise<void> {
+		return this.writeFile(code, outputPath, 'TypeGraphQL code')
+	}
+
+	private async writeFile(content: string, outputPath: string, contentType: string): Promise<void> {
 		try {
 			const dir = dirname(outputPath)
 			await mkdir(dir, { recursive: true })
-			await writeFile(outputPath, sdl, 'utf8')
+			await writeFile(outputPath, content, 'utf8')
 		} catch (error) {
 			if (error instanceof Error) {
-				throw new PluginError(`Failed to write schema to ${outputPath}: ${error.message}`, ErrorCategory.FILE, { outputPath, error: error.message }, [
-					'Check if the output directory exists and is writable',
-					'Verify the output path is valid',
-				])
+				throw new PluginError(
+					`Failed to write ${contentType} to ${outputPath}: ${error.message}`,
+					ErrorCategory.FILE,
+					{ outputPath, error: error.message },
+					['Check if the output directory exists and is writable', 'Verify the output path is valid'],
+				)
 			}
-			throw new PluginError(`Failed to write schema to ${outputPath}`, ErrorCategory.FILE, { outputPath }, [
+			throw new PluginError(`Failed to write ${contentType} to ${outputPath}`, ErrorCategory.FILE, { outputPath }, [
 				'Check if the output directory exists and is writable',
 				'Verify the output path is valid',
 			])

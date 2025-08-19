@@ -10,11 +10,7 @@ generator client {
 plugin graphql {
     provider = '../../dist'
     output = './schema.graphql'
-    fieldNaming = 'camelCase'
-    typeNaming = 'PascalCase'
-    generateFilters = true
-    generateSorts = true
-    connectionTypes = true
+
 }
 
 // System-internal model that should not be exposed in GraphQL

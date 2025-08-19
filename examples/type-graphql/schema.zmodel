@@ -1,0 +1,43 @@
+datasource db {
+    provider = 'postgresql'
+    url = env('DATABASE_URL')
+}
+
+generator client {
+    provider = 'prisma-client-js'
+}
+
+plugin graphql {
+    provider = '../../dist'
+    output = './schema.ts'
+	outputFormat = 'type-graphql'
+}
+
+
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  email     String   @unique
+  bio       String?
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String
+  content   String
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}

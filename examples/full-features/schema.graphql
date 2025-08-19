@@ -7,7 +7,9 @@ interface Node {
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
-"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+"""
+The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: JSON)
+"""
 scalar JSON
 
 """An arbitrary-precision Decimal type"""

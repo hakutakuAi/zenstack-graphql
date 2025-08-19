@@ -6,7 +6,7 @@ export class FilterInputGenerator extends BaseGenerator {
 	generate(): string[] {
 		this.createCommonFilterTypes()
 		this.forEachValidModel((model) => this.generateFilterInputType(model))
-		return this.registry.getTypesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
+		return this.registry.getTypeNamesByKind(TypeKind.INPUT).filter((name) => name.endsWith('FilterInput'))
 	}
 
 	private createCommonFilterTypes(): void {

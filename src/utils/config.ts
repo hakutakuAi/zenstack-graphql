@@ -1,7 +1,7 @@
 import { BuiltinType } from '@zenstackhq/sdk/ast'
 import { z } from 'zod'
 import { ErrorCategory, PluginError } from '@utils/error'
-import { BUILTIN_SCALARS, GRAPHQL_NAMING_REGEX } from '@utils/constants'
+import { BUILTIN_SCALARS, GRAPHQL_NAMING_REGEX, OutputFormat } from '@utils/constants'
 
 export const SCALAR_TYPES: Record<BuiltinType, string> = {
 	String: 'String',
@@ -88,6 +88,10 @@ const optionDefinitions = {
 	schemaPath: {
 		schema: z.string().optional(),
 		default: undefined,
+	},
+	outputFormat: {
+		schema: z.enum(['graphql', 'type-graphql']),
+		default: 'graphql' as OutputFormat,
 	},
 }
 

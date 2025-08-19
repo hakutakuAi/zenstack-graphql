@@ -1,6 +1,6 @@
 {
 	"name": "@hakutakuai/zenstack-graphql",
-	"version": "1.0.5",
+	"version": "1.1.0",
 	"description": "ZenStack plugin for generating GraphQL schemas",
 	"main": "index.js",
 	"module": "index.ts",
@@ -34,11 +34,13 @@
 		"generate:full": "cd ./examples/full-features && zenstack generate",
 		"generate:custom": "cd ./examples/custom-naming && zenstack generate",
 		"generate:graphql-server": "cd ./examples/graphql-server && bun run setup",
+		"generate:type-graphql": "cd ./examples/type-graphql && bun run setup",
 		"generate:all": "bun run generate:basic && bun run generate:full && bun run generate:custom && bun run generate:graphql-server",
 		"test:basic": "cd ./examples/basic && bun test",
 		"test:full": "cd ./examples/full-features && bun test",
 		"test:custom": "cd ./examples/custom-naming && bun test",
 		"test:graphql-server": "cd ./examples/graphql-server && bun test",
+		"test:type-graphql": "cd ./examples/type-graphql && bun test",
 		"test:all": "cd ./examples && bun test",
 		"e2e": "bun run build && bun generate:all && bun test:all",
 		"push": "cd dist && bun publish --access public",
@@ -46,27 +48,31 @@
 	},
 	"devDependencies": {
 		"@types/bun": "^1.2.20",
-		"@types/node": "^24.2.1",
-		"@typescript-eslint/eslint-plugin": "^8.39.0",
-		"@typescript-eslint/parser": "^8.39.0",
+		"@types/node": "^24.3.0",
+		"@typescript-eslint/eslint-plugin": "^8.40.0",
+		"@typescript-eslint/parser": "^8.40.0",
 		"eslint": "^9.33.0",
 		"prettier": "^3.6.2",
-		"prisma": "^6.13.0",
+		"prisma": "^6.14.0",
 		"tsc-alias": "^1.8.16",
 		"typescript": "^5.9.2",
-		"zenstack": "2.18.0"
+		"zenstack": "2.18.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@prisma/client": "^6.13.0",
-		"@zenstackhq/runtime": "2.18.0",
-		"@zenstackhq/sdk": "2.18.0",
+		"@prisma/client": "^6.14.0",
+		"@zenstackhq/runtime": "2.18.1",
+		"@zenstackhq/sdk": "2.18.1",
 		"change-case": "^5.4.4",
+		"graphql": "^16.11.0",
 		"graphql-compose": "^9.1.0",
+		"graphql-scalars": "^1.24.2",
+		"reflect-metadata": "^0.2.2",
 		"ts-morph": "^26.0.0",
 		"ts-pattern": "^5.8.0",
+		"type-graphql": "^2.0.0-rc.2",
 		"zod": "3.25.76"
 	}
 }

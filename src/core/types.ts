@@ -3,9 +3,9 @@ import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 import { NormalizedOptions } from '@utils/config'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
-import { Registry } from '@utils/registry'
+import { GraphQLRegistry } from '@utils/registry'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { TypeMapper } from '@utils/schema/type-mapper'
+import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
 
 export type ComposerType = ReturnType<SchemaComposer['get']>
 
@@ -17,9 +17,9 @@ export interface GeneratorFactoryContext {
 
 export interface GeneratorContext extends GeneratorFactoryContext {
 	schemaComposer: SchemaComposer<unknown>
-	registry: Registry
+	registry: GraphQLRegistry
 	attributeProcessor: SchemaProcessor
 	typeFormatter: TypeFormatter
-	typeMapper: TypeMapper
+	typeMapper: UnifiedTypeMapper
 	typeFactories: GraphQLTypeFactories
 }

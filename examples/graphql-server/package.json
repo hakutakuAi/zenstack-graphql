@@ -12,15 +12,15 @@
 		"setup": "bun i && bun run generate && bun run db:migrate"
 	},
 	"dependencies": {
-		"@prisma/client": "^6.13.0",
-		"@zenstackhq/runtime": "^2.18.0",
+		"@prisma/client": "^6.14.0",
+		"@zenstackhq/runtime": "^2.18.1",
 		"graphql": "^16.11.0",
 		"graphql-yoga": "^5.15.1"
 	},
 	"devDependencies": {
-		"@types/node": "^24.2.1",
-		"prisma": "^6.13.0",
+		"@types/node": "^24.3.0",
+		"prisma": "^6.14.0",
 		"typescript": "^5.9.2",
-		"zenstack": "^2.18.0"
+		"zenstack": "^2.18.1"
 	}
 }

@@ -1,8 +1,8 @@
 export * from './base-generator'
+export * from './abstract-generator'
+export * from './generator-factory'
 
-export * from './core-generator'
-export * from './enum-generator'
-export * from './object-type-generator'
-export * from './relation-generator'
-export * from './scalar-generator'
-export * from './connection-generator'
+export * as GraphQLGenerators from './outputs/graphql'
+export * as TypeScriptGenerators from './outputs/typescript'
+
+export { CoreGenerator } from './core-generator'

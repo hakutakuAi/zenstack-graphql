@@ -7,6 +7,8 @@ This plugin generates a complete GraphQL schema with relations, filtering, sorti
 ## Features
 
 - **Zero Boilerplate**: Go from data model to full GraphQL API schema using the [Zenstack](https://zenstack.dev/)
+- **Dual Output Formats**: Generate either GraphQL SDL schemas or TypeGraphQL TypeScript classes
+- **TypeGraphQL Support**: Generate type-safe TypeScript classes with decorators for TypeGraphQL-based servers
 - **Relationship Handling**: All your model relations become GraphQL connections automatically
 - **Modern API Features**: Built-in filtering, sorting and Relay-compatible pagination
 - **Customization That Makes Sense**: Rename fields, customize types, hide sensitive data, ignore generations...
@@ -31,12 +33,14 @@ yarn add @hakutakuai/zenstack-graphql -D
 ```
 
 Add to your schema.zmodel file:
+
 > Just a base example
 
 ```zmodel
 plugin graphql {
     provider = '@hakutakuai/zenstack-graphql'
     output = './schema.graphql'
+    outputFormat = 'graphql'  // or 'type-graphql' for TypeScript classes
 }
 ```
 
@@ -48,6 +52,20 @@ zenstack generate
 
 That's it! Your GraphQL schema is ready to use with any GraphQL server.
 
+### TypeGraphQL Alternative
+
+For TypeScript projects using TypeGraphQL, you can generate TypeScript classes instead:
+
+```zmodel
+plugin graphql {
+    provider = '@hakutakuai/zenstack-graphql'
+    output = './schema.ts'
+    outputFormat = 'type-graphql'
+}
+```
+
+This generates TypeScript classes with TypeGraphQL decorators instead of SDL.
+
 ## Customization Options
 
 Keep your GraphQL schema clean to your needs:
@@ -56,6 +74,7 @@ Keep your GraphQL schema clean to your needs:
 plugin graphql {
     // Basic settings
     output = './schema.graphql'
+    outputFormat = 'graphql'    // 'graphql' for SDL or 'type-graphql' for TypeScript
 
     // Use your preferred naming style
     fieldNaming = 'snake_case'  // Fields become like_this
@@ -106,20 +125,22 @@ model User {
 
 Here's a complete reference of all available options:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `output` | `string` | `'./schema.graphql'` | Output path for the generated schema |
-| `scalarTypes` | `object` | *See below* | Custom mappings for scalar types |
-| `connectionTypes` | `boolean` | `true` | Generate Relay-compatible connection types |
-| `generateEnums` | `boolean` | `true` | Generate GraphQL enum types |
-| `generateScalars` | `boolean` | `true` | Generate GraphQL scalar types |
-| `generateFilters` | `boolean` | `true` | Generate filter input types |
-| `generateSorts` | `boolean` | `true` | Generate sort input types |
-| `fieldNaming` | `string` | `'camelCase'` | Field naming convention |
-| `typeNaming` | `string` | `'PascalCase'` | Type naming convention |
-| `includeRelations` | `boolean` | `true` | Include model relations in schema |
+| Option             | Type      | Default              | Description                                                           |
+| ------------------ | --------- | -------------------- | --------------------------------------------------------------------- |
+| `output`           | `string`  | `'./schema.graphql'` | Output path for the generated schema                                  |
+| `outputFormat`     | `string`  | `'graphql'`          | Output format: `'graphql'` for SDL or `'type-graphql'` for TypeScript |
+| `scalarTypes`      | `object`  | _See below_          | Custom mappings for scalar types                                      |
+| `connectionTypes`  | `boolean` | `true`               | Generate Relay-compatible connection types                            |
+| `generateEnums`    | `boolean` | `true`               | Generate GraphQL enum types                                           |
+| `generateScalars`  | `boolean` | `true`               | Generate GraphQL scalar types                                         |
+| `generateFilters`  | `boolean` | `true`               | Generate filter input types                                           |
+| `generateSorts`    | `boolean` | `true`               | Generate sort input types                                             |
+| `fieldNaming`      | `string`  | `'camelCase'`        | Field naming convention                                               |
+| `typeNaming`       | `string`  | `'PascalCase'`       | Type naming convention                                                |
+| `includeRelations` | `boolean` | `true`               | Include model relations in schema                                     |
 
 Default scalar mappings:
+
 ```
 {
   "DateTime": 'DateTime',
@@ -189,83 +210,93 @@ model Post {
 Running `zenstack generate` automatically produces this GraphQL schema:
 
 ```graphql
-"""An object with a unique identifier"""
+"""
+An object with a unique identifier
+"""
 interface Node {
-  """The unique identifier for this object"""
-  id: ID!
+	"""
+	The unique identifier for this object
+	"""
+	id: ID!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z
+"""
 scalar DateTime
 
-"""The `JSON` scalar type represents JSON values as specified by ECMA-404"""
+"""
+The `JSON` scalar type represents JSON values as specified by ECMA-404
+"""
 scalar JSON
 
-"""An arbitrary-precision Decimal type"""
+"""
+An arbitrary-precision Decimal type
+"""
 scalar Decimal
 
 # Base model types
 type User {
-  id: Int!
-  email: String!
-  name: String
-  posts: [Post!]!
+	id: Int!
+	email: String!
+	name: String
+	posts: [Post!]!
 }
 
 type Post {
-  id: Int!
-  title: String!
-  content: String
-  published: Boolean!
-  author: User!
-  authorId: Int!
+	id: Int!
+	title: String!
+	content: String
+	published: Boolean!
+	author: User!
+	authorId: Int!
 }
 
 # Pagination support (Relay-compatible)
 type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
+	hasNextPage: Boolean!
+	hasPreviousPage: Boolean!
+	startCursor: String
+	endCursor: String
 }
 
 # Connection types for related lists
 type UserConnection {
-  pageInfo: PageInfo!
-  edges: [UserEdge!]!
-  totalCount: Int!
+	pageInfo: PageInfo!
+	edges: [UserEdge!]!
+	totalCount: Int!
 }
 
 type UserEdge {
-  node: User!
-  cursor: String!
+	node: User!
+	cursor: String!
 }
 
 type PostConnection {
-  pageInfo: PageInfo!
-  edges: [PostEdge!]!
-  totalCount: Int!
+	pageInfo: PageInfo!
+	edges: [PostEdge!]!
+	totalCount: Int!
 }
 
 type PostEdge {
-  node: Post!
-  cursor: String!
+	node: Post!
+	cursor: String!
 }
 
 # Filtering and sorting inputs
 input StringFilterInput {
-  equals: String
-  not: String
-  in: [String!]
-  notIn: [String!]
-  contains: String
-  startsWith: String
-  endsWith: String
+	equals: String
+	not: String
+	in: [String!]
+	notIn: [String!]
+	contains: String
+	startsWith: String
+	endsWith: String
 }
 
 input BooleanFilterInput {
-  equals: Boolean
-  not: Boolean
+	equals: Boolean
+	not: Boolean
 }
 
 # ... and more generated types for complete API functionality
@@ -282,6 +313,80 @@ This simple schema definition gives you a GraphQL API with:
 
 No need to write connection types, or filtering logic, everything is automatically generated from your data model.
 
+## TypeGraphQL Example
+
+For TypeScript projects using TypeGraphQL, the plugin can generate TypeScript classes with decorators:
+
+### ZModel Input
+
+```zmodel
+plugin graphql {
+  provider = "@hakutakuai/zenstack-graphql"
+  output = "./schema.ts"
+  outputFormat = "type-graphql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  bio       String?
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+```
+
+### Generated TypeScript Classes
+
+```typescript
+import { ObjectType, Field, registerEnumType } from 'type-graphql'
+import { GraphQLJSON } from 'graphql-scalars'
+import 'reflect-metadata'
+
+@ObjectType()
+export class User {
+	@Field(() => String)
+	id!: string
+
+	@Field(() => String)
+	name!: string
+
+	@Field(() => String)
+	email!: string
+
+	@Field(() => String, { nullable: true })
+	bio?: string
+}
+
+@ObjectType()
+export class Post {
+	@Field(() => String)
+	id!: string
+
+	@Field(() => String)
+	title!: string
+
+	@Field(() => String)
+	content!: string
+
+	@Field(() => Boolean)
+	published!: boolean
+
+	@Field(() => String)
+	authorId!: string
+}
+```
+
+These classes are ready to use with TypeGraphQL resolvers and provide full type safety for your GraphQL API.
+
 > Check the [examples](./examples/) directory for more sample use cases!
 
 ## Contributing
@@ -291,6 +396,5 @@ Liked this plugin? Want to make it better? Contributions are always welcome! You
 ## License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0) - see the [LICENSE](LICENSE) file for details.
-
 
 ### Built with 🧡 by the Hakutaku team.
