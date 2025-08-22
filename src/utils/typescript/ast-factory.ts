@@ -66,6 +66,95 @@ export class TypeScriptASTFactory {
 		return classDeclaration
 	}
 
+	createObjectTypeFromFields(typeName: string, fields: Record<string, any>, description?: string): ClassDeclaration {
+		const classDeclaration = this.sourceFile.addClass({
+			name: typeName,
+			isExported: true,
+			decorators: [
+				{
+					name: 'ObjectType',
+					arguments: description ? [`{ description: "${description}" }`] : [],
+				},
+			],
+		})
+
+		for (const [fieldName, fieldConfig] of Object.entries(fields)) {
+			const graphqlType = fieldConfig.type
+			const tsType = this.mapGraphQLTypeToTS(graphqlType)
+			const isRequired = graphqlType.includes('!')
+			const isNullable = !isRequired
+
+			classDeclaration.addProperty({
+				name: fieldName,
+				type: tsType,
+				hasQuestionToken: isNullable,
+				hasExclamationToken: isRequired,
+				decorators: [
+					{
+						name: 'Field',
+						arguments: this.getSimpleFieldDecoratorArgs(graphqlType, isNullable),
+					},
+				],
+			})
+		}
+
+		return classDeclaration
+	}
+
+	private getSimpleFieldDecoratorArgs(graphqlType: string, isNullable: boolean): string[] {
+		const cleanType = graphqlType.replace(/[\[\]!]/g, '')
+		const isArray = graphqlType.includes('[')
+
+		let decoratorType = cleanType
+		if (cleanType === 'DateTime') {
+			decoratorType = 'Date'
+		}
+
+		if (isArray) {
+			decoratorType = `[${decoratorType}]`
+		}
+
+		const args = [`() => ${decoratorType}`]
+		if (isNullable) {
+			args.push('{ nullable: true }')
+		}
+
+		return args
+	}
+
+	private mapGraphQLTypeToTS(graphqlType: string): string {
+		const cleanType = graphqlType.replace(/[\[\]!]/g, '')
+		const isArray = graphqlType.includes('[')
+
+		let tsType = 'any'
+		switch (cleanType) {
+			case 'String':
+				tsType = 'string'
+				break
+			case 'Int':
+			case 'Float':
+				tsType = 'number'
+				break
+			case 'Boolean':
+				tsType = 'boolean'
+				break
+			case 'DateTime':
+			case 'Date':
+				tsType = 'Date'
+				break
+			case 'ID':
+				tsType = 'string'
+				break
+			case 'JSON':
+				tsType = 'any'
+				break
+			default:
+				tsType = cleanType
+		}
+
+		return isArray ? `${tsType}[]` : tsType
+	}
+
 	createEnumType(enumType: Enum): EnumDeclaration {
 		const typeName = this.typeFormatter.formatTypeName(enumType.name)
 

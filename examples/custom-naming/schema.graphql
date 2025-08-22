@@ -38,12 +38,6 @@ type Customer {
   billing_address_id: String
   orders: [Order!]!
   contact_number: String
-
-  """Relation to Address via customerShipping"""
-  shippingAddress: Address
-
-  """Relation to Address via customerShipping"""
-  billingAddress: Address
 }
 
 type Product {
@@ -54,9 +48,6 @@ type Product {
   stock_quantity: Int!
   categories: [Category!]!
   order_items: [OrderItem!]!
-
-  """Relation to OrderItem via product"""
-  orderItems: [OrderItem!]!
 }
 
 """Shipping or billing address information"""
@@ -70,12 +61,6 @@ type Address {
   country: String!
   customer_shipping: [Customer!]!
   customer_billing: [Customer!]!
-
-  """Relation to Customer via shippingAddress"""
-  customerShipping: [Customer!]!
-
-  """Relation to Customer via shippingAddress"""
-  customerBilling: [Customer!]!
 }
 
 type Order {
@@ -90,9 +75,6 @@ type Order {
 
   """Special delivery instructions"""
   special_instructions: String
-
-  """Relation to OrderItem via order"""
-  orderItems: [OrderItem!]!
 }
 
 type OrderItem {
@@ -114,12 +96,6 @@ type Category {
   parent_category: Category
   parent_id: String
   sub_categories: [Category!]!
-
-  """Relation to Category via parentCategory"""
-  parentCategory: Category
-
-  """Relation to Category via parentCategory"""
-  subCategories: [Category!]!
 }
 
 """Information about pagination in a connection."""
@@ -312,37 +288,37 @@ enum SortDirection {
 """Sort input for Customer connections"""
 input CustomerSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Product connections"""
 input ProductSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Address connections"""
 input AddressSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Order connections"""
 input OrderSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for OrderItem connections"""
 input OrderItemSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Category connections"""
 input CategorySortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Input type for numeric filtering operations"""

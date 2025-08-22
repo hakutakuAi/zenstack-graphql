@@ -1,6 +1,7 @@
 import { SchemaComposer, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from 'graphql-compose'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { warning, ErrorCategory } from '@utils/error'
+import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 
 export class GraphQLTypeFactories {
 	private readonly schemaComposer: SchemaComposer<unknown>
@@ -321,6 +322,151 @@ export class GraphQLTypeFactories {
 
 			this.schemaComposer.set(fallbackSortInputName, fallbackSortInput)
 			return fallbackSortInput
+		}
+	}
+
+	createFilterInputType(model: DataModel, modelType: string): InputTypeComposer<any> {
+		try {
+			const filterInputName = this.typeFormatter.formatFilterInputTypeName(modelType)
+
+			if (this.schemaComposer.has(filterInputName)) {
+				return this.schemaComposer.getITC(filterInputName)
+			}
+
+			const fields: Record<string, any> = {}
+
+			// Add basic filter fields for each model field
+			for (const field of model.fields) {
+				const fieldName = this.typeFormatter.formatFieldName(field.name)
+				fields[fieldName] = {
+					type: 'String',
+					description: `Filter by ${fieldName}`,
+				}
+			}
+
+			const filterInputTC = this.schemaComposer.createInputTC({
+				name: filterInputName,
+				description: `Filter input for ${modelType}`,
+				fields:
+					Object.keys(fields).length > 0
+						? fields
+						: {
+								_placeholder: {
+									type: 'String',
+									description: 'Placeholder field when no filterable fields are available',
+								},
+							},
+			})
+
+			this.schemaComposer.set(filterInputName, filterInputTC)
+			return filterInputTC
+		} catch (error) {
+			const fallbackFilterInputName = this.typeFormatter.formatFilterInputTypeName(modelType)
+			const fallbackFilterInput = this.schemaComposer.createInputTC({
+				name: fallbackFilterInputName,
+				description: `Fallback filter input for ${modelType} due to error`,
+				fields: {
+					_placeholder: {
+						type: 'String',
+						description: 'Placeholder field when no filterable fields are available',
+					},
+				},
+			})
+
+			this.schemaComposer.set(fallbackFilterInputName, fallbackFilterInput)
+			return fallbackFilterInput
+		}
+	}
+
+	createInputType(model: DataModel, modelType: string): InputTypeComposer<any> {
+		try {
+			const inputName = `${modelType}Input`
+
+			if (this.schemaComposer.has(inputName)) {
+				return this.schemaComposer.getITC(inputName)
+			}
+
+			const fields: Record<string, any> = {}
+
+			// Add basic input fields for each model field
+			for (const field of model.fields) {
+				const fieldName = this.typeFormatter.formatFieldName(field.name)
+				fields[fieldName] = {
+					type: 'String',
+					description: `Input for ${fieldName}`,
+				}
+			}
+
+			const inputTC = this.schemaComposer.createInputTC({
+				name: inputName,
+				description: `Input type for ${modelType}`,
+				fields:
+					Object.keys(fields).length > 0
+						? fields
+						: {
+								_placeholder: {
+									type: 'String',
+									description: 'Placeholder field when no input fields are available',
+								},
+							},
+			})
+
+			this.schemaComposer.set(inputName, inputTC)
+			return inputTC
+		} catch (error) {
+			const fallbackInputName = `${modelType}Input`
+			const fallbackInput = this.schemaComposer.createInputTC({
+				name: fallbackInputName,
+				description: `Fallback input for ${modelType} due to error`,
+				fields: {
+					_placeholder: {
+						type: 'String',
+						description: 'Placeholder field when no input fields are available',
+					},
+				},
+			})
+
+			this.schemaComposer.set(fallbackInputName, fallbackInput)
+			return fallbackInput
+		}
+	}
+
+	createEnumType(enumType: Enum): EnumTypeComposer<any> {
+		try {
+			const enumName = this.typeFormatter.formatTypeName(enumType.name)
+
+			if (this.schemaComposer.has(enumName)) {
+				return this.schemaComposer.getETC(enumName)
+			}
+
+			const values: Record<string, any> = {}
+			for (const value of enumType.fields) {
+				values[value.name] = {
+					value: value.name,
+					description: `${value.name} value`,
+				}
+			}
+
+			const enumTC = this.schemaComposer.createEnumTC({
+				name: enumName,
+				description: `${enumName} enum`,
+				values,
+			})
+
+			this.schemaComposer.set(enumName, enumTC)
+			return enumTC
+		} catch (error) {
+			const fallbackEnumName = this.typeFormatter.formatTypeName(enumType.name)
+			const fallbackEnum = this.schemaComposer.createEnumTC({
+				name: fallbackEnumName,
+				description: `Fallback enum for ${enumType.name} due to error`,
+				values: {
+					UNKNOWN: { value: 'UNKNOWN' },
+				},
+			})
+
+			this.schemaComposer.set(fallbackEnumName, fallbackEnum)
+			return fallbackEnum
 		}
 	}
 }

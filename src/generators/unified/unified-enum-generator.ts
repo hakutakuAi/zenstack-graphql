@@ -1,4 +1,6 @@
-import { AbstractGenerator } from '@generators/abstract-generator'
+import { GeneratorFactoryContext } from '@core/types'
+import { GraphQLRegistry } from '@utils/registry'
+import { SchemaComposer } from 'graphql-compose'
 import { TypeKind } from '@utils/registry/base-registry'
 import { Enum } from '@zenstackhq/sdk/ast'
 import { createGenerationContext, executeSafely } from '@utils/generator-utils'
@@ -16,15 +18,25 @@ export interface EnumGenerationResult {
 	typescriptTypes: string[]
 }
 
-export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult> {
+export class UnifiedEnumGenerator {
 	private astFactory?: TypeScriptASTFactory
 	private format: OutputFormat
 	private typeFormatterOverride?: TypeFormatter
+	private context: GeneratorFactoryContext
+	private typeFormatter: TypeFormatter
+	private registry?: GraphQLRegistry
+	private schemaComposer?: SchemaComposer<unknown>
 
-	constructor(context: any, format: OutputFormat = OutputFormat.GRAPHQL, typeFormatter?: TypeFormatter) {
-		super(context)
+	constructor(context: GeneratorFactoryContext, format: OutputFormat = OutputFormat.GRAPHQL, typeFormatter?: TypeFormatter) {
+		this.context = context
 		this.format = format
 		this.typeFormatterOverride = typeFormatter
+		this.typeFormatter = new TypeFormatter(context.options.typeNaming, context.options.fieldNaming)
+
+		if (format === OutputFormat.GRAPHQL && 'registry' in context) {
+			this.registry = (context as any).registry
+			this.schemaComposer = (context as any).registry?.schemaComposer
+		}
 
 		if (format === OutputFormat.TYPE_GRAPHQL) {
 			const formatter = this.typeFormatterOverride || this.typeFormatter
@@ -51,11 +63,28 @@ export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult
 	}
 
 	private generateGraphQLEnums(): string[] {
-		return this.processEnums((enumObj) => this.generateGraphQLEnum(enumObj))
+		return this.processEnums((enumObj: Enum) => this.generateGraphQLEnum(enumObj))
 	}
 
 	private generateTypeScriptEnums(): string[] {
-		return this.processEnums((enumType) => this.generateTypeScriptEnum(enumType))
+		return this.processEnums((enumType: Enum) => this.generateTypeScriptEnum(enumType))
+	}
+
+	private processEnums(processor: (enumObj: Enum) => any): string[] {
+		const results: string[] = []
+
+		for (const enumObj of this.context.enums) {
+			try {
+				const result = processor(enumObj)
+				if (result?.success && result?.result) {
+					results.push(result.result)
+				}
+			} catch (error) {
+				console.warn(`Failed to process enum ${enumObj.name}:`, error)
+			}
+		}
+
+		return results
 	}
 
 	private generateGraphQLEnum(enumObj: Enum) {
@@ -70,13 +99,17 @@ export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult
 				const enumValues = this.createEnumValues(enumObj)
 				const enumDescription = this.getEnumDescription(enumObj)
 
+				if (!this.schemaComposer) {
+					throw new Error('SchemaComposer not initialized')
+				}
+
 				const enumComposer = this.schemaComposer.createEnumTC({
 					name: enumName,
 					description: enumDescription,
 					values: enumValues,
 				})
 
-				this.registry.registerType(enumName, TypeKind.ENUM, enumComposer, true)
+				this.registry?.registerType(enumName, TypeKind.ENUM, enumComposer, true)
 				return enumName
 			},
 			createGenerationContext(enumName, 'enum', 'generate'),
@@ -119,13 +152,13 @@ export class UnifiedEnumGenerator extends AbstractGenerator<EnumGenerationResult
 		return formatter.formatEnumValueName(field.name)
 	}
 
-	protected override getFormattedName(name: string): string {
+	private getFormattedName(name: string): string {
 		const formatter = this.typeFormatterOverride || this.typeFormatter
 		return formatter.formatTypeName(name)
 	}
 
-	hasEnum(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.ENUM)
+	private hasEnum(name: string): boolean {
+		return this.registry?.isTypeOfKind(name, TypeKind.ENUM) || false
 	}
 
 	static getSupportedFormats(): OutputFormat[] {

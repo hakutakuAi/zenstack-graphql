@@ -1,5 +1,5 @@
-import { BaseGenerator } from '@generators/base-generator'
-import { TypeKind } from '@utils/registry'
+import { UnifiedGeneratorBase } from './unified-generator-base'
+import { UnifiedGeneratorContext } from '@generators/strategies'
 import { DataModel, DataModelField } from '@zenstackhq/sdk/ast'
 import { ErrorCategory, PluginError, warning } from '@utils/error'
 
@@ -9,43 +9,32 @@ export interface FieldConfig {
 	resolve?: any
 }
 
-export class ObjectTypeGenerator extends BaseGenerator {
-	generate(): string[] {
-		this.forEachValidModel((model) => this.generateObjectType(model))
-		return this.registry.getObjectTypes()
+export class UnifiedObjectTypeGenerator extends UnifiedGeneratorBase {
+	constructor(context: UnifiedGeneratorContext) {
+		super(context)
 	}
 
-	hasObjectType(name: string): boolean {
-		return this.registry.isTypeOfKind(name, TypeKind.OBJECT)
-	}
-
-	private generateObjectType(model: DataModel): void {
+	protected generateForModel(model: DataModel): string | null {
 		const typeName = this.attributeProcessor.model(model).getFormattedTypeName(this.typeFormatter)
 
-		if (this.hasObjectType(typeName)) {
-			return
+		if (this.outputStrategy.hasType(typeName)) {
+			return null
 		}
 
 		try {
 			const fields = this.createObjectFields(model)
 			const description = this.attributeProcessor.model(model).description()
 
-			const objectComposer = this.schemaComposer.createObjectTC({
-				name: typeName,
-				description,
-				fields,
-			})
-
-			this.registry.registerType(typeName, TypeKind.OBJECT, objectComposer, true)
+			return this.outputStrategy.createObjectType(typeName, fields, description)
 		} catch (error) {
 			if (error instanceof PluginError) {
-				warning(`Failed to create fields for model ${model.name}: ${error.message}`, error.category, {
+				warning(`Failed to create object type for model ${model.name}: ${error.message}`, error.category, {
 					modelName: model.name,
 					error: error,
 				})
 			} else {
 				warning(
-					`Failed to create fields for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`,
+					`Failed to create object type for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`,
 					ErrorCategory.GENERATION,
 					{
 						modelName: model.name,
@@ -53,6 +42,7 @@ export class ObjectTypeGenerator extends BaseGenerator {
 					},
 				)
 			}
+			return null
 		}
 	}
 
@@ -87,11 +77,11 @@ export class ObjectTypeGenerator extends BaseGenerator {
 	}
 
 	private mapFieldType(field: DataModelField): string {
-		if (this.typeMapper.isRelationField(field)) {
+		if (this.typeMapper && this.typeMapper.isRelationField(field)) {
 			return this.typeMapper.getRelationFieldType(field)
 		}
 
-		const mappedType = this.typeMapper.mapFieldType(field)
+		const mappedType = this.typeMapper && this.typeMapper.mapFieldType(field)
 		if (!mappedType) {
 			throw new PluginError(`Unsupported field type: ${field.type}`, ErrorCategory.SCHEMA, { field: field.name, type: field.type })
 		}

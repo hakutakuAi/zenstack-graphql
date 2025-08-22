@@ -1,5 +1,8 @@
 import { ScalarTypeComposer } from 'graphql-compose'
-import { AbstractGenerator } from '@generators/abstract-generator'
+import { GeneratorFactoryContext } from '@core/types'
+import { TypeFormatter } from '@utils/schema/type-formatter'
+import { GraphQLRegistry } from '@utils/registry'
+import { SchemaComposer } from 'graphql-compose'
 import { TypeKind } from '@utils/registry/base-registry'
 import {
 	UNIFIED_SCALAR_DEFINITIONS,
@@ -21,13 +24,25 @@ export interface ScalarGenerationResult {
 	typescriptTypes: string[]
 }
 
-export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationResult> {
+export class UnifiedScalarGenerator {
 	private astFactory?: TypeScriptASTFactory
 	private format: OutputFormat
+	private context: GeneratorFactoryContext
+	private typeFormatter: TypeFormatter
+	private registry?: GraphQLRegistry
+	private schemaComposer?: SchemaComposer<unknown>
+	private options: GeneratorFactoryContext['options']
 
-	constructor(context: any, format: OutputFormat = OutputFormat.GRAPHQL) {
-		super(context)
+	constructor(context: GeneratorFactoryContext, format: OutputFormat = OutputFormat.GRAPHQL) {
+		this.context = context
 		this.format = format
+		this.options = context.options
+		this.typeFormatter = new TypeFormatter(context.options.typeNaming, context.options.fieldNaming)
+
+		if (format === OutputFormat.GRAPHQL && 'registry' in context) {
+			this.registry = (context as any).registry
+			this.schemaComposer = (context as any).registry?.schemaComposer
+		}
 
 		if (format === OutputFormat.TYPE_GRAPHQL) {
 			this.astFactory = new TypeScriptASTFactory(this.typeFormatter)
@@ -50,9 +65,11 @@ export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationRe
 	}
 
 	private generateGraphQLScalars(): string[] {
+		if (!this.registry) return []
+
 		this.registerBuiltInScalars()
 		this.registerCustomScalars()
-		return this.registry.getScalarTypes()
+		return this.registry?.getScalarTypes() || []
 	}
 
 	private generateTypeScriptScalars(): string[] {
@@ -96,7 +113,7 @@ export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationRe
 				const scalarComposer = ScalarTypeComposer.createTemp(scalarType)
 
 				this.registerInSchemaComposer(config.name, scalarComposer)
-				this.registry.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
+				this.registry?.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
 
 				return config.name
 			},
@@ -122,7 +139,7 @@ export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationRe
 				const scalarComposer = ScalarTypeComposer.createTemp(scalarType)
 
 				this.registerInSchemaComposer(config.name, scalarComposer)
-				this.registry.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
+				this.registry?.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
 
 				return config.name
 			},
@@ -148,7 +165,7 @@ export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationRe
 					const scalarComposer = ScalarTypeComposer.createTemp(scalarType)
 
 					this.registerInSchemaComposer(config.name, scalarComposer)
-					this.registry.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
+					this.registry?.registerType(config.name, TypeKind.SCALAR, scalarComposer, true)
 
 					return config.name
 				},
@@ -178,7 +195,12 @@ export class UnifiedScalarGenerator extends AbstractGenerator<ScalarGenerationRe
 	}
 
 	private hasScalarRegistered(name: string): boolean {
-		return (this.schemaComposer && this.schemaComposer.has(name)) || this.registry.hasType(name) || this.registry.isTypeOfKind(name, TypeKind.SCALAR)
+		return (
+			(this.schemaComposer && this.schemaComposer.has(name)) ||
+			this.registry?.hasType(name) ||
+			this.registry?.isTypeOfKind(name, TypeKind.SCALAR) ||
+			false
+		)
 	}
 
 	private registerInSchemaComposer(name: string, composer: ScalarTypeComposer): void {

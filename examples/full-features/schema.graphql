@@ -430,7 +430,7 @@ input TagSortInput {
 """Sort input for TagsOnPosts connections"""
 input TagsOnPostsSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Input type for numeric filtering operations"""

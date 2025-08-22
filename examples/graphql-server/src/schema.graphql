@@ -260,13 +260,13 @@ input PostSortInput {
 """Sort input for Category connections"""
 input CategorySortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for PostCategory connections"""
 input PostCategorySortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Comment connections"""

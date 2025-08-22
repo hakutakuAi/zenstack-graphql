@@ -2,7 +2,7 @@ import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsTyp
 import { GraphQLJSON } from "graphql-scalars";
 import "reflect-metadata";
 
-@ObjectType()
+@ObjectType({ description: "User of the blog system" })
 export class User {
     @Field(() => String)
     id!: string;
@@ -22,7 +22,7 @@ export class User {
     comments!: Comment[];
 }
 
-@ObjectType()
+@ObjectType({ description: "Blog post" })
 export class Post {
     @Field(() => String)
     id!: string;
@@ -48,7 +48,7 @@ export class Post {
     comments!: Comment[];
 }
 
-@ObjectType()
+@ObjectType({ description: "Post category" })
 export class Category {
     @Field(() => String)
     id!: string;
@@ -60,7 +60,7 @@ export class Category {
     posts!: PostCategory[];
 }
 
-@ObjectType()
+@ObjectType({ description: "Relation between Post and Category" })
 export class PostCategory {
     @Field(() => Post)
     post!: Post;
@@ -74,7 +74,7 @@ export class PostCategory {
     assignedAt!: Date;
 }
 
-@ObjectType()
+@ObjectType({ description: "Comment on a blog post" })
 export class Comment {
     @Field(() => String)
     id!: string;

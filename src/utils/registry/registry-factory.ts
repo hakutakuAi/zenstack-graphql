@@ -122,4 +122,3 @@ export abstract class EnhancedBaseRegistry<TData, TInfo extends BaseTypeInfo<TDa
 		return chain
 	}
 }
-

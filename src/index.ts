@@ -6,7 +6,6 @@ import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'
 
 import { CoreGenerator } from '@generators/core-generator'
-import { CoreGenerator as TypeScriptCoreGenerator } from '@generators/outputs/typescript/core-generator'
 import { ErrorCategory, PluginError } from '@utils/error'
 import { validateOptions, PluginOptions } from '@utils/config'
 import { FileWriter } from '@utils/file-writer'
@@ -47,30 +46,69 @@ export default async function run(model: Model, options: SdkPluginOptions): Prom
 		const enums = model.declarations.filter((x) => isEnum(x)) as Enum[]
 
 		if (normalizedOptions.outputFormat === OutputFormat.TYPE_GRAPHQL) {
-			const typeScriptGenerator = new TypeScriptCoreGenerator({
+			const { TypeFormatter } = await import('@utils/schema/type-formatter')
+			const { TypeScriptASTFactory } = await import('@utils/typescript/ast-factory')
+			const { SchemaProcessor } = await import('@utils/schema/schema-processor')
+			const { UnifiedTypeMapper } = await import('@utils/type-mapping/unified-type-mapper')
+			const { TypeScriptOutputStrategy } = await import('@generators/strategies/typescript-output-strategy')
+
+			const typeFormatter = new TypeFormatter(normalizedOptions.typeNaming, normalizedOptions.fieldNaming)
+			const astFactory = new TypeScriptASTFactory(typeFormatter)
+			const outputStrategy = new TypeScriptOutputStrategy(astFactory)
+			const attributeProcessor = new SchemaProcessor()
+			const typeMapper = new UnifiedTypeMapper(typeFormatter, models, enums, normalizedOptions)
+
+			const unifiedContext = {
 				options: normalizedOptions,
 				models,
 				enums,
-			})
+				typeFormatter,
+				attributeProcessor,
+				typeMapper,
+				outputStrategy,
+			}
 
-			const result = typeScriptGenerator.generate()
+			const objectGenerator = new (await import('@generators/unified/unified-object-type-generator')).UnifiedObjectTypeGenerator(unifiedContext)
+			const filterGenerator = new (await import('@generators/unified/unified-filter-input-generator')).UnifiedFilterInputGenerator(unifiedContext)
+			const sortGenerator = new (await import('@generators/unified/unified-sort-input-generator')).UnifiedSortInputGenerator(unifiedContext)
+			const connectionGenerator = new (await import('@generators/unified/unified-connection-generator')).UnifiedConnectionGenerator(unifiedContext)
+			const { OutputFormat: OF } = await import('@utils/constants')
+			const enumGenerator = new (await import('@generators/unified/unified-enum-generator')).UnifiedEnumGenerator(
+				{ options: normalizedOptions, models, enums },
+				OF.TYPE_GRAPHQL,
+				typeFormatter,
+			)
+			const scalarGenerator = new (await import('@generators/unified/unified-scalar-generator')).UnifiedScalarGenerator(
+				{ options: normalizedOptions, models, enums },
+				OF.TYPE_GRAPHQL,
+			)
+
+			const scalarResult = normalizedOptions.generateScalars ? scalarGenerator.generate() : { typescriptTypes: [] }
+			const enumResult = normalizedOptions.generateEnums ? enumGenerator.generate() : { typescriptTypes: [] }
+			const objectResult = objectGenerator.generate()
+			const filterResult = normalizedOptions.generateFilters ? filterGenerator.generate() : []
+			const sortResult = normalizedOptions.generateSorts ? sortGenerator.generate() : []
+			const connectionResult = normalizedOptions.connectionTypes ? connectionGenerator.generate() : []
+
 			const outputPath = path.join(
 				path.dirname(normalizedOptions.output),
 				path.basename(normalizedOptions.output, path.extname(normalizedOptions.output)) + '.ts',
 			)
 
-			await FileWriter.create().writeTypeGraphQL(result.code, outputPath)
+			const code = outputStrategy.getGeneratedCode()
+
+			await FileWriter.create().writeTypeGraphQL(code, outputPath)
 
 			return {
 				metadata: {
 					stats: {
-						objectTypes: result.stats.objectTypes.length,
-						enumTypes: result.stats.enumTypes.length,
-						scalarTypes: 0,
+						objectTypes: objectResult.length,
+						enumTypes: enumResult.typescriptTypes.length,
+						scalarTypes: scalarResult.typescriptTypes.length,
 						relationFields: 0,
-						connectionTypes: 0,
-						sortInputTypes: 0,
-						filterInputTypes: 0,
+						connectionTypes: connectionResult.length,
+						sortInputTypes: sortResult.length,
+						filterInputTypes: filterResult.length,
 					},
 					outputPath,
 				},

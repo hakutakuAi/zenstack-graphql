@@ -256,31 +256,31 @@ enum SortDirection {
 """Sort input for Author connections"""
 input AuthorSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Book connections"""
 input BookSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Review connections"""
 input ReviewSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Article connections"""
 input ArticleSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Sort input for Publisher connections"""
 input PublisherSortInput {
   """Placeholder field when no sortable fields are available"""
-  _placeholder: String
+  _placeholder: SortDirection
 }
 
 """Input type for numeric filtering operations"""
