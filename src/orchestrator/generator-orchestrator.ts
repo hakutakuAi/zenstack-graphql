@@ -13,13 +13,38 @@ import {
 	UnifiedRelationGenerator,
 	UnifiedEnumGenerator,
 	UnifiedScalarGenerator,
-} from '@/orchestrator/generators/unified'
+} from '@generators/unified'
+import { UnifiedGeneratorContext } from '@generators/strategies'
 import { SchemaComposer } from 'graphql-compose'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { GraphQLRegistry } from '@utils/registry'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
+
+interface TypeScriptGenerators {
+	sortInputGenerator: UnifiedSortInputGenerator
+	filterInputGenerator: UnifiedFilterInputGenerator
+	connectionGenerator: UnifiedConnectionGenerator
+	objectTypeGenerator: UnifiedObjectTypeGenerator
+	enumGenerator: UnifiedEnumGenerator
+	scalarGenerator: UnifiedScalarGenerator
+	relationGenerator: UnifiedRelationGenerator
+	inputGenerator: UnifiedInputGenerator
+	queryArgsGenerator?: UnifiedQueryArgsGenerator
+}
+
+interface GraphQLGenerators {
+	sortInputGenerator?: UnifiedSortInputGenerator
+	filterInputGenerator?: UnifiedFilterInputGenerator
+	connectionGenerator?: UnifiedConnectionGenerator
+	objectTypeGenerator?: UnifiedObjectTypeGenerator
+	enumGenerator?: UnifiedEnumGenerator
+	scalarGenerator?: UnifiedScalarGenerator
+	relationGenerator?: UnifiedRelationGenerator
+	inputGenerator?: UnifiedInputGenerator
+	queryArgsGenerator?: UnifiedQueryArgsGenerator
+}
 
 export class GeneratorOrchestrator {
 	constructor(
@@ -48,7 +73,7 @@ export class GeneratorOrchestrator {
 		}
 	}
 
-	private createTypeScriptGeneratorsWithContext(unifiedContext: any) {
+	private createTypeScriptGeneratorsWithContext(unifiedContext: UnifiedGeneratorContext): TypeScriptGenerators {
 		return {
 			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
 			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
@@ -100,7 +125,7 @@ export class GeneratorOrchestrator {
 		}
 	}
 
-	private async executeGenerators(generators: any): Promise<GenerationResult[]> {
+	private async executeGenerators(generators: TypeScriptGenerators | GraphQLGenerators): Promise<GenerationResult[]> {
 		const results: GenerationResult[] = []
 		const isTypeScript = this.outputFormat === OutputFormat.TYPE_GRAPHQL
 

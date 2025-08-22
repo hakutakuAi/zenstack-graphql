@@ -281,18 +281,6 @@ export class NumericFilterInput {
 }
 
 @InputType()
-export class DateTimeFilterInput {
-    @Field(() => Date, { nullable: true })
-    equals?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    not?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    gt?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    lt?: Date | undefined;
-}
-
-@InputType()
 export class StringFilterInput {
     @Field(() => String, { nullable: true })
     equals?: string | undefined;
@@ -316,6 +304,18 @@ export class BooleanFilterInput {
     equals?: boolean | undefined;
     @Field(() => Boolean, { nullable: true })
     not?: boolean | undefined;
+}
+
+@InputType()
+export class DateTimeFilterInput {
+    @Field(() => Date, { nullable: true })
+    equals?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    not?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    gt?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    lt?: Date | undefined;
 }
 
 @InputType()

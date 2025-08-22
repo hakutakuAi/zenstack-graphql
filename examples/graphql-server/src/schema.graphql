@@ -290,21 +290,6 @@ input NumericFilterInput {
   lt: Float
 }
 
-"""Input type for datetime filtering operations"""
-input DateTimeFilterInput {
-  """Equal to the given value"""
-  equals: DateTime
-
-  """Not equal to the given value"""
-  not: DateTime
-
-  """Greater than the given value"""
-  gt: DateTime
-
-  """Less than the given value"""
-  lt: DateTime
-}
-
 """Input type for string filtering operations"""
 input StringFilterInput {
   """Equal to the given value"""
@@ -336,6 +321,21 @@ input BooleanFilterInput {
 
   """Not equal to the given value"""
   not: Boolean
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
 }
 
 """Filter input type for User"""

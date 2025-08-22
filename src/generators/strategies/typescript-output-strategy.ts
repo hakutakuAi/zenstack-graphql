@@ -2,6 +2,7 @@ import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
 import { DataModel } from '@zenstackhq/sdk/ast'
 import { OutputStrategy, CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from './output-strategy'
 import { RelationField } from '@generators/unified/unified-relation-generator'
+import { COMMON_FILTER_TYPES, createFilterFields } from '@utils/filter-type-definitions'
 
 export class TypeScriptOutputStrategy implements OutputStrategy {
 	constructor(private readonly astFactory: TypeScriptASTFactory) {}
@@ -58,34 +59,10 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	}
 
 	createCommonFilterTypes(): void {
-		this.astFactory.createFilterInputType('NumericFilterInput', [
-			{ name: 'equals', type: 'Float', nullable: true },
-			{ name: 'not', type: 'Float', nullable: true },
-			{ name: 'gt', type: 'Float', nullable: true },
-			{ name: 'lt', type: 'Float', nullable: true },
-		])
-
-		this.astFactory.createFilterInputType('DateTimeFilterInput', [
-			{ name: 'equals', type: 'Date', nullable: true },
-			{ name: 'not', type: 'Date', nullable: true },
-			{ name: 'gt', type: 'Date', nullable: true },
-			{ name: 'lt', type: 'Date', nullable: true },
-		])
-
-		this.astFactory.createFilterInputType('StringFilterInput', [
-			{ name: 'equals', type: 'String', nullable: true },
-			{ name: 'not', type: 'String', nullable: true },
-			{ name: 'in', type: '[String!]', nullable: true },
-			{ name: 'notIn', type: '[String!]', nullable: true },
-			{ name: 'contains', type: 'String', nullable: true },
-			{ name: 'startsWith', type: 'String', nullable: true },
-			{ name: 'endsWith', type: 'String', nullable: true },
-		])
-
-		this.astFactory.createFilterInputType('BooleanFilterInput', [
-			{ name: 'equals', type: 'Boolean', nullable: true },
-			{ name: 'not', type: 'Boolean', nullable: true },
-		])
+		COMMON_FILTER_TYPES.forEach((definition) => {
+			const fields = createFilterFields(definition)
+			this.astFactory.createFilterInputType(definition.name, fields)
+		})
 	}
 
 	createSortDirectionEnum(): void {
@@ -93,7 +70,7 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	}
 
 	hasType(typeName: string): boolean {
-		return false
+		return this.astFactory.hasType(typeName)
 	}
 
 	createObjectType(typeName: string, fields: Record<string, any>, description?: string): string {

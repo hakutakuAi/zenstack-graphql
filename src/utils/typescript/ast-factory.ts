@@ -734,6 +734,11 @@ registerEnumType(SortDirection, {
 		return allNames
 	}
 
+	hasType(typeName: string): boolean {
+		const allTypeNames = this.getGeneratedTypeNames()
+		return allTypeNames.includes(typeName)
+	}
+
 	clear(): void {
 		this.sourceFile.removeText()
 		this.addImports()

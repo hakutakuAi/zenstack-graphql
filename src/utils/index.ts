@@ -2,6 +2,7 @@ export * from './config'
 export * from './error'
 export * from './file-writer'
 export * from './constants'
+export * from './filter-type-definitions'
 
 export * from './registry'
 

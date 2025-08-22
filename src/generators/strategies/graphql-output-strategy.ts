@@ -6,6 +6,7 @@ import { ErrorCategory, PluginError } from '@utils/error'
 import { DataModel } from '@zenstackhq/sdk/ast'
 import { OutputStrategy, CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from './output-strategy'
 import { RelationField } from '@generators/unified/unified-relation-generator'
+import { COMMON_FILTER_TYPES, createGraphQLFilterFields } from '@utils/filter-type-definitions'
 
 export class GraphQLOutputStrategy implements OutputStrategy {
 	constructor(
@@ -154,13 +155,28 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	createCommonFilterTypes(): void {
-		this.createFilterType('NumericFilterInput', 'numeric', 'Float', false)
+		COMMON_FILTER_TYPES.forEach((definition) => {
+			let actualDefinition = definition
+			
+			if (definition.type === 'datetime') {
+				const dateTimeType = this.options.scalarTypes?.['DateTime'] || 'DateTime'
+				actualDefinition = {
+					...definition,
+					name: `${dateTimeType}FilterInput`,
+					baseType: dateTimeType,
+				}
+			}
 
-		const dateTimeType = this.options.scalarTypes['DateTime'] || 'DateTime'
-		this.createFilterType(`${dateTimeType}FilterInput`, 'datetime', dateTimeType, false)
-
-		this.createFilterType('StringFilterInput', 'string', 'String', true)
-		this.createFilterType('BooleanFilterInput', 'boolean', 'Boolean', false)
+			if (!this.schemaComposer.has(actualDefinition.name)) {
+				const fields = createGraphQLFilterFields(actualDefinition)
+				const filterTC = this.schemaComposer.createInputTC({
+					name: actualDefinition.name,
+					description: `Input type for ${actualDefinition.type} filtering operations`,
+					fields,
+				})
+				this.registry.registerType(actualDefinition.name, TypeKind.INPUT, filterTC, true)
+			}
+		})
 	}
 
 	createSortDirectionEnum(): void {
@@ -283,62 +299,4 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 		return filter ? typeNames.filter(filter) : typeNames
 	}
 
-	private createFilterType(name: string, description: string, typeName: string, includeStringOperations: boolean): void {
-		if (this.schemaComposer.has(name)) {
-			return
-		}
-
-		const fields: Record<string, { type: string; description: string }> = {
-			equals: {
-				type: typeName,
-				description: 'Equal to the given value',
-			},
-			not: {
-				type: typeName,
-				description: 'Not equal to the given value',
-			},
-		}
-
-		if (typeName !== 'Boolean' && typeName !== 'String') {
-			fields.gt = {
-				type: typeName,
-				description: 'Greater than the given value',
-			}
-			fields.lt = {
-				type: typeName,
-				description: 'Less than the given value',
-			}
-		}
-
-		if (includeStringOperations) {
-			fields.in = {
-				type: `[${typeName}!]`,
-				description: 'In the given list of values',
-			}
-			fields.notIn = {
-				type: `[${typeName}!]`,
-				description: 'Not in the given list of values',
-			}
-			fields.contains = {
-				type: typeName,
-				description: 'Contains the given value',
-			}
-			fields.startsWith = {
-				type: typeName,
-				description: 'Starts with the given value',
-			}
-			fields.endsWith = {
-				type: typeName,
-				description: 'Ends with the given value',
-			}
-		}
-
-		const filterTC = this.schemaComposer.createInputTC({
-			name,
-			description: `Input type for ${description} filtering operations`,
-			fields,
-		})
-
-		this.registry.registerType(name, TypeKind.INPUT, filterTC, true)
-	}
 }
