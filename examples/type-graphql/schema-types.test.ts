@@ -324,7 +324,7 @@ describe('TypeGraphQL Test Example', () => {
 			expect(schemaContent).toContain('@Field(() => Boolean)')
 			expect(schemaContent).toContain('@Field(() => Date)')
 			expect(schemaContent).toContain('@Field(() => Int)')
-			expect(schemaContent).toContain('@Field(() => Float)')
+			expect(schemaContent).toContain('@Field(() => Float, { nullable: true })')
 		})
 
 		test('Connection types follow GraphQL Relay specification', () => {

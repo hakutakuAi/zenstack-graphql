@@ -6,7 +6,13 @@ const TEST_PORT = 4567
 const GRAPHQL_ENDPOINT = `http://localhost:${TEST_PORT}/graphql`
 
 describe('GraphQL Server Tests', () => {
-	beforeAll(() => {
+	beforeAll(async () => {
+		await prismaClient.$executeRaw`DELETE FROM CategoryOnPost`
+		await prismaClient.$executeRaw`DELETE FROM Comment`
+		await prismaClient.$executeRaw`DELETE FROM Post`
+		await prismaClient.$executeRaw`DELETE FROM Category`
+		await prismaClient.$executeRaw`DELETE FROM User`
+
 		server.listen(TEST_PORT, () => {
 			console.log(`Test server running at http://localhost:${TEST_PORT}/graphql`)
 		})
@@ -416,6 +422,14 @@ describe('GraphQL Server Tests', () => {
 						type {
 							name
 							kind
+							ofType {
+								name
+								kind
+								ofType {
+									name
+									kind
+								}
+							}
 						}
 					}
 				}
@@ -430,16 +444,28 @@ describe('GraphQL Server Tests', () => {
 
 		const fields = result.data.__type.fields
 		const fieldMap = fields.reduce((acc: any, field: any) => {
-			acc[field.name] = field.type
+			const getTypeName = (type: any): string => {
+				if (type.kind === 'NON_NULL' && type.ofType) {
+					return type.ofType.name
+				}
+				if (type.kind === 'LIST' && type.ofType) {
+					if (type.ofType.kind === 'NON_NULL' && type.ofType.ofType) {
+						return type.ofType.ofType.name
+					}
+					return type.ofType.name
+				}
+				return type.name
+			}
+			acc[field.name] = getTypeName(field.type)
 			return acc
 		}, {})
 
-		expect(fieldMap.id.name).toBe('String')
-		expect(fieldMap.title.name).toBe('String')
-		expect(fieldMap.content.name).toBe('String')
-		expect(fieldMap.published.name).toBe('Boolean')
-		expect(fieldMap.viewCount.name).toBe('Int')
-		expect(fieldMap.author.name).toBe('User')
+		expect(fieldMap.id).toBe('String')
+		expect(fieldMap.title).toBe('String')
+		expect(fieldMap.content).toBe('String')
+		expect(fieldMap.published).toBe('Boolean')
+		expect(fieldMap.viewCount).toBe('Int')
+		expect(fieldMap.author).toBe('User')
 	})
 
 	test('Error handling for invalid mutations', async () => {
