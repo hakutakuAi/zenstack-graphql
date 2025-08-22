@@ -1,0 +1,102 @@
+datasource db {
+	provider = 'sqlite'
+	url = 'file:./dev.db'
+}
+
+generator client {
+	provider = 'prisma-client-js'
+	binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+plugin graphql {
+	provider = '../../dist'
+    output = './schema.ts'
+	outputFormat = 'type-graphql'
+	generateFilters = true
+	generateSorts = true
+	connectionTypes = true
+	includeRelations = true
+	generateEnums = true
+	generateScalars = true
+}
+
+enum ProductStatus {
+    DRAFT
+    PUBLISHED
+    ARCHIVED
+    
+    @@graphql.description("Product status in the system")
+}
+
+enum ReviewRating {
+    ONE
+    TWO  
+    THREE
+    FOUR
+    FIVE
+    
+    @@graphql.description("Review rating from 1 to 5 stars")
+}
+
+model Product {
+	id          String        @id @default(uuid())
+	createdAt   DateTime      @default(now()) @graphql.sortable @graphql.filterable
+	updatedAt   DateTime      @updatedAt @graphql.sortable
+	name        String        @graphql.filterable
+	description String?
+	price       Float         @graphql.sortable @graphql.filterable
+	status      ProductStatus @default(DRAFT) @graphql.filterable
+	metadata    Json?         @graphql.description("Arbitrary product metadata as JSON")
+	
+	// Relations
+	reviews     Review[]
+	tags        ProductTag[]
+
+	@@graphql.description("Product in the e-commerce system")
+	@@graphql.connection(pageSize: 20)
+	@@allow('all', true)
+}
+
+model Review {
+	id          String       @id @default(uuid())
+	createdAt   DateTime     @default(now()) @graphql.sortable @graphql.filterable
+	title       String       @graphql.filterable
+	content     String
+	rating      ReviewRating @graphql.sortable @graphql.filterable
+	verified    Boolean      @default(false) @graphql.filterable
+	helpfulCount Int         @default(0) @graphql.sortable
+	
+	// Relations
+	product     Product      @relation(fields: [productId], references: [id])
+	productId   String
+	
+	@@graphql.description("Customer review for a product")
+	@@graphql.connection(pageSize: 10)
+	@@allow('all', true)
+}
+
+model Tag {
+	id          String       @id @default(uuid())
+	name        String       @unique @graphql.filterable
+	color       String?      @graphql.description("Hex color code for the tag")
+	
+	// Relations
+	products    ProductTag[]
+	
+	@@graphql.description("Tag for categorizing products")
+	@@graphql.connection(pageSize: 50)
+	@@allow('all', true)
+}
+
+model ProductTag {
+	product     Product   @relation(fields: [productId], references: [id])
+	productId   String
+	tag         Tag       @relation(fields: [tagId], references: [id])
+	tagId       String
+	assignedAt  DateTime  @default(now())
+	
+	@@id([productId, tagId])
+	@@graphql.name("ProductTag")
+	@@graphql.description("Many-to-many relation between Product and Tag")
+	@@allow('all', true)
+}

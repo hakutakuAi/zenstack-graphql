@@ -1,0 +1,29 @@
+{
+	"name": "advanced-graphql",
+	"version": "1.0.0",
+	"description": "Advanced GraphQL features test example for ZenStack GraphQL plugin",
+	"main": "src/server.ts",
+	"scripts": {
+		"generate": "zenstack generate",
+		"db:migrate": "prisma migrate dev",
+		"start": "bun run src/server.ts",
+		"test": "bun test",
+		"setup": "bun install && bun run generate && bun run db:migrate"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.14.0",
+		"@zenstackhq/runtime": "^2.18.1",
+		"graphql": "^16.11.0",
+		"graphql-scalars": "^1.24.2",
+		"graphql-yoga": "^5.15.1",
+		"reflect-metadata": "^0.2.2",
+		"type-graphql": "^2.0.0-rc.2"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.20",
+		"@types/node": "^24.3.0",
+		"prisma": "^6.14.0",
+		"typescript": "^5.9.2",
+		"zenstack": "^2.18.1"
+	}
+}

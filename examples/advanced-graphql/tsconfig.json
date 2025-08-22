@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"lib": ["ESNext"],
+		"target": "es2021",
+		"module": "commonjs",
+		"moduleDetection": "force",
+		"allowJs": true,
+
+		"moduleResolution": "node",
+		"allowImportingTsExtensions": false,
+		"verbatimModuleSyntax": false,
+		"noEmit": false,
+		"esModuleInterop": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": false,
+		"isolatedModules": true,
+		"outDir": "./dist"
+	},
+	"include": ["./src/**/*.ts", "./src/**/*.tsx", "./schema.ts"],
+	"exclude": ["node_modules", "dist"]
+}
