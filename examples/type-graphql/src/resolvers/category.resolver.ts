@@ -46,4 +46,3 @@ export class CategoryResolver extends BaseResolver {
 		return this.findMany<PostCategory>(prisma, 'categoryOnPost', { where: { categoryId: category.id } })
 	}
 }
-''
