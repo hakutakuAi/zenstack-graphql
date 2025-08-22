@@ -120,30 +120,6 @@ export class GraphQLRegistry extends BaseRegistry<any, GraphQLTypeInfo> {
 		this.registerType(COMMON_TYPES.NODE, TypeKind.INTERFACE, nodeInterface, true)
 	}
 
-	getTypeNamesByKind(kind: TypeKind): string[] {
-		return super.getTypesByKind(kind).map((info) => info.name)
-	}
-
-	getObjectTypes(): string[] {
-		return super.getTypesByKind(TypeKind.OBJECT).map((info) => info.name)
-	}
-
-	getEnumTypes(): string[] {
-		return super.getTypesByKind(TypeKind.ENUM).map((info) => info.name)
-	}
-
-	getScalarTypes(): string[] {
-		return super.getTypesByKind(TypeKind.SCALAR).map((info) => info.name)
-	}
-
-	getInputTypes(): string[] {
-		return super.getTypesByKind(TypeKind.INPUT).map((info) => info.name)
-	}
-
-	getConnectionTypes(): string[] {
-		return super.getTypesByKind(TypeKind.CONNECTION).map((info) => info.name)
-	}
-
 	private syncFromSchemaComposer(): void {
 		for (const typeName of this.schemaComposer.types.keys()) {
 			const composer = this.schemaComposer.get(typeName)

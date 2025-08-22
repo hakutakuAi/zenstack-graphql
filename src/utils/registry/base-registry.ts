@@ -94,4 +94,28 @@ export abstract class BaseRegistry<TData, TInfo extends BaseTypeInfo<TData>> imp
 	protected getAllTypes(): TInfo[] {
 		return Array.from(this.types.values())
 	}
+
+	getTypeNamesByKind(kind: TypeKind): string[] {
+		return this.getTypesByKind(kind).map((info) => info.name)
+	}
+
+	getObjectTypes(): string[] {
+		return this.getTypeNamesByKind(TypeKind.OBJECT)
+	}
+
+	getEnumTypes(): string[] {
+		return this.getTypeNamesByKind(TypeKind.ENUM)
+	}
+
+	getScalarTypes(): string[] {
+		return this.getTypeNamesByKind(TypeKind.SCALAR)
+	}
+
+	getInputTypes(): string[] {
+		return this.getTypeNamesByKind(TypeKind.INPUT)
+	}
+
+	getConnectionTypes(): string[] {
+		return this.getTypeNamesByKind(TypeKind.CONNECTION)
+	}
 }

@@ -1,4 +1,4 @@
-import { GeneratorFactoryContext, GeneratorContext } from '@core/types'
+import { BaseGeneratorContext, GeneratorContext } from '@core/types'
 import { UnifiedGeneratorContext } from '@generators/strategies'
 import { GraphQLOutputStrategy } from '@generators/strategies/graphql-output-strategy'
 import { TypeScriptOutputStrategy } from '@generators/strategies/typescript-output-strategy'
@@ -27,12 +27,12 @@ export class UnifiedContextFactory {
 		}
 	}
 
-	static createTypeScriptContext(factoryContext: GeneratorFactoryContext): UnifiedGeneratorContext {
+	static createTypeScriptContext(factoryContext: BaseGeneratorContext): UnifiedGeneratorContext {
 		const typeFormatter = new TypeFormatter(factoryContext.options.typeNaming, factoryContext.options.fieldNaming)
-		const astFactory = new TypeScriptASTFactory(typeFormatter)
-		const outputStrategy = new TypeScriptOutputStrategy(astFactory)
 		const attributeProcessor = new SchemaProcessor()
 		const typeMapper = new UnifiedTypeMapper(typeFormatter, factoryContext.models, factoryContext.enums, factoryContext.options)
+		const astFactory = new TypeScriptASTFactory(typeFormatter, typeMapper, attributeProcessor)
+		const outputStrategy = new TypeScriptOutputStrategy(astFactory)
 
 		return {
 			options: factoryContext.options,

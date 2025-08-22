@@ -93,156 +93,6 @@ export class Comment {
 }
 
 @InputType()
-export class NumericFilterInput {
-    @Field(() => Float, { nullable: true })
-    equals?: number | undefined;
-    @Field(() => Float, { nullable: true })
-    not?: number | undefined;
-    @Field(() => Float, { nullable: true })
-    gt?: number | undefined;
-    @Field(() => Float, { nullable: true })
-    lt?: number | undefined;
-}
-
-@InputType()
-export class DateTimeFilterInput {
-    @Field(() => Date, { nullable: true })
-    equals?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    not?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    gt?: Date | undefined;
-    @Field(() => Date, { nullable: true })
-    lt?: Date | undefined;
-}
-
-@InputType()
-export class StringFilterInput {
-    @Field(() => String, { nullable: true })
-    equals?: string | undefined;
-    @Field(() => String, { nullable: true })
-    not?: string | undefined;
-    @Field(() => [String!], { nullable: true })
-    in?: string[] | undefined;
-    @Field(() => [String!], { nullable: true })
-    notIn?: string[] | undefined;
-    @Field(() => String, { nullable: true })
-    contains?: string | undefined;
-    @Field(() => String, { nullable: true })
-    startsWith?: string | undefined;
-    @Field(() => String, { nullable: true })
-    endsWith?: string | undefined;
-}
-
-@InputType()
-export class BooleanFilterInput {
-    @Field(() => Boolean, { nullable: true })
-    equals?: boolean | undefined;
-    @Field(() => Boolean, { nullable: true })
-    not?: boolean | undefined;
-}
-
-@InputType()
-export class UserFilterInput {
-    @Field(() => DateTimeFilterInput, { nullable: true })
-    createdAt?: DateTimeFilterInput | undefined;
-    @Field(() => StringFilterInput, { nullable: true })
-    email?: StringFilterInput | undefined;
-    @Field(() => StringFilterInput, { nullable: true })
-    name?: StringFilterInput | undefined;
-    @Field(() => [UserFilterInput!], { nullable: true })
-    AND?: UserFilterInput[] | undefined;
-    @Field(() => [UserFilterInput!], { nullable: true })
-    OR?: UserFilterInput[] | undefined;
-}
-
-@InputType()
-export class PostFilterInput {
-    @Field(() => DateTimeFilterInput, { nullable: true })
-    createdAt?: DateTimeFilterInput | undefined;
-    @Field(() => StringFilterInput, { nullable: true })
-    title?: StringFilterInput | undefined;
-    @Field(() => BooleanFilterInput, { nullable: true })
-    published?: BooleanFilterInput | undefined;
-    @Field(() => [PostFilterInput!], { nullable: true })
-    AND?: PostFilterInput[] | undefined;
-    @Field(() => [PostFilterInput!], { nullable: true })
-    OR?: PostFilterInput[] | undefined;
-}
-
-@InputType()
-export class CategoryFilterInput {
-    @Field(() => StringFilterInput, { nullable: true })
-    name?: StringFilterInput | undefined;
-    @Field(() => [CategoryFilterInput!], { nullable: true })
-    AND?: CategoryFilterInput[] | undefined;
-    @Field(() => [CategoryFilterInput!], { nullable: true })
-    OR?: CategoryFilterInput[] | undefined;
-}
-
-@InputType()
-export class PostCategoryFilterInput {
-    @Field(() => [PostCategoryFilterInput!], { nullable: true })
-    AND?: PostCategoryFilterInput[] | undefined;
-    @Field(() => [PostCategoryFilterInput!], { nullable: true })
-    OR?: PostCategoryFilterInput[] | undefined;
-}
-
-@InputType()
-export class CommentFilterInput {
-    @Field(() => [CommentFilterInput!], { nullable: true })
-    AND?: CommentFilterInput[] | undefined;
-    @Field(() => [CommentFilterInput!], { nullable: true })
-    OR?: CommentFilterInput[] | undefined;
-}
-
-export enum SortDirection {
-    ASC = "ASC",
-    DESC = "DESC"
-}
-
-registerEnumType(SortDirection, {
-  name: 'SortDirection',
-  description: 'Sort direction for ordering results',
-})
-
-@InputType()
-export class UserSortInput {
-    @Field(() => SortDirection, { nullable: true })
-    createdAt?: SortDirection | undefined;
-    @Field(() => SortDirection, { nullable: true })
-    updatedAt?: SortDirection | undefined;
-}
-
-@InputType()
-export class PostSortInput {
-    @Field(() => SortDirection, { nullable: true })
-    createdAt?: SortDirection | undefined;
-    @Field(() => SortDirection, { nullable: true })
-    updatedAt?: SortDirection | undefined;
-    @Field(() => SortDirection, { nullable: true })
-    viewCount?: SortDirection | undefined;
-}
-
-@InputType()
-export class CategorySortInput {
-    @Field(() => SortDirection, { nullable: true })
-    _placeholder?: SortDirection | undefined;
-}
-
-@InputType()
-export class PostCategorySortInput {
-    @Field(() => SortDirection, { nullable: true })
-    _placeholder?: SortDirection | undefined;
-}
-
-@InputType()
-export class CommentSortInput {
-    @Field(() => SortDirection, { nullable: true })
-    createdAt?: SortDirection | undefined;
-}
-
-@InputType()
 export class ForwardPaginationInput {
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
@@ -370,4 +220,154 @@ export class CommentConnection {
     edges!: CommentEdge[];
     @Field(() => Int)
     totalCount!: number;
+}
+
+export enum SortDirection {
+    ASC = "ASC",
+    DESC = "DESC"
+}
+
+registerEnumType(SortDirection, {
+  name: 'SortDirection',
+  description: 'Sort direction for ordering results',
+})
+
+@InputType()
+export class UserSortInput {
+    @Field(() => SortDirection, { nullable: true })
+    createdAt?: SortDirection | undefined;
+    @Field(() => SortDirection, { nullable: true })
+    updatedAt?: SortDirection | undefined;
+}
+
+@InputType()
+export class PostSortInput {
+    @Field(() => SortDirection, { nullable: true })
+    createdAt?: SortDirection | undefined;
+    @Field(() => SortDirection, { nullable: true })
+    updatedAt?: SortDirection | undefined;
+    @Field(() => SortDirection, { nullable: true })
+    viewCount?: SortDirection | undefined;
+}
+
+@InputType()
+export class CategorySortInput {
+    @Field(() => SortDirection, { nullable: true })
+    _placeholder?: SortDirection | undefined;
+}
+
+@InputType()
+export class PostCategorySortInput {
+    @Field(() => SortDirection, { nullable: true })
+    _placeholder?: SortDirection | undefined;
+}
+
+@InputType()
+export class CommentSortInput {
+    @Field(() => SortDirection, { nullable: true })
+    createdAt?: SortDirection | undefined;
+}
+
+@InputType()
+export class NumericFilterInput {
+    @Field(() => Float, { nullable: true })
+    equals?: number | undefined;
+    @Field(() => Float, { nullable: true })
+    not?: number | undefined;
+    @Field(() => Float, { nullable: true })
+    gt?: number | undefined;
+    @Field(() => Float, { nullable: true })
+    lt?: number | undefined;
+}
+
+@InputType()
+export class DateTimeFilterInput {
+    @Field(() => Date, { nullable: true })
+    equals?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    not?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    gt?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    lt?: Date | undefined;
+}
+
+@InputType()
+export class StringFilterInput {
+    @Field(() => String, { nullable: true })
+    equals?: string | undefined;
+    @Field(() => String, { nullable: true })
+    not?: string | undefined;
+    @Field(() => [String!], { nullable: true })
+    in?: string[] | undefined;
+    @Field(() => [String!], { nullable: true })
+    notIn?: string[] | undefined;
+    @Field(() => String, { nullable: true })
+    contains?: string | undefined;
+    @Field(() => String, { nullable: true })
+    startsWith?: string | undefined;
+    @Field(() => String, { nullable: true })
+    endsWith?: string | undefined;
+}
+
+@InputType()
+export class BooleanFilterInput {
+    @Field(() => Boolean, { nullable: true })
+    equals?: boolean | undefined;
+    @Field(() => Boolean, { nullable: true })
+    not?: boolean | undefined;
+}
+
+@InputType()
+export class UserFilterInput {
+    @Field(() => DateTimeFilterInput, { nullable: true })
+    createdAt?: DateTimeFilterInput | undefined;
+    @Field(() => StringFilterInput, { nullable: true })
+    email?: StringFilterInput | undefined;
+    @Field(() => StringFilterInput, { nullable: true })
+    name?: StringFilterInput | undefined;
+    @Field(() => [UserFilterInput!], { nullable: true })
+    AND?: UserFilterInput[] | undefined;
+    @Field(() => [UserFilterInput!], { nullable: true })
+    OR?: UserFilterInput[] | undefined;
+}
+
+@InputType()
+export class PostFilterInput {
+    @Field(() => DateTimeFilterInput, { nullable: true })
+    createdAt?: DateTimeFilterInput | undefined;
+    @Field(() => StringFilterInput, { nullable: true })
+    title?: StringFilterInput | undefined;
+    @Field(() => BooleanFilterInput, { nullable: true })
+    published?: BooleanFilterInput | undefined;
+    @Field(() => [PostFilterInput!], { nullable: true })
+    AND?: PostFilterInput[] | undefined;
+    @Field(() => [PostFilterInput!], { nullable: true })
+    OR?: PostFilterInput[] | undefined;
+}
+
+@InputType()
+export class CategoryFilterInput {
+    @Field(() => StringFilterInput, { nullable: true })
+    name?: StringFilterInput | undefined;
+    @Field(() => [CategoryFilterInput!], { nullable: true })
+    AND?: CategoryFilterInput[] | undefined;
+    @Field(() => [CategoryFilterInput!], { nullable: true })
+    OR?: CategoryFilterInput[] | undefined;
+}
+
+@InputType()
+export class PostCategoryFilterInput {
+    @Field(() => [PostCategoryFilterInput!], { nullable: true })
+    AND?: PostCategoryFilterInput[] | undefined;
+    @Field(() => [PostCategoryFilterInput!], { nullable: true })
+    OR?: PostCategoryFilterInput[] | undefined;
+}
+
+@InputType()
+export class CommentFilterInput {
+    @Field(() => [CommentFilterInput!], { nullable: true })
+    AND?: CommentFilterInput[] | undefined;
+    @Field(() => [CommentFilterInput!], { nullable: true })
+    OR?: CommentFilterInput[] | undefined;
 }

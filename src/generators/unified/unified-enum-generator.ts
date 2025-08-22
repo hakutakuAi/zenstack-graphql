@@ -1,9 +1,9 @@
-import { GeneratorFactoryContext } from '@core/types'
+import { BaseGeneratorContext } from '@core/types'
 import { GraphQLRegistry } from '@utils/registry'
 import { SchemaComposer } from 'graphql-compose'
 import { TypeKind } from '@utils/registry/base-registry'
 import { Enum } from '@zenstackhq/sdk/ast'
-import { createGenerationContext, executeSafely } from '@utils/generator-utils'
+import { createGenerationContext, executeSafely } from '@utils/error'
 import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
 import { OutputFormat } from '@utils/constants'
 import { TypeFormatter } from '@utils/schema/type-formatter'
@@ -22,12 +22,12 @@ export class UnifiedEnumGenerator {
 	private astFactory?: TypeScriptASTFactory
 	private format: OutputFormat
 	private typeFormatterOverride?: TypeFormatter
-	private context: GeneratorFactoryContext
+	private context: BaseGeneratorContext
 	private typeFormatter: TypeFormatter
 	private registry?: GraphQLRegistry
 	private schemaComposer?: SchemaComposer<unknown>
 
-	constructor(context: GeneratorFactoryContext, format: OutputFormat = OutputFormat.GRAPHQL, typeFormatter?: TypeFormatter) {
+	constructor(context: BaseGeneratorContext, format: OutputFormat = OutputFormat.GRAPHQL, typeFormatter?: TypeFormatter) {
 		this.context = context
 		this.format = format
 		this.typeFormatterOverride = typeFormatter
@@ -172,12 +172,4 @@ export class UnifiedEnumGenerator {
 	static createTypeScriptGenerator(context: any, typeFormatter?: TypeFormatter): UnifiedEnumGenerator {
 		return new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL, typeFormatter)
 	}
-}
-
-export function createGraphQLEnumGenerator(context: any): UnifiedEnumGenerator {
-	return UnifiedEnumGenerator.createGraphQLGenerator(context)
-}
-
-export function createTypeScriptEnumGenerator(context: any, typeFormatter?: TypeFormatter): UnifiedEnumGenerator {
-	return UnifiedEnumGenerator.createTypeScriptGenerator(context, typeFormatter)
 }

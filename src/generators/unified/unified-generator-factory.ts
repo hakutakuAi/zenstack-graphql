@@ -1,4 +1,4 @@
-import { GeneratorFactoryContext, GeneratorContext } from '@core/types'
+import { BaseGeneratorContext, GeneratorContext } from '@core/types'
 import {
 	UnifiedSortInputGenerator,
 	UnifiedFilterInputGenerator,
@@ -12,31 +12,33 @@ import {
 } from '@generators/unified'
 
 export class UnifiedGeneratorFactory {
+	private static createCommonGenerators(unifiedContext: any, originalContext: any) {
+		return {
+			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
+			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
+			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
+			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
+			enumGenerator: new UnifiedEnumGenerator(originalContext),
+			scalarGenerator: new UnifiedScalarGenerator(originalContext),
+		}
+	}
+
 	static createGraphQLGenerators(context: GeneratorContext) {
 		const unifiedContext = UnifiedContextFactory.createGraphQLContext(context)
 
 		return {
-			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
-			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
-			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
-			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
+			...this.createCommonGenerators(unifiedContext, context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
-			enumGenerator: new UnifiedEnumGenerator(context),
-			scalarGenerator: new UnifiedScalarGenerator(context),
 		}
 	}
 
-	static createTypeScriptGenerators(context: GeneratorFactoryContext) {
+	static createTypeScriptGenerators(context: BaseGeneratorContext) {
 		const unifiedContext = UnifiedContextFactory.createTypeScriptContext(context)
 
 		return {
-			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
-			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
-			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
-			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
+			...this.createCommonGenerators(unifiedContext, context),
+			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
-			enumGenerator: new UnifiedEnumGenerator(context),
-			scalarGenerator: new UnifiedScalarGenerator(context),
 		}
 	}
 
@@ -49,7 +51,7 @@ export class UnifiedGeneratorFactory {
 	}
 
 	static createTypeScriptGenerator<T extends keyof ReturnType<typeof UnifiedGeneratorFactory.createTypeScriptGenerators>>(
-		context: GeneratorFactoryContext,
+		context: BaseGeneratorContext,
 		generatorType: T,
 	): ReturnType<typeof UnifiedGeneratorFactory.createTypeScriptGenerators>[T] {
 		const generators = UnifiedGeneratorFactory.createTypeScriptGenerators(context)

@@ -38,7 +38,7 @@ export abstract class UnifiedGeneratorBase {
 	protected afterGeneration(): void {}
 
 	protected processResults(results: string[]): string[] {
-		return this.outputStrategy.getGeneratedTypeNames()
+		return results.length > 0 ? results : this.outputStrategy.getGeneratedTypeNames()
 	}
 
 	protected generateForAllModels(): string[] {

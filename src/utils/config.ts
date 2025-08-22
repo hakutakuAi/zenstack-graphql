@@ -1,7 +1,7 @@
 import { BuiltinType } from '@zenstackhq/sdk/ast'
 import { z } from 'zod'
 import { ErrorCategory, PluginError } from '@utils/error'
-import { BUILTIN_SCALARS, GRAPHQL_NAMING_REGEX, OutputFormat } from '@utils/constants'
+import { BUILTIN_GRAPHQL_SCALARS, GRAPHQL_NAMING_REGEX, OutputFormat } from '@utils/constants'
 
 export const SCALAR_TYPES: Record<BuiltinType, string> = {
 	String: 'String',
@@ -17,7 +17,7 @@ export const SCALAR_TYPES: Record<BuiltinType, string> = {
 
 export const DEFAULT_SCALAR_VALUES = Object.values(SCALAR_TYPES)
 
-export const VALID_SCALAR_VALUES = [...BUILTIN_SCALARS, ...DEFAULT_SCALAR_VALUES]
+export const VALID_SCALAR_VALUES = [...BUILTIN_GRAPHQL_SCALARS, ...DEFAULT_SCALAR_VALUES]
 
 function isValidGraphQLScalarName(name: string): boolean {
 	return GRAPHQL_NAMING_REGEX.test(name)
@@ -90,8 +90,8 @@ const optionDefinitions = {
 		default: undefined,
 	},
 	outputFormat: {
-		schema: z.enum(['graphql', 'type-graphql']),
-		default: 'graphql' as OutputFormat,
+		schema: z.nativeEnum(OutputFormat),
+		default: OutputFormat.GRAPHQL,
 	},
 }
 

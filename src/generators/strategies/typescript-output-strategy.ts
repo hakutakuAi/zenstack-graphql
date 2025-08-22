@@ -102,7 +102,7 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	processRelation(relation: RelationField): void {}
 
 	getGeneratedTypeNames(filter?: (name: string) => boolean): string[] {
-		return []
+		return this.astFactory.getGeneratedTypeNames(filter)
 	}
 
 	getGeneratedCode(): string {

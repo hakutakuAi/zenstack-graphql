@@ -268,5 +268,179 @@ describe('TypeGraphQL Test Example', () => {
 			expect(schemaContent).toContain('@Field(() => User)')
 			expect(schemaContent).toContain('author!: User')
 		})
+
+		test('PostCategory has correct foreign key fields', () => {
+			const postCategoryMatch = schemaContent.match(/export class PostCategory[\s\S]*?(?=export class|$)/)
+			expect(postCategoryMatch).not.toBeNull()
+			const postCategorySection = postCategoryMatch![0]
+			expect(postCategorySection).toContain('postId!: string')
+			expect(postCategorySection).toContain('categoryId!: string')
+			expect(postCategorySection).toContain('@Field(() => String)')
+		})
+
+		test('User has proper bi-directional relations', () => {
+			const userMatch = schemaContent.match(/export class User[\s\S]*?(?=export class|$)/)
+			expect(userMatch).not.toBeNull()
+			const userSection = userMatch![0]
+			expect(userSection).toContain('posts!: Post[]')
+			expect(userSection).toContain('comments!: Comment[]')
+			expect(userSection).toContain('@Field(() => [Post])')
+			expect(userSection).toContain('@Field(() => [Comment])')
+		})
+	})
+
+	// Comprehensive Validation Tests
+	describe('Comprehensive Schema Validation', () => {
+		test('All classes have proper ObjectType or InputType decorators', () => {
+			const classMatches = schemaContent.match(/export class \w+/g)
+			expect(classMatches).not.toBeNull()
+			expect(classMatches!.length).toBeGreaterThan(20)
+
+			const decoratorMatches = schemaContent.match(/@(ObjectType|InputType)\(\)/g)
+			expect(decoratorMatches).not.toBeNull()
+			expect(decoratorMatches!.length).toBeGreaterThan(20)
+		})
+
+		test('All non-nullable fields have exclamation marks', () => {
+			const requiredFieldMatches = schemaContent.match(/!: (string|number|boolean|Date)/g)
+			expect(requiredFieldMatches).not.toBeNull()
+			expect(requiredFieldMatches!.length).toBeGreaterThan(10)
+		})
+
+		test('All nullable fields have proper undefined union types', () => {
+			const nullableFieldMatches = schemaContent.match(/\?: \w+(\[\])? \| undefined/g)
+			expect(nullableFieldMatches).not.toBeNull()
+			expect(nullableFieldMatches!.length).toBeGreaterThan(5)
+		})
+
+		test('All array fields use proper TypeScript array syntax', () => {
+			const arrayFieldMatches = schemaContent.match(/!: \w+\[\]/g)
+			expect(arrayFieldMatches).not.toBeNull()
+			expect(arrayFieldMatches!.length).toBeGreaterThan(5)
+		})
+
+		test('All Field decorators have proper GraphQL types', () => {
+			expect(schemaContent).toContain('@Field(() => String)')
+			expect(schemaContent).toContain('@Field(() => Boolean)')
+			expect(schemaContent).toContain('@Field(() => Date)')
+			expect(schemaContent).toContain('@Field(() => Int)')
+			expect(schemaContent).toContain('@Field(() => Float)')
+		})
+
+		test('Connection types follow GraphQL Relay specification', () => {
+			const connectionClasses = ['UserConnection', 'PostConnection', 'CategoryConnection', 'PostCategoryConnection', 'CommentConnection']
+
+			connectionClasses.forEach((className) => {
+				expect(schemaContent).toContain(`export class ${className}`)
+				const connectionMatch = schemaContent.match(new RegExp(`export class ${className}[\\s\\S]*?(?=export class|$)`))
+				expect(connectionMatch).not.toBeNull()
+
+				const connectionSection = connectionMatch![0]
+				expect(connectionSection).toContain('pageInfo!: PageInfo')
+				expect(connectionSection).toContain('edges!:')
+				expect(connectionSection).toContain('totalCount!: number')
+			})
+		})
+
+		test('Edge types follow GraphQL Relay specification', () => {
+			const edgeClasses = ['UserEdge', 'PostEdge', 'CategoryEdge', 'PostCategoryEdge', 'CommentEdge']
+
+			edgeClasses.forEach((className) => {
+				expect(schemaContent).toContain(`export class ${className}`)
+				const edgeMatch = schemaContent.match(new RegExp(`export class ${className}[\\s\\S]*?(?=export class|$)`))
+				expect(edgeMatch).not.toBeNull()
+
+				const edgeSection = edgeMatch![0]
+				expect(edgeSection).toContain('node!:')
+				expect(edgeSection).toContain('cursor!: string')
+			})
+		})
+	})
+
+	// Advanced Filter Tests
+	describe('Advanced Filter Validation', () => {
+		test('All filter inputs have AND/OR logical operators', () => {
+			const modelFilterClasses = ['UserFilterInput', 'PostFilterInput', 'CategoryFilterInput', 'PostCategoryFilterInput', 'CommentFilterInput']
+
+			modelFilterClasses.forEach((className) => {
+				const filterMatch = schemaContent.match(new RegExp(`export class ${className}[\\s\\S]*?(?=export class|$)`))
+				expect(filterMatch).not.toBeNull()
+
+				const filterSection = filterMatch![0]
+				expect(filterSection).toContain(`AND?: ${className}[] | undefined`)
+				expect(filterSection).toContain(`OR?: ${className}[] | undefined`)
+			})
+		})
+
+		test('StringFilterInput has all standard operations', () => {
+			const stringFilterMatch = schemaContent.match(/export class StringFilterInput[\s\S]*?(?=export class|$)/)
+			expect(stringFilterMatch).not.toBeNull()
+
+			const stringFilterSection = stringFilterMatch![0]
+			const expectedOperations = ['equals', 'not', 'in', 'notIn', 'contains', 'startsWith', 'endsWith']
+
+			expectedOperations.forEach((operation) => {
+				expect(stringFilterSection).toContain(`${operation}?:`)
+			})
+		})
+
+		test('NumericFilterInput has comparison operations', () => {
+			const numericFilterMatch = schemaContent.match(/export class NumericFilterInput[\s\S]*?(?=export class|$)/)
+			expect(numericFilterMatch).not.toBeNull()
+
+			const numericFilterSection = numericFilterMatch![0]
+			const expectedOperations = ['equals', 'not', 'gt', 'lt']
+
+			expectedOperations.forEach((operation) => {
+				expect(numericFilterSection).toContain(`${operation}?:`)
+			})
+		})
+
+		test('DateTimeFilterInput has temporal operations', () => {
+			const dateFilterMatch = schemaContent.match(/export class DateTimeFilterInput[\s\S]*?(?=export class|$)/)
+			expect(dateFilterMatch).not.toBeNull()
+
+			const dateFilterSection = dateFilterMatch![0]
+			const expectedOperations = ['equals', 'not', 'gt', 'lt']
+
+			expectedOperations.forEach((operation) => {
+				expect(dateFilterSection).toContain(`${operation}?:`)
+			})
+		})
+	})
+
+	// Sort Input Validation
+	describe('Advanced Sort Validation', () => {
+		test('All sort inputs have proper SortDirection references', () => {
+			const sortInputClasses = ['UserSortInput', 'PostSortInput', 'CategorySortInput', 'PostCategorySortInput', 'CommentSortInput']
+
+			sortInputClasses.forEach((className) => {
+				expect(schemaContent).toContain(`export class ${className}`)
+				const sortMatch = schemaContent.match(new RegExp(`export class ${className}[\\s\\S]*?(?=export class|$)`))
+				expect(sortMatch).not.toBeNull()
+
+				const sortSection = sortMatch![0]
+				expect(sortSection).toContain('SortDirection | undefined')
+			})
+		})
+
+		test('PostSortInput includes all sortable fields', () => {
+			const postSortMatch = schemaContent.match(/export class PostSortInput[\s\S]*?(?=export class|$)/)
+			expect(postSortMatch).not.toBeNull()
+
+			const postSortSection = postSortMatch![0]
+			expect(postSortSection).toContain('createdAt?: SortDirection')
+			expect(postSortSection).toContain('updatedAt?: SortDirection')
+			expect(postSortSection).toContain('viewCount?: SortDirection')
+		})
+
+		test('UserSortInput includes timestamp fields', () => {
+			const userSortMatch = schemaContent.match(/export class UserSortInput[\s\S]*?(?=export class|$)/)
+			expect(userSortMatch).not.toBeNull()
+
+			const userSortSection = userSortMatch![0]
+			expect(userSortSection).toContain('createdAt?: SortDirection')
+			expect(userSortSection).toContain('updatedAt?: SortDirection')
+		})
 	})
 })

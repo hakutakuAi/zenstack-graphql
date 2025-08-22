@@ -54,19 +54,19 @@ export class TypeScriptRegistry extends BaseRegistry<string, TypeScriptTypeInfo>
 		return warnings
 	}
 
-	getObjectTypes(): string[] {
+	override getObjectTypes(): string[] {
 		return this.getTypesByKind(TypeKind.OBJECT).map((info) => info.code)
 	}
 
-	getEnumTypes(): string[] {
+	override getEnumTypes(): string[] {
 		return this.getTypesByKind(TypeKind.ENUM).map((info) => info.code)
 	}
 
-	getScalarTypes(): string[] {
+	override getScalarTypes(): string[] {
 		return this.getTypesByKind(TypeKind.SCALAR).map((info) => info.code)
 	}
 
-	getInputTypes(): string[] {
+	override getInputTypes(): string[] {
 		return this.getTypesByKind(TypeKind.INPUT).map((info) => info.code)
 	}
 

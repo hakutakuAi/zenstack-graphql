@@ -1,5 +1,9 @@
-import { DataModel } from '@zenstackhq/sdk/ast'
+import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 import { RelationField } from '@generators/unified/unified-relation-generator'
+import { NormalizedOptions } from '@utils/config'
+import { TypeFormatter } from '@utils/schema/type-formatter'
+import { SchemaProcessor } from '@utils/schema/schema-processor'
+import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
 
 export interface OutputStrategy {
 	createCommonTypes?(types: CommonTypeDefinition[]): void
@@ -52,12 +56,12 @@ export interface FilterFieldDefinition {
 }
 
 export interface UnifiedGeneratorContext {
-	options: any
+	options: NormalizedOptions
 	models: DataModel[]
-	enums: any[]
-	typeFormatter: any
-	attributeProcessor: any
-	typeMapper?: any
+	enums: Enum[]
+	typeFormatter: TypeFormatter
+	attributeProcessor: SchemaProcessor
+	typeMapper?: UnifiedTypeMapper
 
 	outputStrategy: OutputStrategy
 }

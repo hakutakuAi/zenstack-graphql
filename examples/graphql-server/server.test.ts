@@ -200,4 +200,270 @@ describe('GraphQL Server Tests', () => {
 		expect(createPostResult.data.createPost.published).toBe(true)
 		expect(createPostResult.data.createPost.author.id).toBe(authorId)
 	})
+
+	test('Can create categories and post with categories', async () => {
+		const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation {
+				createUser(email: "author-categories-${Date.now()}@example.com", name: "Category Author") {
+					id
+				}
+			}
+        `,
+			}),
+		})
+
+		const createUserResult = await createUserResponse.json()
+		const authorId = createUserResult.data.createUser.id
+
+		const createCategoryResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation {
+				createCategory(name: "Technology", description: "Tech related posts") {
+					id
+					name
+					description
+				}
+			}
+        `,
+			}),
+		})
+
+		const createCategoryResult = await createCategoryResponse.json()
+		expect(createCategoryResponse.status).toBe(200)
+		expect(createCategoryResult.errors).toBeUndefined()
+		expect(createCategoryResult.data.createCategory.name).toBe('Technology')
+		expect(createCategoryResult.data.createCategory.description).toBe('Tech related posts')
+
+		const categoryId = createCategoryResult.data.createCategory.id
+
+		const createPostResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation CreatePost($title: String!, $content: String!, $authorId: String!) {
+				createPost(title: $title, content: $content, published: true, authorId: $authorId) {
+					id
+					title
+					content
+					published
+					author {
+						id
+						name
+					}
+				}
+			}
+        `,
+				variables: {
+					title: 'Tech Post',
+					content: 'Content about technology',
+					authorId: authorId,
+				},
+			}),
+		})
+
+		const createPostResult = await createPostResponse.json()
+		expect(createPostResponse.status).toBe(200)
+		expect(createPostResult.errors).toBeUndefined()
+		expect(createPostResult.data.createPost.title).toBe('Tech Post')
+		expect(createPostResult.data.createPost.published).toBe(true)
+	})
+
+	test('Can create comments on posts', async () => {
+		const createUserResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation {
+				createUser(email: "commenter-${Date.now()}@example.com", name: "Comment Author") {
+					id
+				}
+			}
+        `,
+			}),
+		})
+
+		const createUserResult = await createUserResponse.json()
+		const authorId = createUserResult.data.createUser.id
+
+		const createPostResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation CreatePost($title: String!, $content: String!, $authorId: String!) {
+				createPost(title: $title, content: $content, published: true, authorId: $authorId) {
+					id
+				}
+			}
+        `,
+				variables: {
+					title: 'Post for Comments',
+					content: 'This post will receive comments',
+					authorId: authorId,
+				},
+			}),
+		})
+
+		const createPostResult = await createPostResponse.json()
+		const postId = createPostResult.data.createPost.id
+
+		const createCommentResponse = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation CreateComment($content: String!, $postId: String!, $authorId: String!) {
+				createComment(content: $content, postId: $postId, authorId: $authorId) {
+					id
+					content
+					post {
+						id
+						title
+					}
+					author {
+						id
+						name
+					}
+				}
+			}
+        `,
+				variables: {
+					content: 'Great post!',
+					postId: postId,
+					authorId: authorId,
+				},
+			}),
+		})
+
+		const createCommentResult = await createCommentResponse.json()
+		expect(createCommentResponse.status).toBe(200)
+		expect(createCommentResult.errors).toBeUndefined()
+		expect(createCommentResult.data.createComment.content).toBe('Great post!')
+		expect(createCommentResult.data.createComment.post.id).toBe(postId)
+		expect(createCommentResult.data.createComment.author.id).toBe(authorId)
+	})
+
+	test('Schema introspection includes all expected mutations', async () => {
+		const response = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			{
+				__schema {
+					mutationType {
+						fields {
+							name
+							type {
+								name
+							}
+						}
+					}
+				}
+			}
+        `,
+			}),
+		})
+
+		const result = await response.json()
+		expect(response.status).toBe(200)
+		expect(result.errors).toBeUndefined()
+
+		const mutations = result.data.__schema.mutationType.fields
+		const mutationNames = mutations.map((m: any) => m.name)
+
+		expect(mutationNames).toContain('createUser')
+		expect(mutationNames).toContain('createPost')
+		expect(mutationNames).toContain('createCategory')
+		expect(mutationNames).toContain('createComment')
+	})
+
+	test('Schema introspection validates field types', async () => {
+		const response = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			{
+				__type(name: "Post") {
+					fields {
+						name
+						type {
+							name
+							kind
+						}
+					}
+				}
+			}
+        `,
+			}),
+		})
+
+		const result = await response.json()
+		expect(response.status).toBe(200)
+		expect(result.errors).toBeUndefined()
+
+		const fields = result.data.__type.fields
+		const fieldMap = fields.reduce((acc: any, field: any) => {
+			acc[field.name] = field.type
+			return acc
+		}, {})
+
+		expect(fieldMap.id.name).toBe('String')
+		expect(fieldMap.title.name).toBe('String')
+		expect(fieldMap.content.name).toBe('String')
+		expect(fieldMap.published.name).toBe('Boolean')
+		expect(fieldMap.viewCount.name).toBe('Int')
+		expect(fieldMap.author.name).toBe('User')
+	})
+
+	test('Error handling for invalid mutations', async () => {
+		const response = await fetch(GRAPHQL_ENDPOINT, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `
+			mutation {
+				createUser(email: "invalid-email", name: "") {
+					id
+				}
+			}
+        `,
+			}),
+		})
+
+		const result = await response.json()
+		expect(response.status).toBe(200)
+		if (result.errors) {
+			expect(result.errors).toBeDefined()
+			expect(result.errors.length).toBeGreaterThan(0)
+		}
+	})
 })

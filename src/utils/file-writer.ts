@@ -3,19 +3,7 @@ import { dirname } from 'path'
 import { ErrorCategory, PluginError } from '@utils/error'
 
 export class FileWriter {
-	static create(): FileWriter {
-		return new FileWriter()
-	}
-
-	async writeSchema(sdl: string, outputPath: string): Promise<void> {
-		return this.writeFile(sdl, outputPath, 'schema')
-	}
-
-	async writeTypeGraphQL(code: string, outputPath: string): Promise<void> {
-		return this.writeFile(code, outputPath, 'TypeGraphQL code')
-	}
-
-	private async writeFile(content: string, outputPath: string, contentType: string): Promise<void> {
+	async write(content: string, outputPath: string, contentType = 'file'): Promise<void> {
 		try {
 			const dir = dirname(outputPath)
 			await mkdir(dir, { recursive: true })

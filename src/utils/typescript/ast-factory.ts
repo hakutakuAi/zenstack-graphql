@@ -717,6 +717,23 @@ registerEnumType(SortDirection, {
 		return this.sourceFile.getFullText()
 	}
 
+	getGeneratedTypeNames(filter?: (name: string) => boolean): string[] {
+		const classNames = this.sourceFile
+			.getClasses()
+			.map((cls) => cls.getName())
+			.filter(Boolean) as string[]
+		const enumNames = this.sourceFile
+			.getEnums()
+			.map((enumDecl) => enumDecl.getName())
+			.filter(Boolean) as string[]
+		const allNames = [...classNames, ...enumNames]
+
+		if (filter) {
+			return allNames.filter(filter)
+		}
+		return allNames
+	}
+
 	clear(): void {
 		this.sourceFile.removeText()
 		this.addImports()

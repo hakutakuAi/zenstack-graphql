@@ -1,5 +1,5 @@
 import { ScalarTypeComposer } from 'graphql-compose'
-import { GeneratorFactoryContext } from '@core/types'
+import { BaseGeneratorContext } from '@core/types'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { GraphQLRegistry } from '@utils/registry'
 import { SchemaComposer } from 'graphql-compose'
@@ -13,8 +13,8 @@ import {
 	BUILTIN_PRISMA_TYPES,
 	type ScalarConfig,
 	type UnifiedScalarDefinition,
-} from '@utils/constants/scalar-constants'
-import { createGenerationContext, executeSafely } from '@utils/generator-utils'
+} from '@utils/constants'
+import { createGenerationContext, executeSafely } from '@utils/error'
 import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
 
 import { OutputFormat } from '@utils/constants'
@@ -27,14 +27,12 @@ export interface ScalarGenerationResult {
 export class UnifiedScalarGenerator {
 	private astFactory?: TypeScriptASTFactory
 	private format: OutputFormat
-	private context: GeneratorFactoryContext
 	private typeFormatter: TypeFormatter
 	private registry?: GraphQLRegistry
 	private schemaComposer?: SchemaComposer<unknown>
-	private options: GeneratorFactoryContext['options']
+	private options: BaseGeneratorContext['options']
 
-	constructor(context: GeneratorFactoryContext, format: OutputFormat = OutputFormat.GRAPHQL) {
-		this.context = context
+	constructor(context: BaseGeneratorContext, format: OutputFormat = OutputFormat.GRAPHQL) {
 		this.format = format
 		this.options = context.options
 		this.typeFormatter = new TypeFormatter(context.options.typeNaming, context.options.fieldNaming)
@@ -228,12 +226,4 @@ export class UnifiedScalarGenerator {
 	static createTypeScriptGenerator(context: any): UnifiedScalarGenerator {
 		return new UnifiedScalarGenerator(context, OutputFormat.TYPE_GRAPHQL)
 	}
-}
-
-export function createGraphQLScalarGenerator(context: any): UnifiedScalarGenerator {
-	return UnifiedScalarGenerator.createGraphQLGenerator(context)
-}
-
-export function createTypeScriptScalarGenerator(context: any): UnifiedScalarGenerator {
-	return UnifiedScalarGenerator.createTypeScriptGenerator(context)
 }
