@@ -44,7 +44,7 @@ export class GeneratorOrchestrator {
 		const unifiedContext = UnifiedContextFactory.createTypeScriptContext(this.context)
 		const generators = this.createTypeScriptGeneratorsWithContext(unifiedContext)
 		const results = await this.executeGenerators(generators)
-		
+
 		return {
 			code: unifiedContext.outputStrategy.getGeneratedCode?.() || '',
 			results,
@@ -59,8 +59,8 @@ export class GeneratorOrchestrator {
 			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
 			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
 			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
-			enumGenerator: new UnifiedEnumGenerator(this.context),
-			scalarGenerator: new UnifiedScalarGenerator(this.context),
+			enumGenerator: new UnifiedEnumGenerator(unifiedContext, OutputFormat.TYPE_GRAPHQL),
+			scalarGenerator: new UnifiedScalarGenerator(this.context, OutputFormat.TYPE_GRAPHQL),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
 		}
@@ -124,10 +124,9 @@ export class GeneratorOrchestrator {
 
 		if (this.context.options.generateEnums && generators.enumGenerator) {
 			const enumResult = generators.enumGenerator.generate()
-			const items = isTypeScript ? (enumResult.typescriptTypes || []) : (enumResult.graphqlTypes || [])
 			results.push({
-				items,
-				count: items.length,
+				items: enumResult,
+				count: enumResult.length,
 				type: GenerationType.ENUM
 			})
 		}

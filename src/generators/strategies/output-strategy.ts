@@ -18,6 +18,8 @@ export interface OutputStrategy {
 
 	createInputType(typeName: string, model: DataModel, inputType: 'create' | 'update', description?: string): string
 
+	createEnumType(enumType: Enum): string
+
 	createPaginationTypes(): void
 
 	createCommonFilterTypes(): void

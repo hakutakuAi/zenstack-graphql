@@ -1,4 +1,5 @@
 import { BaseGeneratorContext, GeneratorContext } from '@core/types'
+import { OutputFormat } from '@utils/constants'
 import {
 	UnifiedSortInputGenerator,
 	UnifiedFilterInputGenerator,
@@ -12,22 +13,16 @@ import {
 } from '@generators/unified'
 
 export class UnifiedGeneratorFactory {
-	private static createCommonGenerators(unifiedContext: any, originalContext: any) {
+	static createGraphQLGenerators(context: GeneratorContext) {
+		const unifiedContext = UnifiedContextFactory.createGraphQLContext(context)
+
 		return {
 			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
 			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
 			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
 			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
-			enumGenerator: new UnifiedEnumGenerator(originalContext),
-			scalarGenerator: new UnifiedScalarGenerator(originalContext),
-		}
-	}
-
-	static createGraphQLGenerators(context: GeneratorContext) {
-		const unifiedContext = UnifiedContextFactory.createGraphQLContext(context)
-
-		return {
-			...this.createCommonGenerators(unifiedContext, context),
+			enumGenerator: new UnifiedEnumGenerator(unifiedContext, OutputFormat.GRAPHQL),
+			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 		}
 	}
@@ -36,7 +31,12 @@ export class UnifiedGeneratorFactory {
 		const unifiedContext = UnifiedContextFactory.createTypeScriptContext(context)
 
 		return {
-			...this.createCommonGenerators(unifiedContext, context),
+			sortInputGenerator: new UnifiedSortInputGenerator(unifiedContext),
+			filterInputGenerator: new UnifiedFilterInputGenerator(unifiedContext),
+			connectionGenerator: new UnifiedConnectionGenerator(unifiedContext),
+			objectTypeGenerator: new UnifiedObjectTypeGenerator(unifiedContext),
+			enumGenerator: new UnifiedEnumGenerator(unifiedContext, OutputFormat.TYPE_GRAPHQL),
+			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
 		}

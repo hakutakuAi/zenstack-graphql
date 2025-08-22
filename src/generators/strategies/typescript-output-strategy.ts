@@ -10,11 +10,17 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 		types.forEach((type) => {
 			switch (type.type) {
 				case 'enum':
+					this.astFactory.createEnumType(type.definition)
 					break
 				case 'input':
 					break
 			}
 		})
+	}
+
+	createEnumType(enumType: any): string {
+		this.astFactory.createEnumType(enumType)
+		return enumType.name
 	}
 
 	createSortInputType(typeName: string, fields: SortFieldDefinition[]): string {

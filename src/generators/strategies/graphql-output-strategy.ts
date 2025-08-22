@@ -34,6 +34,28 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 		})
 	}
 
+	createEnumType(enumType: any): string {
+		const enumName = enumType.name
+
+		if (this.hasType(enumName)) {
+			return enumName
+		}
+
+		const enumValues = enumType.fields.reduce((acc: any, field: any) => {
+			acc[field.name] = { value: field.name }
+			return acc
+		}, {})
+
+		const enumTC = this.schemaComposer.createEnumTC({
+			name: enumName,
+			description: enumType.comments?.[0],
+			values: enumValues,
+		})
+
+		this.registry.registerType(enumName, TypeKind.ENUM, enumTC, true)
+		return enumName
+	}
+
 	createSortInputType(typeName: string, fields: SortFieldDefinition[]): string {
 		const sortInputName = `${typeName}SortInput`
 
