@@ -205,6 +205,69 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 		return ''
 	}
 
+	createQueryArgsInputType(typeName: string, model: DataModel, description?: string): string {
+		const queryArgsInputName = typeName
+
+		if (this.hasType(queryArgsInputName)) {
+			return queryArgsInputName
+		}
+
+		const filterInputName = `${model.name}FilterInput`
+		const sortInputName = `${model.name}SortInput`
+
+		const fields: Record<string, { type: string; description: string }> = {}
+
+		if (this.hasType(filterInputName)) {
+			fields.filter = {
+				type: filterInputName,
+				description: `Filter conditions for ${model.name}`,
+			}
+		}
+
+		if (this.hasType(sortInputName)) {
+			fields.sort = {
+				type: sortInputName,
+				description: `Sort options for ${model.name}`,
+			}
+		}
+
+		fields.first = {
+			type: 'Int',
+			description: 'Number of items to return from the beginning',
+		}
+		fields.after = {
+			type: 'String',
+			description: 'Cursor for pagination after this item',
+		}
+		fields.last = {
+			type: 'Int',
+			description: 'Number of items to return from the end',
+		}
+		fields.before = {
+			type: 'String',
+			description: 'Cursor for pagination before this item',
+		}
+		fields.connection = {
+			type: 'Boolean',
+			description: 'Return connection format with edges and pageInfo',
+		}
+
+		try {
+			const queryArgsInputTC = this.schemaComposer.createInputTC({
+				name: queryArgsInputName,
+				description: description || `Query arguments for ${model.name}`,
+				fields,
+			})
+
+			this.registry.registerType(queryArgsInputName, TypeKind.INPUT, queryArgsInputTC, true)
+			return queryArgsInputName
+		} catch (error) {
+			throw new PluginError(`Error creating query args input type for ${model.name}`, ErrorCategory.GENERATION, { typeName, error }, [
+				'Check if the filter and sort input types are defined correctly',
+			])
+		}
+	}
+
 	processRelation(relation: RelationField): void {}
 
 	hasProcessedRelation(relationKey: string): boolean {

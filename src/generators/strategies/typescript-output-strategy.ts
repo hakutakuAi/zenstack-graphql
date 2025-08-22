@@ -105,6 +105,39 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 		return ''
 	}
 
+	createQueryArgsInputType(typeName: string, model: DataModel, description?: string): string {
+		const queryArgsInputName = typeName
+
+		const filterInputName = `${model.name}FilterInput`
+		const sortInputName = `${model.name}SortInput`
+
+		const fields: Array<{ name: string; type: string; nullable: boolean }> = []
+
+		// Only add filter and sort if they would exist (based on model attributes)
+		const hasFilterableFields = model.fields.some(field => field.attributes && field.attributes.some(attr => attr.decl?.ref?.name === 'graphql.filterable'))
+		const hasSortableFields = model.fields.some(field => field.attributes && field.attributes.some(attr => attr.decl?.ref?.name === 'graphql.sortable'))
+		
+		if (hasFilterableFields) {
+			fields.push({ name: 'filter', type: filterInputName, nullable: true })
+		}
+		
+		if (hasSortableFields) {
+			fields.push({ name: 'sort', type: sortInputName, nullable: true })
+		}
+
+		// Always add pagination fields
+		fields.push(
+			{ name: 'first', type: 'Int', nullable: true },
+			{ name: 'after', type: 'String', nullable: true },
+			{ name: 'last', type: 'Int', nullable: true },
+			{ name: 'before', type: 'String', nullable: true },
+			{ name: 'connection', type: 'Boolean', nullable: true },
+		)
+
+		this.astFactory.createFilterInputType(queryArgsInputName, fields)
+		return queryArgsInputName
+	}
+
 	processRelation(relation: RelationField): void {}
 
 	getGeneratedTypeNames(filter?: (name: string) => boolean): string[] {

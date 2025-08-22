@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-export * from '@generators'
+export * from '@/orchestrator/generators'
 
 import type { PluginOptions as SdkPluginOptions } from '@zenstackhq/sdk'
 import { DataModel, Enum, isDataModel, isEnum, type Model } from '@zenstackhq/sdk/ast'

@@ -1,24 +1,19 @@
-import { 
-	BaseGeneratorContext, 
-	GeneratorContext,
-	UnifiedGenerationResult, 
-	GenerationResult, 
-	GenerationType 
-} from '@core/types'
+import { BaseGeneratorContext, GeneratorContext, UnifiedGenerationResult, GenerationResult, GenerationType } from '@core/types'
 import { OutputFormat } from '@utils/constants'
 import { StatsCollector } from './stats-collector'
-import { 
-	UnifiedGeneratorFactory, 
+import {
+	UnifiedGeneratorFactory,
 	UnifiedContextFactory,
 	UnifiedSortInputGenerator,
 	UnifiedFilterInputGenerator,
 	UnifiedConnectionGenerator,
 	UnifiedObjectTypeGenerator,
 	UnifiedInputGenerator,
+	UnifiedQueryArgsGenerator,
 	UnifiedRelationGenerator,
 	UnifiedEnumGenerator,
-	UnifiedScalarGenerator
-} from '@generators/unified'
+	UnifiedScalarGenerator,
+} from '@/orchestrator/generators/unified'
 import { SchemaComposer } from 'graphql-compose'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
@@ -29,7 +24,7 @@ import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
 export class GeneratorOrchestrator {
 	constructor(
 		private readonly context: BaseGeneratorContext,
-		private readonly outputFormat: OutputFormat
+		private readonly outputFormat: OutputFormat,
 	) {}
 
 	async generate(): Promise<UnifiedGenerationResult> {
@@ -49,7 +44,7 @@ export class GeneratorOrchestrator {
 			code: unifiedContext.outputStrategy.getGeneratedCode?.() || '',
 			results,
 			stats: StatsCollector.collect(results),
-			outputFormat: this.outputFormat
+			outputFormat: this.outputFormat,
 		}
 	}
 
@@ -69,24 +64,24 @@ export class GeneratorOrchestrator {
 	private async generateGraphQL(): Promise<UnifiedGenerationResult> {
 		const graphqlContext = this.createGraphQLContext()
 		const unifiedContext = UnifiedContextFactory.createGraphQLContext(graphqlContext)
-		
+
 		// Setup relay requirements for GraphQL
 		graphqlContext.registry.addRelayRequirements()
-		
+
 		const generators = UnifiedGeneratorFactory.createGraphQLGenerators(graphqlContext)
 		const results = await this.executeGenerators(generators)
-		
+
 		// Validate schema and generate SDL
 		const warnings = graphqlContext.registry.validateSchema()
 		if (warnings.length > 0) {
 			console.warn('Schema validation warnings:', warnings)
 		}
-		
+
 		return {
 			sdl: graphqlContext.registry.generateSDL(),
 			results,
 			stats: StatsCollector.collect(results),
-			outputFormat: this.outputFormat
+			outputFormat: this.outputFormat,
 		}
 	}
 
@@ -105,20 +100,19 @@ export class GeneratorOrchestrator {
 		}
 	}
 
-
 	private async executeGenerators(generators: any): Promise<GenerationResult[]> {
 		const results: GenerationResult[] = []
 		const isTypeScript = this.outputFormat === OutputFormat.TYPE_GRAPHQL
 
 		// Execute in proper order: scalars -> enums -> objects -> relations -> connections/sorts/filters
-		
+
 		if (this.context.options.generateScalars && generators.scalarGenerator) {
 			const scalarResult = generators.scalarGenerator.generate()
-			const items = isTypeScript ? (scalarResult.typescriptTypes || []) : (scalarResult.graphqlTypes || [])
+			const items = isTypeScript ? scalarResult.typescriptTypes || [] : scalarResult.graphqlTypes || []
 			results.push({
 				items,
 				count: items.length,
-				type: GenerationType.SCALAR
+				type: GenerationType.SCALAR,
 			})
 		}
 
@@ -127,7 +121,7 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: enumResult,
 				count: enumResult.length,
-				type: GenerationType.ENUM
+				type: GenerationType.ENUM,
 			})
 		}
 
@@ -137,7 +131,7 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: objectResult,
 				count: objectResult.length,
-				type: GenerationType.OBJECT
+				type: GenerationType.OBJECT,
 			})
 		}
 
@@ -147,7 +141,7 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: relationResult,
 				count: relationResult.length,
-				type: GenerationType.RELATION
+				type: GenerationType.RELATION,
 			})
 		}
 
@@ -157,7 +151,7 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: connectionResult,
 				count: connectionResult.length,
-				type: GenerationType.CONNECTION
+				type: GenerationType.CONNECTION,
 			})
 		}
 
@@ -166,7 +160,7 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: sortResult,
 				count: sortResult.length,
-				type: GenerationType.SORT
+				type: GenerationType.SORT,
 			})
 		}
 
@@ -175,7 +169,17 @@ export class GeneratorOrchestrator {
 			results.push({
 				items: filterResult,
 				count: filterResult.length,
-				type: GenerationType.FILTER
+				type: GenerationType.FILTER,
+			})
+		}
+
+		// Query args should come after filters and sorts since they reference them
+		if (generators.queryArgsGenerator) {
+			const queryArgsResult = generators.queryArgsGenerator.generate()
+			results.push({
+				items: queryArgsResult,
+				count: queryArgsResult.length,
+				type: GenerationType.INPUT,
 			})
 		}
 

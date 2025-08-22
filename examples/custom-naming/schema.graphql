@@ -383,3 +383,134 @@ input BooleanFilterInput {
   """Not equal to the given value"""
   not: Boolean
 }
+
+"""
+Query arguments for Customer with optional filter, sort, and pagination
+"""
+input CustomerQueryArgs {
+  """Sort options for Customer"""
+  sort: CustomerSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""
+Query arguments for ProductItem with optional filter, sort, and pagination
+"""
+input ProductItemQueryArgs {
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Address with optional filter, sort, and pagination"""
+input AddressQueryArgs {
+  """Sort options for Address"""
+  sort: AddressSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Order with optional filter, sort, and pagination"""
+input OrderQueryArgs {
+  """Sort options for Order"""
+  sort: OrderSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""
+Query arguments for OrderItem with optional filter, sort, and pagination
+"""
+input OrderItemQueryArgs {
+  """Sort options for OrderItem"""
+  sort: OrderItemSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""
+Query arguments for Category with optional filter, sort, and pagination
+"""
+input CategoryQueryArgs {
+  """Sort options for Category"""
+  sort: CategorySortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}

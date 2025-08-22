@@ -218,14 +218,21 @@ describe('TypeGraphQL Server Tests', () => {
 				query: `
 			query {
 				users {
-				id
-				name
-				email
-				posts {
-					id
-					title
-					published
-				}
+					edges {
+						node {
+							id
+							name
+							email
+							posts {
+								id
+								title
+								published
+							}
+						}
+					}
+					pageInfo {
+						hasNextPage
+					}
 				}
 			}
         `,
@@ -236,7 +243,8 @@ describe('TypeGraphQL Server Tests', () => {
 
 		expect(response.status).toBe(200)
 		expect(result.errors).toBeUndefined()
-		expect(Array.isArray(result.data.users)).toBe(true)
+		expect(result.data.users).toBeDefined()
+		expect(Array.isArray(result.data.users.edges)).toBe(true)
 	})
 
 	test('Can create categories and comments', async () => {
@@ -365,10 +373,17 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterUsers($filter: UserFilterInput) {
-							usersFiltered(filter: $filter) {
-								id
-								email
-								name
+							users(filter: $filter) {
+								edges {
+									node {
+										id
+										email
+										name
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -382,9 +397,9 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.usersFiltered).toBeDefined()
-			expect(result.data.usersFiltered.length).toBeGreaterThanOrEqual(1)
-			expect(result.data.usersFiltered[0].email).toBe(testEmail)
+			expect(result.data?.users).toBeDefined()
+			expect(result.data.users.edges.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.users.edges[0].node.email).toBe(testEmail)
 		})
 
 		test('Can filter posts by published status', async () => {
@@ -420,10 +435,17 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterPosts($filter: PostFilterInput) {
-							postsFiltered(filter: $filter) {
-								id
-								title
-								published
+							posts(filter: $filter) {
+								edges {
+									node {
+										id
+										title
+										published
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -437,9 +459,9 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.postsFiltered).toBeDefined()
-			expect(result.data.postsFiltered.length).toBeGreaterThanOrEqual(1)
-			expect(result.data.postsFiltered.every((post: any) => post.published)).toBe(true)
+			expect(result.data?.posts).toBeDefined()
+			expect(result.data.posts.edges.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.posts.edges.every((edge: any) => edge.node.published)).toBe(true)
 		})
 
 		test('Can filter with string contains operation', async () => {
@@ -458,9 +480,16 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterUsers($filter: UserFilterInput) {
-							usersFiltered(filter: $filter) {
-								id
-								name
+							users(filter: $filter) {
+								edges {
+									node {
+										id
+										name
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -474,9 +503,9 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.usersFiltered).toBeDefined()
-			expect(result.data.usersFiltered.length).toBeGreaterThanOrEqual(1)
-			expect(result.data.usersFiltered.some((user: any) => user.name.includes('StringFilter'))).toBe(true)
+			expect(result.data?.users).toBeDefined()
+			expect(result.data.users.edges.length).toBeGreaterThanOrEqual(1)
+			expect(result.data.users.edges.some((edge: any) => edge.node.name.includes('StringFilter'))).toBe(true)
 		})
 	})
 
@@ -507,10 +536,17 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query SortUsers($sort: UserSortInput) {
-							usersSorted(sort: $sort) {
-								id
-								name
-								createdAt
+							users(sort: $sort) {
+								edges {
+									node {
+										id
+										name
+										createdAt
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -522,10 +558,10 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.usersSorted).toBeDefined()
-			expect(result.data.usersSorted.length).toBeGreaterThanOrEqual(2)
+			expect(result.data?.users).toBeDefined()
+			expect(result.data.users.edges.length).toBeGreaterThanOrEqual(2)
 
-			const dates = result.data.usersSorted.map((user: any) => new Date(user.createdAt).getTime())
+			const dates = result.data.users.edges.map((edge: any) => new Date(edge.node.createdAt).getTime())
 			for (let i = 1; i < dates.length; i++) {
 				expect(dates[i]).toBeGreaterThanOrEqual(dates[i - 1])
 			}
@@ -564,10 +600,17 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query SortPosts($sort: PostSortInput) {
-							postsSorted(sort: $sort) {
-								id
-								title
-								viewCount
+							posts(sort: $sort) {
+								edges {
+									node {
+										id
+										title
+										viewCount
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -579,10 +622,10 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.postsSorted).toBeDefined()
-			expect(result.data.postsSorted.length).toBeGreaterThanOrEqual(2)
+			expect(result.data?.posts).toBeDefined()
+			expect(result.data.posts.edges.length).toBeGreaterThanOrEqual(2)
 
-			const viewCounts = result.data.postsSorted.map((post: any) => post.viewCount)
+			const viewCounts = result.data.posts.edges.map((edge: any) => edge.node.viewCount)
 			for (let i = 1; i < viewCounts.length; i++) {
 				expect(viewCounts[i]).toBeLessThanOrEqual(viewCounts[i - 1])
 			}
@@ -607,7 +650,7 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query PaginateUsers($first: Int, $after: String) {
-							usersConnection(first: $first, after: $after) {
+							users(first: $first, after: $after) {
 								pageInfo {
 									hasNextPage
 									hasPreviousPage
@@ -633,12 +676,12 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.usersConnection).toBeDefined()
-			expect(result.data.usersConnection.pageInfo).toBeDefined()
-			expect(result.data.usersConnection.edges).toBeDefined()
-			expect(result.data.usersConnection.edges.length).toBeLessThanOrEqual(2)
-			expect(result.data.usersConnection.totalCount).toBeGreaterThanOrEqual(5)
-			expect(typeof result.data.usersConnection.pageInfo.hasNextPage).toBe('boolean')
+			expect(result.data?.users).toBeDefined()
+			expect(result.data.users.pageInfo).toBeDefined()
+			expect(result.data.users.edges).toBeDefined()
+			expect(result.data.users.edges.length).toBeLessThanOrEqual(2)
+			expect(result.data.users.totalCount).toBeGreaterThanOrEqual(5)
+			expect(typeof result.data.users.pageInfo.hasNextPage).toBe('boolean')
 		})
 
 		test('Can query posts connection with pagination', async () => {
@@ -668,7 +711,7 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query PaginatePosts($last: Int) {
-							postsConnection(last: $last) {
+							posts(last: $last) {
 								pageInfo {
 									hasNextPage
 									hasPreviousPage
@@ -694,11 +737,11 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.postsConnection).toBeDefined()
-			expect(result.data.postsConnection.pageInfo).toBeDefined()
-			expect(result.data.postsConnection.edges).toBeDefined()
-			expect(result.data.postsConnection.edges.length).toBeLessThanOrEqual(2)
-			expect(typeof result.data.postsConnection.totalCount).toBe('number')
+			expect(result.data?.posts).toBeDefined()
+			expect(result.data.posts.pageInfo).toBeDefined()
+			expect(result.data.posts.edges).toBeDefined()
+			expect(result.data.posts.edges.length).toBeLessThanOrEqual(2)
+			expect(typeof result.data.posts.totalCount).toBe('number')
 		})
 
 		test('PageInfo provides correct pagination metadata', async () => {
@@ -716,7 +759,7 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query TestPageInfo {
-							usersConnection(first: 1) {
+							users(first: 1) {
 								pageInfo {
 									hasNextPage
 									hasPreviousPage
@@ -734,12 +777,12 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data.usersConnection.pageInfo).toBeDefined()
-			expect(typeof result.data.usersConnection.pageInfo.hasNextPage).toBe('boolean')
-			expect(typeof result.data.usersConnection.pageInfo.hasPreviousPage).toBe('boolean')
-			if (result.data.usersConnection.edges.length > 0) {
-				expect(result.data.usersConnection.pageInfo.startCursor).toBeDefined()
-				expect(result.data.usersConnection.pageInfo.endCursor).toBeDefined()
+			expect(result.data.users.pageInfo).toBeDefined()
+			expect(typeof result.data.users.pageInfo.hasNextPage).toBe('boolean')
+			expect(typeof result.data.users.pageInfo.hasPreviousPage).toBe('boolean')
+			if (result.data.users.edges.length > 0) {
+				expect(result.data.users.pageInfo.startCursor).toBeDefined()
+				expect(result.data.users.pageInfo.endCursor).toBeDefined()
 			}
 		})
 	})
@@ -778,11 +821,18 @@ describe('TypeGraphQL Server Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterAndSort($filter: PostFilterInput, $sort: PostSortInput) {
-							postsFilteredAndSorted(filter: $filter, sort: $sort) {
-								id
-								title
-								published
-								createdAt
+							posts(filter: $filter, sort: $sort) {
+								edges {
+									node {
+										id
+										title
+										published
+										createdAt
+									}
+								}
+								pageInfo {
+									hasNextPage
+								}
 							}
 						}
 					`,
@@ -799,8 +849,8 @@ describe('TypeGraphQL Server Tests', () => {
 
 			const result = await response.json()
 			expect(response.status).toBe(200)
-			expect(result.data?.postsFilteredAndSorted).toBeDefined()
-			expect(result.data.postsFilteredAndSorted.every((post: any) => post.published)).toBe(true)
+			expect(result.data?.posts).toBeDefined()
+			expect(result.data.posts.edges.every((edge: any) => edge.node.published)).toBe(true)
 		})
 	})
 })

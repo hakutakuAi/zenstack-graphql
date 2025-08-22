@@ -4,6 +4,7 @@ import { createYoga } from 'graphql-yoga'
 import { createServer } from 'node:http'
 import { PrismaClient } from '@prisma/client'
 import { UserResolver, PostResolver, CategoryResolver, CommentResolver, PostCategoryResolver } from './resolvers'
+import type { Context } from './resolvers/types'
 
 const prisma = new PrismaClient()
 
@@ -12,11 +13,15 @@ const schema = buildSchema({
 	emitSchemaFile: false,
 })
 
+export function createContext(): Context {
+	return {
+		prisma,
+	}
+}
+
 const yoga = createYoga({
 	schema,
-	context: () => ({
-		prisma,
-	}),
+	context: () => createContext(),
 })
 
 export const server = createServer(yoga)

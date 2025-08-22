@@ -1,0 +1,5 @@
+export { UserResolver } from './user.resolver'
+export { PostResolver } from './post.resolver'
+export { CommentResolver } from './comment.resolver'
+export { CategoryResolver } from './category.resolver'
+export { PostCategoryResolver } from './post-category.resolver'

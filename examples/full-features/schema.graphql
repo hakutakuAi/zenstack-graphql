@@ -579,3 +579,184 @@ input TagFilterInput {
   """Logical OR operation"""
   OR: [TagFilterInput!]
 }
+
+"""Query arguments for User with optional filter, sort, and pagination"""
+input UserQueryArgs {
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""
+Query arguments for UserProfile with optional filter, sort, and pagination
+"""
+input UserProfileQueryArgs {
+  """Filter conditions for UserProfile"""
+  filter: UserProfileFilterInput
+
+  """Sort options for UserProfile"""
+  sort: UserProfileSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Post with optional filter, sort, and pagination"""
+input PostQueryArgs {
+  """Filter conditions for Post"""
+  filter: PostFilterInput
+
+  """Sort options for Post"""
+  sort: PostSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Comment with optional filter, sort, and pagination"""
+input CommentQueryArgs {
+  """Filter conditions for Comment"""
+  filter: CommentFilterInput
+
+  """Sort options for Comment"""
+  sort: CommentSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Like with optional filter, sort, and pagination"""
+input LikeQueryArgs {
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Follow with optional filter, sort, and pagination"""
+input FollowQueryArgs {
+  """Filter conditions for Follow"""
+  filter: FollowFilterInput
+
+  """Sort options for Follow"""
+  sort: FollowSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""Query arguments for Tag with optional filter, sort, and pagination"""
+input TagQueryArgs {
+  """Filter conditions for Tag"""
+  filter: TagFilterInput
+
+  """Sort options for Tag"""
+  sort: TagSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
+
+"""
+Query arguments for TagsOnPosts with optional filter, sort, and pagination
+"""
+input TagsOnPostsQueryArgs {
+  """Sort options for TagsOnPosts"""
+  sort: TagsOnPostsSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+
+  """Return connection format with edges and pageInfo"""
+  connection: Boolean
+}
