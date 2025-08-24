@@ -5,27 +5,21 @@ import { Context } from './types'
 @Resolver(() => Tag)
 export class TagResolver {
 	@Query(() => Tag, { nullable: true })
-	async tag(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<Tag | null> {
+	async tag(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Tag | null> {
 		return ctx.prisma.tag.findUnique({
 			where: { id },
 			include: {
 				products: {
 					include: {
-						product: true
-					}
-				}
-			}
+						product: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Query(() => TagConnection)
-	async tags(
-		@Arg('args', { nullable: true }) args: TagQueryArgs,
-		@Ctx() ctx: Context
-	): Promise<TagConnection> {
+	async tags(@Arg('args', { nullable: true }) args: TagQueryArgs, @Ctx() ctx: Context): Promise<TagConnection> {
 		const take = args?.first || 50
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined
@@ -39,10 +33,10 @@ export class TagResolver {
 			include: {
 				products: {
 					include: {
-						product: true
-					}
-				}
-			}
+						product: true,
+					},
+				},
+			},
 		})
 
 		const hasNextPage = tags.length > take
@@ -50,7 +44,7 @@ export class TagResolver {
 
 		const edges = nodes.map((tag) => ({
 			node: tag,
-			cursor: tag.id
+			cursor: tag.id,
 		}))
 
 		return {
@@ -59,89 +53,71 @@ export class TagResolver {
 				hasNextPage,
 				hasPreviousPage: false,
 				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor
+				endCursor: edges[edges.length - 1]?.cursor,
 			},
 			totalCount: await ctx.prisma.tag.count({
-				where: this.buildWhereCondition(args?.filter)
-			})
+				where: this.buildWhereCondition(args?.filter),
+			}),
 		}
 	}
 
 	@Mutation(() => Tag)
-	async createTag(
-		@Arg('input') input: TagCreateInput,
-		@Ctx() ctx: Context
-	): Promise<Tag> {
+	async createTag(@Arg('input') input: TagCreateInput, @Ctx() ctx: Context): Promise<Tag> {
 		return ctx.prisma.tag.create({
 			data: input,
 			include: {
 				products: {
 					include: {
-						product: true
-					}
-				}
-			}
+						product: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Mutation(() => Tag)
-	async updateTag(
-		@Arg('id', () => ID) id: string,
-		@Arg('input') input: TagUpdateInput,
-		@Ctx() ctx: Context
-	): Promise<Tag> {
+	async updateTag(@Arg('id', () => ID) id: string, @Arg('input') input: TagUpdateInput, @Ctx() ctx: Context): Promise<Tag> {
 		return ctx.prisma.tag.update({
 			where: { id },
 			data: input,
 			include: {
 				products: {
 					include: {
-						product: true
-					}
-				}
-			}
+						product: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Mutation(() => Boolean)
-	async deleteTag(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<boolean> {
+	async deleteTag(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<boolean> {
 		await ctx.prisma.tag.delete({
-			where: { id }
+			where: { id },
 		})
 		return true
 	}
 
 	@Mutation(() => Boolean)
-	async assignTagToProduct(
-		@Arg('tagId', () => ID) tagId: string,
-		@Arg('productId', () => ID) productId: string,
-		@Ctx() ctx: Context
-	): Promise<boolean> {
+	async assignTagToProduct(@Arg('tagId', () => ID) tagId: string, @Arg('productId', () => ID) productId: string, @Ctx() ctx: Context): Promise<boolean> {
 		await ctx.prisma.productTag.create({
 			data: {
 				tagId,
-				productId
-			}
+				productId,
+			},
 		})
 		return true
 	}
 
 	@Mutation(() => Boolean)
-	async removeTagFromProduct(
-		@Arg('tagId', () => ID) tagId: string,
-		@Arg('productId', () => ID) productId: string,
-		@Ctx() ctx: Context
-	): Promise<boolean> {
+	async removeTagFromProduct(@Arg('tagId', () => ID) tagId: string, @Arg('productId', () => ID) productId: string, @Ctx() ctx: Context): Promise<boolean> {
 		await ctx.prisma.productTag.delete({
 			where: {
 				productId_tagId: {
 					productId,
-					tagId
-				}
-			}
+					tagId,
+				},
+			},
 		})
 		return true
 	}

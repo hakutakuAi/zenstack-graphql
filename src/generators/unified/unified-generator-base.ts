@@ -4,10 +4,11 @@ import { OutputStrategy, UnifiedGeneratorContext } from '@generators/strategies'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
+import { NormalizedOptions } from '@/utils'
 
 export abstract class UnifiedGeneratorBase {
 	protected outputStrategy: OutputStrategy
-	protected options: any
+	protected options: NormalizedOptions
 	protected models: DataModel[]
 	protected enums: any[]
 	protected typeFormatter: TypeFormatter

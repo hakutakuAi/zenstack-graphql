@@ -66,8 +66,8 @@ query GetProducts {
     totalCount
   }
 }
-		`
-	}
+		`,
+	},
 })
 
 export const server = createServer(yoga)

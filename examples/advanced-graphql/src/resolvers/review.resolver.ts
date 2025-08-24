@@ -5,23 +5,17 @@ import { Context } from './types'
 @Resolver(() => Review)
 export class ReviewResolver {
 	@Query(() => Review, { nullable: true })
-	async review(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<Review | null> {
+	async review(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Review | null> {
 		return ctx.prisma.review.findUnique({
 			where: { id },
 			include: {
-				product: true
-			}
+				product: true,
+			},
 		})
 	}
 
 	@Query(() => ReviewConnection)
-	async reviews(
-		@Arg('args', { nullable: true }) args: ReviewQueryArgs,
-		@Ctx() ctx: Context
-	): Promise<ReviewConnection> {
+	async reviews(@Arg('args', { nullable: true }) args: ReviewQueryArgs, @Ctx() ctx: Context): Promise<ReviewConnection> {
 		const take = args?.first || 10
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined
@@ -33,8 +27,8 @@ export class ReviewResolver {
 			where: this.buildWhereCondition(args?.filter),
 			orderBy: this.buildOrderBy(args?.sort),
 			include: {
-				product: true
-			}
+				product: true,
+			},
 		})
 
 		const hasNextPage = reviews.length > take
@@ -42,7 +36,7 @@ export class ReviewResolver {
 
 		const edges = nodes.map((review) => ({
 			node: review,
-			cursor: review.id
+			cursor: review.id,
 		}))
 
 		return {
@@ -51,49 +45,39 @@ export class ReviewResolver {
 				hasNextPage,
 				hasPreviousPage: false,
 				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor
+				endCursor: edges[edges.length - 1]?.cursor,
 			},
 			totalCount: await ctx.prisma.review.count({
-				where: this.buildWhereCondition(args?.filter)
-			})
+				where: this.buildWhereCondition(args?.filter),
+			}),
 		}
 	}
 
 	@Mutation(() => Review)
-	async createReview(
-		@Arg('input') input: ReviewCreateInput,
-		@Ctx() ctx: Context
-	): Promise<Review> {
+	async createReview(@Arg('input') input: ReviewCreateInput, @Ctx() ctx: Context): Promise<Review> {
 		return ctx.prisma.review.create({
 			data: input,
 			include: {
-				product: true
-			}
+				product: true,
+			},
 		})
 	}
 
 	@Mutation(() => Review)
-	async updateReview(
-		@Arg('id', () => ID) id: string,
-		@Arg('input') input: ReviewUpdateInput,
-		@Ctx() ctx: Context
-	): Promise<Review> {
+	async updateReview(@Arg('id', () => ID) id: string, @Arg('input') input: ReviewUpdateInput, @Ctx() ctx: Context): Promise<Review> {
 		return ctx.prisma.review.update({
 			where: { id },
 			data: input,
 			include: {
-				product: true
-			}
+				product: true,
+			},
 		})
 	}
 
 	@Mutation(() => Boolean)
-	async deleteReview(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<boolean> {
+	async deleteReview(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<boolean> {
 		await ctx.prisma.review.delete({
-			where: { id }
+			where: { id },
 		})
 		return true
 	}

@@ -53,6 +53,10 @@ export class UnifiedScalarGenerator {
 			typescriptTypes: [],
 		}
 
+		if (!this.options.generateScalars) {
+			return result
+		}
+
 		if (this.format === OutputFormat.GRAPHQL) {
 			result.graphqlTypes = this.generateGraphQLScalars()
 		} else {

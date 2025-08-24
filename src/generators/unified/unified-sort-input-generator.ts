@@ -4,20 +4,31 @@ import { SortFieldDefinition } from '@generators/strategies'
 
 export class UnifiedSortInputGenerator extends UnifiedGeneratorBase {
 	protected override beforeGeneration(): void {
-		this.outputStrategy.createSortDirectionEnum()
+		if (this.options.generateSorts) {
+			this.outputStrategy.createSortDirectionEnum()
+		}
+	}
+
+	override generate(): string[] {
+		if (!this.options.generateSorts) {
+			return []
+		}
+
+		return super.generate()
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
 		const typeName = this.getFormattedTypeName(model)
 		const sortFields = this.getSortableFields(model)
 
-		const sortInputName = this.outputStrategy.createSortInputType(typeName, sortFields)
+		const sortInputTypeName = this.typeFormatter.formatSortInputTypeName(typeName)
+		this.outputStrategy.createSortInputType(sortInputTypeName, sortFields)
 
-		return this.typeFormatter.formatSortInputTypeName(typeName)
+		return sortInputTypeName
 	}
 
 	protected override processResults(results: string[]): string[] {
-		return this.outputStrategy.getGeneratedTypeNames((name) => name.endsWith('SortInput'))
+		return this.outputStrategy.getGeneratedTypeNames((name) => name.endsWith('SortInput') || name === 'SortDirection')
 	}
 
 	private getSortableFields(model: DataModel): SortFieldDefinition[] {

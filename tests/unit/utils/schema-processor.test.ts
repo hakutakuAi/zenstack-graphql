@@ -1,0 +1,375 @@
+import { describe, test, expect, beforeEach } from 'bun:test'
+import { SchemaProcessor } from '@utils/schema/schema-processor'
+import { TypeFormatter } from '@utils/schema/type-formatter'
+import { TestUtils, SchemaBuilder } from '../../helpers'
+import { DataModel } from '@zenstackhq/sdk/ast'
+
+describe('Schema Processor', () => {
+	let processor: SchemaProcessor
+	let typeFormatter: TypeFormatter
+	let model: DataModel
+
+	beforeEach(() => {
+		processor = new SchemaProcessor()
+		typeFormatter = TypeFormatter.fromOptions('PascalCase', 'camelCase')
+
+		model = TestUtils.createMockDataModel('User', [
+			{
+				...TestUtils.createMockField('id', 'String'),
+				attributes: [],
+			},
+			{
+				...TestUtils.createMockField('name', 'String'),
+				attributes: [TestUtils.createMockAttribute('@graphql.name', [{ value: 'fullName' }])],
+			},
+			{
+				...TestUtils.createMockField('email', 'String'),
+				attributes: [TestUtils.createMockAttribute('@graphql.ignore')],
+			},
+			{
+				...TestUtils.createMockField('age', 'Int'),
+				attributes: [TestUtils.createMockAttribute('@graphql.sortable')],
+			},
+			{
+				...TestUtils.createMockField('bio', 'String'),
+				attributes: [TestUtils.createMockAttribute('@graphql.filterable')],
+			},
+			{
+				...TestUtils.createMockField('score', 'Float'),
+				attributes: [TestUtils.createMockAttribute('@graphql.sortable'), TestUtils.createMockAttribute('@graphql.filterable')],
+			},
+		])
+
+		model.attributes = [
+			TestUtils.createMockAttribute('@@graphql.name', [{ value: 'UserType' }]),
+			TestUtils.createMockAttribute('@@graphql.description', [{ value: 'A user in the system' }]),
+		]
+	})
+
+	describe('Static Factory Method', () => {
+		test('should create processor from model', () => {
+			const modelChain = SchemaProcessor.fromModel(model)
+
+			expect(modelChain.name()).toBe('UserType')
+			expect(modelChain.description()).toBe('A user in the system')
+		})
+	})
+
+	describe('Model Processing', () => {
+		test('should extract model name from attribute', () => {
+			const modelChain = processor.model(model)
+
+			expect(modelChain.name()).toBe('UserType')
+		})
+
+		test('should fall back to original model name when no attribute', () => {
+			const simpleModel = TestUtils.createMockDataModel('SimpleUser')
+			const modelChain = processor.model(simpleModel)
+
+			expect(modelChain.name()).toBe('SimpleUser')
+		})
+
+		test('should extract model description', () => {
+			const modelChain = processor.model(model)
+
+			expect(modelChain.description()).toBe('A user in the system')
+		})
+
+		test('should return undefined for missing description', () => {
+			const simpleModel = TestUtils.createMockDataModel('SimpleUser')
+			const modelChain = processor.model(simpleModel)
+
+			expect(modelChain.description()).toBeUndefined()
+		})
+
+		test('should detect ignored models', () => {
+			const ignoredModel = TestUtils.createMockDataModel('IgnoredUser')
+			ignoredModel.attributes = [TestUtils.createMockAttribute('@@graphql.ignore')]
+
+			const modelChain = processor.model(ignoredModel)
+			expect(modelChain.isIgnored()).toBe(true)
+		})
+
+		test('should detect non-ignored models', () => {
+			const modelChain = processor.model(model)
+			expect(modelChain.isIgnored()).toBe(false)
+		})
+
+		test('should format type name correctly', () => {
+			const modelChain = processor.model(model)
+			const formattedName = modelChain.getFormattedTypeName(typeFormatter)
+
+			expect(formattedName).toBe('UserType')
+		})
+
+		test('should format original name when no attribute', () => {
+			const simpleModel = TestUtils.createMockDataModel('simpleUser')
+			const modelChain = processor.model(simpleModel)
+			const formattedName = modelChain.getFormattedTypeName(typeFormatter)
+
+			expect(formattedName).toBe('SimpleUser')
+		})
+	})
+
+	describe('Field Processing', () => {
+		test('should extract field name from attribute', () => {
+			const fieldChain = processor.field(model, 'name')
+
+			expect(fieldChain.name()).toBe('fullName')
+		})
+
+		test('should fall back to original field name', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.name()).toBe('id')
+		})
+
+		test('should detect ignored fields', () => {
+			const fieldChain = processor.field(model, 'email')
+
+			expect(fieldChain.isIgnored()).toBe(true)
+		})
+
+		test('should detect non-ignored fields', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.isIgnored()).toBe(false)
+		})
+
+		test('should detect sortable fields', () => {
+			const fieldChain = processor.field(model, 'age')
+
+			expect(fieldChain.isSortable()).toBe(true)
+		})
+
+		test('should detect non-sortable fields', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.isSortable()).toBe(false)
+		})
+
+		test('should detect filterable fields', () => {
+			const fieldChain = processor.field(model, 'bio')
+
+			expect(fieldChain.isFilterable()).toBe(true)
+		})
+
+		test('should detect non-filterable fields', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.isFilterable()).toBe(false)
+		})
+
+		test('should detect fields with multiple attributes', () => {
+			const fieldChain = processor.field(model, 'score')
+
+			expect(fieldChain.isSortable()).toBe(true)
+			expect(fieldChain.isFilterable()).toBe(true)
+		})
+
+		test('should check field existence', () => {
+			const existingField = processor.field(model, 'id')
+			const nonExistingField = processor.field(model, 'nonexistent')
+
+			expect(existingField.exists()).toBe(true)
+			expect(nonExistingField.exists()).toBe(false)
+		})
+
+		test('should format field names correctly', () => {
+			const fieldChain = processor.field(model, 'name')
+			const formattedName = fieldChain.getFormattedFieldName(typeFormatter)
+
+			expect(formattedName).toBe('fullName')
+		})
+
+		test('should format original field name when no attribute', () => {
+			const fieldChain = processor.field(model, 'user_id')
+			const formattedName = fieldChain.getFormattedFieldName(typeFormatter)
+
+			expect(formattedName).toBe('userId')
+		})
+	})
+
+	describe('Field Type Analysis', () => {
+		test('should identify sortable field types', () => {
+			const testCases = [
+				{ name: 'stringField', type: 'String', expected: true },
+				{ name: 'intField', type: 'Int', expected: true },
+				{ name: 'floatField', type: 'Float', expected: true },
+				{ name: 'decimalField', type: 'Decimal', expected: true },
+				{ name: 'dateTimeField', type: 'DateTime', expected: true },
+				{ name: 'booleanField', type: 'Boolean', expected: true },
+				{ name: 'jsonField', type: 'Json', expected: false },
+				{ name: 'bytesField', type: 'Bytes', expected: false },
+			]
+
+			for (const testCase of testCases) {
+				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+
+				const fieldChain = processor.field(testModel, testCase.name)
+				expect(fieldChain.isSortableType()).toBe(testCase.expected)
+			}
+		})
+
+		test('should identify range filterable field types', () => {
+			const testCases = [
+				{ name: 'stringField', type: 'String', expected: false },
+				{ name: 'intField', type: 'Int', expected: true },
+				{ name: 'floatField', type: 'Float', expected: true },
+				{ name: 'decimalField', type: 'Decimal', expected: true },
+				{ name: 'dateTimeField', type: 'DateTime', expected: true },
+				{ name: 'booleanField', type: 'Boolean', expected: false },
+			]
+
+			for (const testCase of testCases) {
+				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+
+				const fieldChain = processor.field(testModel, testCase.name)
+				expect(fieldChain.isRangeFilterableType()).toBe(testCase.expected)
+			}
+		})
+
+		test('should identify string searchable field types', () => {
+			const testCases = [
+				{ name: 'stringField', type: 'String', expected: true },
+				{ name: 'intField', type: 'Int', expected: false },
+				{ name: 'floatField', type: 'Float', expected: false },
+			]
+
+			for (const testCase of testCases) {
+				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+
+				const fieldChain = processor.field(testModel, testCase.name)
+				expect(fieldChain.isStringSearchableType()).toBe(testCase.expected)
+			}
+		})
+
+		test('should handle missing field type gracefully', () => {
+			const fieldChain = processor.field(model, 'nonexistent')
+
+			expect(fieldChain.isSortableType()).toBe(false)
+			expect(fieldChain.isRangeFilterableType()).toBe(false)
+			expect(fieldChain.isStringSearchableType()).toBe(false)
+		})
+	})
+
+	describe('Field Inclusion Logic', () => {
+		test('should include regular fields', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.shouldInclude(false)).toBe(true)
+		})
+
+		test('should exclude ignored fields', () => {
+			const fieldChain = processor.field(model, 'email')
+
+			expect(fieldChain.shouldInclude(false)).toBe(false)
+		})
+
+		test('should include relations when requested', () => {
+			const modelWithRelation = TestUtils.createMockDataModel('User', [TestUtils.createMockRelationField('posts', 'Post', false, true)])
+
+			const fieldChain = processor.field(modelWithRelation, 'posts')
+
+			expect(fieldChain.shouldInclude(true)).toBe(true)
+		})
+
+		test('should exclude relations when not requested', () => {
+			const modelWithRelation = TestUtils.createMockDataModel('User', [TestUtils.createMockRelationField('posts', 'Post', false, true)])
+
+			const fieldChain = processor.field(modelWithRelation, 'posts')
+
+			expect(fieldChain.shouldInclude(false)).toBe(false)
+		})
+
+		test('should handle non-existent fields', () => {
+			const fieldChain = processor.field(model, 'nonexistent')
+
+			expect(fieldChain.shouldInclude(true)).toBe(false)
+			expect(fieldChain.shouldInclude(false)).toBe(false)
+		})
+	})
+
+	describe('Attribute Handling', () => {
+		test('should find attributes by exact name', () => {
+			const fieldChain = processor.field(model, 'name')
+
+			expect(fieldChain.attr('@graphql.name')).toBe(true)
+			expect(fieldChain.attr('@graphql.ignore')).toBe(false)
+		})
+
+		test('should extract string values from attributes', () => {
+			const fieldChain = processor.field(model, 'name')
+
+			expect(fieldChain.getString('name')).toBe('fullName')
+		})
+
+		test('should return undefined for missing string attributes', () => {
+			const fieldChain = processor.field(model, 'id')
+
+			expect(fieldChain.getString('name')).toBeUndefined()
+		})
+
+		test('should handle complex attribute structures', () => {
+			const complexModel = TestUtils.createMockDataModel('Complex', [
+				{
+					...TestUtils.createMockField('priority', 'Int'),
+					attributes: [
+						TestUtils.createMockAttribute('@graphql.sortable', [
+							{ name: 'enabled', value: true },
+							{ name: 'priority', value: 10 },
+						]),
+					],
+				},
+			])
+
+			const fieldChain = processor.field(complexModel, 'priority')
+
+			expect(fieldChain.getBoolean('enabled')).toBe(true)
+			expect(fieldChain.getNumber('priority')).toBe(10)
+		})
+	})
+
+	describe('Edge Cases', () => {
+		test('should handle empty model', () => {
+			const emptyModel = TestUtils.createMockDataModel('Empty')
+			const modelChain = processor.model(emptyModel)
+
+			expect(modelChain.name()).toBe('Empty')
+			expect(modelChain.description()).toBeUndefined()
+			expect(modelChain.isIgnored()).toBe(false)
+		})
+
+		test('should handle model with no fields', () => {
+			const emptyModel = TestUtils.createMockDataModel('Empty')
+			const fieldChain = processor.field(emptyModel, 'nonexistent')
+
+			expect(fieldChain.exists()).toBe(false)
+			expect(fieldChain.name()).toBe('nonexistent')
+		})
+
+		test('should handle attributes with no arguments', () => {
+			const simpleModel = TestUtils.createMockDataModel('Simple', [
+				{
+					...TestUtils.createMockField('active', 'Boolean'),
+					attributes: [TestUtils.createMockAttribute('@graphql.sortable')],
+				},
+			])
+
+			const fieldChain = processor.field(simpleModel, 'active')
+			expect(fieldChain.isSortable()).toBe(true)
+		})
+
+		test('should handle malformed attributes gracefully', () => {
+			const malformedModel = TestUtils.createMockDataModel('Malformed', [
+				{
+					...TestUtils.createMockField('broken', 'String'),
+					attributes: [{ decl: null, args: [] }],
+				},
+			])
+
+			const fieldChain = processor.field(malformedModel, 'broken')
+			expect(fieldChain.getString('name')).toBeUndefined()
+		})
+	})
+})

@@ -56,8 +56,8 @@ describe('Advanced GraphQL Features Tests', () => {
 								}
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
@@ -119,9 +119,9 @@ describe('Advanced GraphQL Features Tests', () => {
 					features: ['feature1', 'feature2'],
 					specifications: {
 						weight: '1kg',
-						dimensions: '10x10x5cm'
-					}
-				}
+						dimensions: '10x10x5cm',
+					},
+				},
 			}
 
 			const createResponse = await fetch(GRAPHQL_ENDPOINT, {
@@ -137,8 +137,8 @@ describe('Advanced GraphQL Features Tests', () => {
 							}
 						}
 					`,
-					variables: { input: productData }
-				})
+					variables: { input: productData },
+				}),
 			})
 
 			const createResult = await createResponse.json()
@@ -152,14 +152,14 @@ describe('Advanced GraphQL Features Tests', () => {
 			// Create test products
 			const products = await Promise.all([
 				prismaClient.product.create({
-					data: { name: 'Product A', price: 10.0, status: 'PUBLISHED' }
+					data: { name: 'Product A', price: 10.0, status: 'PUBLISHED' },
 				}),
 				prismaClient.product.create({
-					data: { name: 'Product B', price: 20.0, status: 'PUBLISHED' }
+					data: { name: 'Product B', price: 20.0, status: 'PUBLISHED' },
 				}),
 				prismaClient.product.create({
-					data: { name: 'Product C', price: 30.0, status: 'PUBLISHED' }
-				})
+					data: { name: 'Product C', price: 30.0, status: 'PUBLISHED' },
+				}),
 			])
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -187,15 +187,15 @@ describe('Advanced GraphQL Features Tests', () => {
 							}
 						}
 					`,
-					variables: { first: 2 }
-				})
+					variables: { first: 2 },
+				}),
 			})
 
 			const result = await response.json()
 			expect(result.errors).toBeUndefined()
 
 			const connection = result.data.products
-			
+
 			// Verify Relay structure
 			expect(connection.edges).toHaveLength(2)
 			expect(connection.totalCount).toBe(3)
@@ -216,7 +216,7 @@ describe('Advanced GraphQL Features Tests', () => {
 			await Promise.all([
 				prismaClient.product.create({ data: { name: 'Product 1', price: 10.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'Product 2', price: 20.0, status: 'PUBLISHED' } }),
-				prismaClient.product.create({ data: { name: 'Product 3', price: 30.0, status: 'PUBLISHED' } })
+				prismaClient.product.create({ data: { name: 'Product 3', price: 30.0, status: 'PUBLISHED' } }),
 			])
 
 			// Get first page
@@ -238,13 +238,13 @@ describe('Advanced GraphQL Features Tests', () => {
 							}
 						}
 					`,
-					variables: { first: 2 }
-				})
+					variables: { first: 2 },
+				}),
 			})
 
 			const firstPage = await firstPageResponse.json()
 			expect(firstPage.data.products.pageInfo.hasNextPage).toBe(true)
-			
+
 			const endCursor = firstPage.data.products.pageInfo.endCursor
 
 			// Get second page using cursor
@@ -264,8 +264,8 @@ describe('Advanced GraphQL Features Tests', () => {
 							}
 						}
 					`,
-					variables: { first: 2, after: endCursor }
-				})
+					variables: { first: 2, after: endCursor },
+				}),
 			})
 
 			const secondPage = await secondPageResponse.json()
@@ -279,7 +279,7 @@ describe('Advanced GraphQL Features Tests', () => {
 			await Promise.all([
 				prismaClient.product.create({ data: { name: 'Expensive Item', price: 100.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'Cheap Item', price: 10.0, status: 'PUBLISHED' } }),
-				prismaClient.product.create({ data: { name: 'Draft Item', price: 50.0, status: 'DRAFT' } })
+				prismaClient.product.create({ data: { name: 'Draft Item', price: 50.0, status: 'DRAFT' } }),
 			])
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -304,8 +304,8 @@ describe('Advanced GraphQL Features Tests', () => {
 								totalCount
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
@@ -318,7 +318,7 @@ describe('Advanced GraphQL Features Tests', () => {
 			await Promise.all([
 				prismaClient.product.create({ data: { name: 'Product A', price: 100.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'Product B', price: 200.0, status: 'DRAFT' } }),
-				prismaClient.product.create({ data: { name: 'Product C', price: 50.0, status: 'PUBLISHED' } })
+				prismaClient.product.create({ data: { name: 'Product C', price: 50.0, status: 'PUBLISHED' } }),
 			])
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -350,8 +350,8 @@ describe('Advanced GraphQL Features Tests', () => {
 								totalCount
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
@@ -365,7 +365,7 @@ describe('Advanced GraphQL Features Tests', () => {
 			await Promise.all([
 				prismaClient.product.create({ data: { name: 'Z Product', price: 10.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'A Product', price: 20.0, status: 'PUBLISHED' } }),
-				prismaClient.product.create({ data: { name: 'M Product', price: 15.0, status: 'PUBLISHED' } })
+				prismaClient.product.create({ data: { name: 'M Product', price: 15.0, status: 'PUBLISHED' } }),
 			])
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -385,13 +385,13 @@ describe('Advanced GraphQL Features Tests', () => {
 								}
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
 			expect(result.errors).toBeUndefined()
-			
+
 			const products = result.data.products.edges.map((edge: any) => edge.node)
 			expect(products[0]?.name).toBe('A Product')
 			expect(products[1]?.name).toBe('M Product')
@@ -402,7 +402,7 @@ describe('Advanced GraphQL Features Tests', () => {
 	describe('Enums', () => {
 		test('Product status enum works correctly', async () => {
 			await prismaClient.product.create({
-				data: { name: 'Test Product', price: 10.0, status: 'ARCHIVED' }
+				data: { name: 'Test Product', price: 10.0, status: 'ARCHIVED' },
 			})
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -422,8 +422,8 @@ describe('Advanced GraphQL Features Tests', () => {
 								}
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
@@ -434,7 +434,7 @@ describe('Advanced GraphQL Features Tests', () => {
 
 		test('Review rating enum works correctly', async () => {
 			const product = await prismaClient.product.create({
-				data: { name: 'Test Product', price: 10.0, status: 'PUBLISHED' }
+				data: { name: 'Test Product', price: 10.0, status: 'PUBLISHED' },
 			})
 
 			await prismaClient.review.create({
@@ -443,8 +443,8 @@ describe('Advanced GraphQL Features Tests', () => {
 					content: 'Really good',
 					rating: 'FIVE',
 					productId: product.id,
-					verified: true
-				}
+					verified: true,
+				},
 			})
 
 			const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -465,8 +465,8 @@ describe('Advanced GraphQL Features Tests', () => {
 								}
 							}
 						}
-					`
-				})
+					`,
+				}),
 			})
 
 			const result = await response.json()
@@ -479,11 +479,11 @@ describe('Advanced GraphQL Features Tests', () => {
 	describe('Relations and Many-to-Many', () => {
 		test('Product-Tag many-to-many relationship works', async () => {
 			const product = await prismaClient.product.create({
-				data: { name: 'Test Product', price: 10.0, status: 'PUBLISHED' }
+				data: { name: 'Test Product', price: 10.0, status: 'PUBLISHED' },
 			})
 
 			const tag = await prismaClient.tag.create({
-				data: { name: 'test-tag', color: '#FF0000' }
+				data: { name: 'test-tag', color: '#FF0000' },
 			})
 
 			// Assign tag to product
@@ -496,8 +496,8 @@ describe('Advanced GraphQL Features Tests', () => {
 							assignTagToProduct(tagId: $tagId, productId: $productId)
 						}
 					`,
-					variables: { tagId: tag.id, productId: product.id }
-				})
+					variables: { tagId: tag.id, productId: product.id },
+				}),
 			})
 
 			const assignResult = await assignResponse.json()
@@ -522,8 +522,8 @@ describe('Advanced GraphQL Features Tests', () => {
 							}
 						}
 					`,
-					variables: { id: product.id }
-				})
+					variables: { id: product.id },
+				}),
 			})
 
 			const queryResult = await queryResponse.json()

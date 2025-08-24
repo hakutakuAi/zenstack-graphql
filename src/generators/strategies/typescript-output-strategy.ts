@@ -79,7 +79,8 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	}
 
 	createInputType(typeName: string, model: DataModel, inputType: 'create' | 'update', description?: string): string {
-		return ''
+		this.astFactory.createInputType(typeName, model, inputType, description)
+		return typeName
 	}
 
 	createQueryArgsInputType(typeName: string, model: DataModel, description?: string): string {

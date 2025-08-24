@@ -46,3 +46,6 @@ yarn.lock
 .vscode
 dist
 .claude
+
+# Test outputs
+.tmp/

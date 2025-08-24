@@ -5,28 +5,22 @@ import { Context } from './types'
 @Resolver(() => Product)
 export class ProductResolver {
 	@Query(() => Product, { nullable: true })
-	async product(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<Product | null> {
+	async product(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Product | null> {
 		return ctx.prisma.product.findUnique({
 			where: { id },
 			include: {
 				reviews: true,
 				tags: {
 					include: {
-						tag: true
-					}
-				}
-			}
+						tag: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Query(() => ProductConnection)
-	async products(
-		@Arg('args', { nullable: true }) args: ProductQueryArgs,
-		@Ctx() ctx: Context
-	): Promise<ProductConnection> {
+	async products(@Arg('args', { nullable: true }) args: ProductQueryArgs, @Ctx() ctx: Context): Promise<ProductConnection> {
 		const take = args?.first || 20
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined
@@ -41,10 +35,10 @@ export class ProductResolver {
 				reviews: true,
 				tags: {
 					include: {
-						tag: true
-					}
-				}
-			}
+						tag: true,
+					},
+				},
+			},
 		})
 
 		const hasNextPage = products.length > take
@@ -52,7 +46,7 @@ export class ProductResolver {
 
 		const edges = nodes.map((product, index) => ({
 			node: product,
-			cursor: product.id
+			cursor: product.id,
 		}))
 
 		return {
@@ -61,38 +55,31 @@ export class ProductResolver {
 				hasNextPage,
 				hasPreviousPage: false,
 				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor
+				endCursor: edges[edges.length - 1]?.cursor,
 			},
 			totalCount: await ctx.prisma.product.count({
-				where: this.buildWhereCondition(args?.filter)
-			})
+				where: this.buildWhereCondition(args?.filter),
+			}),
 		}
 	}
 
 	@Mutation(() => Product)
-	async createProduct(
-		@Arg('input') input: ProductCreateInput,
-		@Ctx() ctx: Context
-	): Promise<Product> {
+	async createProduct(@Arg('input') input: ProductCreateInput, @Ctx() ctx: Context): Promise<Product> {
 		return ctx.prisma.product.create({
 			data: input,
 			include: {
 				reviews: true,
 				tags: {
 					include: {
-						tag: true
-					}
-				}
-			}
+						tag: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Mutation(() => Product)
-	async updateProduct(
-		@Arg('id', () => ID) id: string,
-		@Arg('input') input: ProductUpdateInput,
-		@Ctx() ctx: Context
-	): Promise<Product> {
+	async updateProduct(@Arg('id', () => ID) id: string, @Arg('input') input: ProductUpdateInput, @Ctx() ctx: Context): Promise<Product> {
 		return ctx.prisma.product.update({
 			where: { id },
 			data: input,
@@ -100,20 +87,17 @@ export class ProductResolver {
 				reviews: true,
 				tags: {
 					include: {
-						tag: true
-					}
-				}
-			}
+						tag: true,
+					},
+				},
+			},
 		})
 	}
 
 	@Mutation(() => Boolean)
-	async deleteProduct(
-		@Arg('id', () => ID) id: string,
-		@Ctx() ctx: Context
-	): Promise<boolean> {
+	async deleteProduct(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<boolean> {
 		await ctx.prisma.product.delete({
-			where: { id }
+			where: { id },
 		})
 		return true
 	}

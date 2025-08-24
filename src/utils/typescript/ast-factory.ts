@@ -175,51 +175,7 @@ registerEnumType(${typeName}, {
 		return enumDeclaration
 	}
 
-	createInputType(model: DataModel, suffix: string): ClassDeclaration {
-		const typeName = this.typeFormatter.formatTypeName(`${model.name}${suffix}`)
-
-		const classDeclaration = this.sourceFile.addClass({
-			name: typeName,
-			isExported: true,
-			decorators: [
-				{
-					name: 'InputType',
-					arguments: [],
-				},
-			],
-		})
-
-		const validFields = model.fields.filter((field) => field.type.type)
-
-		for (const field of validFields) {
-			this.addInputFieldToClass(classDeclaration, field)
-		}
-
-		return classDeclaration
-	}
-
 	private addFieldToClass(classDeclaration: ClassDeclaration, field: DataModelField): void {
-		const fieldName = this.typeFormatter.formatFieldName(field.name)
-		const fieldType = this.getFieldType(field)
-		const typeScriptType = this.getTypeScriptType(field)
-
-		const decoratorArgs = this.getFieldDecoratorArgs(field, fieldType)
-
-		classDeclaration.addProperty({
-			name: fieldName,
-			type: typeScriptType,
-			hasQuestionToken: field.type.optional,
-			hasExclamationToken: !field.type.optional,
-			decorators: [
-				{
-					name: 'Field',
-					arguments: decoratorArgs,
-				},
-			],
-		})
-	}
-
-	private addInputFieldToClass(classDeclaration: ClassDeclaration, field: DataModelField): void {
 		const fieldName = this.typeFormatter.formatFieldName(field.name)
 		const fieldType = this.getFieldType(field)
 		const typeScriptType = this.getTypeScriptType(field)
@@ -734,6 +690,59 @@ registerEnumType(SortDirection, {
 		return allNames
 	}
 
+	createInputType(inputName: string, model: DataModel, inputType: 'create' | 'update', description?: string): ClassDeclaration {
+		const classDeclaration = this.sourceFile.addClass({
+			name: inputName,
+			isExported: true,
+			decorators: [
+				{
+					name: 'InputType',
+					arguments: description ? [`{ description: "${description}" }`] : [],
+				},
+			],
+		})
+
+		const fields = model.fields.filter((field) => {
+			if (inputType === 'create') {
+				const fieldName = field.name
+				if (fieldName === 'id' || fieldName === 'createdAt' || fieldName === 'updatedAt') {
+					return false
+				}
+			}
+
+			return field.type.type && !this.typeMapper?.isRelationField(field)
+		})
+
+		for (const field of fields) {
+			this.addInputFieldToClass(classDeclaration, field, inputType)
+		}
+
+		return classDeclaration
+	}
+
+	private addInputFieldToClass(classDeclaration: ClassDeclaration, field: DataModelField, inputType: 'create' | 'update'): void {
+		const fieldName = field.name
+		const tsType = this.getTypeScriptType(field)
+
+		const isOptional = inputType === 'update' || field.type.optional || this.fieldHasDefaultValue(field)
+
+		const graphqlType = this.getGraphQLType(field)
+		const nullableGraphqlType = isOptional ? graphqlType.replace('!', '') : graphqlType
+
+		classDeclaration.addProperty({
+			name: fieldName,
+			type: tsType,
+			hasQuestionToken: isOptional,
+			hasExclamationToken: !isOptional,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: this.getFieldDecoratorArgs(field, nullableGraphqlType),
+				},
+			],
+		})
+	}
+
 	hasType(typeName: string): boolean {
 		const allTypeNames = this.getGeneratedTypeNames()
 		return allTypeNames.includes(typeName)
@@ -742,5 +751,22 @@ registerEnumType(SortDirection, {
 	clear(): void {
 		this.sourceFile.removeText()
 		this.addImports()
+	}
+
+	private fieldHasDefaultValue(field: DataModelField): boolean {
+		return field.attributes?.some((attr) => attr.decl?.ref?.name === 'default') ?? false
+	}
+
+	private getGraphQLType(field: DataModelField): string {
+		if (this.typeMapper) {
+			const mappedType = this.typeMapper.mapFieldType(field)
+			if (mappedType) {
+				return mappedType
+			}
+		}
+
+		const baseType = field.type.type || 'String'
+		const suffix = field.type.optional ? '' : '!'
+		return field.type.array ? `[${baseType}${suffix}]` : `${baseType}${suffix}`
 	}
 }

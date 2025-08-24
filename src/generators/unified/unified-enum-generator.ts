@@ -17,6 +17,10 @@ export class UnifiedEnumGenerator extends UnifiedGeneratorBase {
 	}
 
 	override generate(): string[] {
+		if (!this.options.generateEnums) {
+			return []
+		}
+
 		const results: string[] = []
 
 		for (const enumObj of this.enums) {

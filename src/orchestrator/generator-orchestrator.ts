@@ -19,6 +19,7 @@ import { SchemaComposer } from 'graphql-compose'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { GraphQLRegistry } from '@utils/registry'
+import { TypeKind } from '@utils/registry/base-registry'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
 
@@ -83,20 +84,20 @@ export class GeneratorOrchestrator {
 			scalarGenerator: new UnifiedScalarGenerator(this.context, OutputFormat.TYPE_GRAPHQL),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
+			queryArgsGenerator: new UnifiedQueryArgsGenerator(unifiedContext),
 		}
 	}
 
 	private async generateGraphQL(): Promise<UnifiedGenerationResult> {
 		const graphqlContext = this.createGraphQLContext()
-		const unifiedContext = UnifiedContextFactory.createGraphQLContext(graphqlContext)
 
-		// Setup relay requirements for GraphQL
 		graphqlContext.registry.addRelayRequirements()
+
+		this.ensureEssentialTypes(graphqlContext)
 
 		const generators = UnifiedGeneratorFactory.createGraphQLGenerators(graphqlContext)
 		const results = await this.executeGenerators(generators)
 
-		// Validate schema and generate SDL
 		const warnings = graphqlContext.registry.validateSchema()
 		if (warnings.length > 0) {
 			console.warn('Schema validation warnings:', warnings)
@@ -107,6 +108,37 @@ export class GeneratorOrchestrator {
 			results,
 			stats: StatsCollector.collect(results),
 			outputFormat: this.outputFormat,
+		}
+	}
+
+	private ensureEssentialTypes(context: GeneratorContext): void {
+		const essentialScalars = ['DateTime', 'JSON', 'Decimal']
+
+		for (const scalarName of essentialScalars) {
+			if (!context.schemaComposer.has(scalarName)) {
+				const scalarTC = context.schemaComposer.createScalarTC({
+					name: scalarName,
+					description: `Essential scalar type: ${scalarName}`,
+				})
+				context.registry.registerType(scalarName, TypeKind.SCALAR, scalarTC, true)
+			}
+		}
+
+		for (const enumType of this.context.enums) {
+			const enumName = enumType.name
+			if (!context.schemaComposer.has(enumName)) {
+				const enumTC = context.schemaComposer.createEnumTC({
+					name: enumName,
+					values: enumType.fields.reduce(
+						(acc, field) => {
+							acc[field.name] = { value: field.name }
+							return acc
+						},
+						{} as Record<string, { value: string }>,
+					),
+				})
+				context.registry.registerType(enumName, TypeKind.ENUM, enumTC, true)
+			}
 		}
 	}
 
@@ -129,8 +161,6 @@ export class GeneratorOrchestrator {
 		const results: GenerationResult[] = []
 		const isTypeScript = this.outputFormat === OutputFormat.TYPE_GRAPHQL
 
-		// Execute in proper order: scalars -> enums -> objects -> relations -> connections/sorts/filters
-
 		if (this.context.options.generateScalars && generators.scalarGenerator) {
 			const scalarResult = generators.scalarGenerator.generate()
 			const items = isTypeScript ? scalarResult.typescriptTypes || [] : scalarResult.graphqlTypes || []
@@ -150,7 +180,6 @@ export class GeneratorOrchestrator {
 			})
 		}
 
-		// Object types must be generated before relations since relations reference objects
 		if (generators.objectTypeGenerator) {
 			const objectResult = generators.objectTypeGenerator.generate()
 			results.push({
@@ -160,7 +189,6 @@ export class GeneratorOrchestrator {
 			})
 		}
 
-		// Relations must come after objects since they reference object types
 		if (this.context.options.includeRelations && generators.relationGenerator) {
 			const relationResult = generators.relationGenerator.generate()
 			results.push({
@@ -170,7 +198,6 @@ export class GeneratorOrchestrator {
 			})
 		}
 
-		// Connections, sorts, and filters can come after objects and relations
 		if (this.context.options.connectionTypes && generators.connectionGenerator) {
 			const connectionResult = generators.connectionGenerator.generate()
 			results.push({
@@ -198,7 +225,15 @@ export class GeneratorOrchestrator {
 			})
 		}
 
-		// Query args should come after filters and sorts since they reference them
+		if (generators.inputGenerator) {
+			const inputResult = generators.inputGenerator.generate()
+			results.push({
+				items: inputResult,
+				count: inputResult.length,
+				type: GenerationType.INPUT,
+			})
+		}
+
 		if (generators.queryArgsGenerator) {
 			const queryArgsResult = generators.queryArgsGenerator.generate()
 			results.push({

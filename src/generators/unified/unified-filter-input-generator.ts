@@ -4,16 +4,31 @@ import { FilterFieldDefinition } from '@generators/strategies'
 
 export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 	protected override beforeGeneration(): void {
-		this.outputStrategy.createCommonFilterTypes()
+		if (this.options.generateFilters) {
+			this.outputStrategy.createCommonFilterTypes()
+		}
+	}
+
+	override generate(): string[] {
+		if (!this.options.generateFilters) {
+			return []
+		}
+
+		return super.generate()
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
 		const typeName = this.getFormattedTypeName(model)
 		const filterFields = this.getFilterableFields(model)
 
-		const filterInputName = this.outputStrategy.createFilterInputType(typeName, filterFields)
+		if (filterFields.length === 0) {
+			return null
+		}
 
-		return this.typeFormatter.formatFilterInputTypeName(typeName)
+		const filterInputTypeName = this.typeFormatter.formatFilterInputTypeName(typeName)
+		this.outputStrategy.createFilterInputType(filterInputTypeName, filterFields)
+
+		return filterInputTypeName
 	}
 
 	protected override processResults(results: string[]): string[] {

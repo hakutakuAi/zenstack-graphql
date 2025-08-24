@@ -22,7 +22,15 @@ export class TypeScriptRegistry extends BaseRegistry<string, TypeScriptTypeInfo>
 		if (this.types.has(name)) {
 			const existing = this.types.get(name)!
 			if (existing.kind !== kind) {
-				super.registerType(name, kind, code, isGenerated)
+				const typeInfo: TypeScriptTypeInfo = {
+					name,
+					kind,
+					data: code,
+					code,
+					dependencies,
+					isGenerated,
+				}
+				this.types.set(name, typeInfo)
 				return
 			}
 			return

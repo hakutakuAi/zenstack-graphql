@@ -39,6 +39,7 @@ export abstract class BaseRegistry<TData, TInfo extends BaseTypeInfo<TData>> imp
 	registerType(name: string, kind: TypeKind, data: TData, isGenerated = true): void {
 		if (this.types.has(name)) {
 			const existing = this.types.get(name)!
+
 			if (existing.kind !== kind) {
 				warning(`Type ${name} already exists with kind ${existing.kind}, but trying to register as ${kind}`, ErrorCategory.SCHEMA, {
 					typeName: name,
@@ -47,6 +48,8 @@ export abstract class BaseRegistry<TData, TInfo extends BaseTypeInfo<TData>> imp
 					conflictType: 'TypeKindMismatch',
 				})
 			}
+
+			this.types.set(name, this.createTypeInfo(name, kind, data, isGenerated))
 			return
 		}
 
@@ -63,6 +66,12 @@ export abstract class BaseRegistry<TData, TInfo extends BaseTypeInfo<TData>> imp
 
 	getTypesByKind(kind: TypeKind): TInfo[] {
 		return Array.from(this.types.values()).filter((info) => info.kind === kind)
+	}
+
+	getTypeNamesByKind(kind: TypeKind): string[] {
+		return Array.from(this.types.entries())
+			.filter(([_, info]) => info.kind === kind)
+			.map(([name, _]) => name)
 	}
 
 	getGeneratedTypes(): TInfo[] {
@@ -91,12 +100,8 @@ export abstract class BaseRegistry<TData, TInfo extends BaseTypeInfo<TData>> imp
 		return Array.from(this.types.keys())
 	}
 
-	protected getAllTypes(): TInfo[] {
+	getAllTypes(): TInfo[] {
 		return Array.from(this.types.values())
-	}
-
-	getTypeNamesByKind(kind: TypeKind): string[] {
-		return this.getTypesByKind(kind).map((info) => info.name)
 	}
 
 	getObjectTypes(): string[] {

@@ -295,7 +295,8 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	getGeneratedTypeNames(filter?: (name: string) => boolean): string[] {
-		const typeNames = this.registry.getTypeNamesByKind(TypeKind.INPUT)
+		const generatedTypes = this.registry.getGeneratedTypes()
+		const typeNames = generatedTypes.map(type => type.name)
 		return filter ? typeNames.filter(filter) : typeNames
 	}
 
