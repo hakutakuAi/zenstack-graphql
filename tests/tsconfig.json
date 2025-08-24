@@ -5,11 +5,10 @@
 		"module": "CommonJS",
 		"moduleDetection": "force",
 		"allowJs": true,
-
 		"moduleResolution": "node",
 		"allowImportingTsExtensions": false,
 		"verbatimModuleSyntax": false,
-		"noEmit": false,
+		"noEmit": true,
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
@@ -18,14 +17,9 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 		"noImplicitOverride": true,
-
-		//"noUnusedLocals": true,
-		//"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
 		"isolatedModules": true,
-		"outDir": "./dist",
-		"rootDir": "./src",
-		"baseUrl": ".",
+		"baseUrl": "..",
 		"paths": {
 			"@": ["./src"],
 			"@/*": ["./src/*"],
@@ -39,6 +33,6 @@
 			"@utils/*": ["./src/utils/*"]
 		}
 	},
-	"include": ["./src/**/*.ts", "./src/**/*.tsx"],
+	"include": ["./**/*.ts"],
 	"exclude": ["node_modules", "dist"]
 }

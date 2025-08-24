@@ -2,55 +2,64 @@ import { SchemaComposer } from 'graphql-compose'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
-import { GraphQLRegistry } from '@utils/registry'
-import { TypeScriptRegistry } from '@utils/registry'
+import { GraphQLRegistry, TypeScriptRegistry } from '@utils/registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { UnifiedGeneratorContext, OutputStrategy, SortFieldDefinition, FilterFieldDefinition } from '@generators/strategies'
-import { BaseGeneratorContext } from '@core/types'
-import { TestUtils } from './test-utils'
+import { BaseGeneratorContext, GeneratorContext } from '@core/types'
+import { TestFixtures } from './test-fixtures'
 import { DataModel, Enum } from '@zenstackhq/sdk/ast'
 import { RelationField } from '@generators/unified/unified-relation-generator'
 import { TypeKind } from '@utils/registry/base-registry'
 
-export class MockFactory {
-	static createMockSchemaComposer(): SchemaComposer {
+export class TestMockFactory {
+	static createSchemaComposer(): SchemaComposer {
 		return new SchemaComposer()
 	}
 
-	static createMockTypeFormatter(): TypeFormatter {
+	static createTypeFormatter(): TypeFormatter {
 		return TypeFormatter.fromOptions('PascalCase', 'camelCase')
 	}
 
-	static createMockSchemaProcessor(): SchemaProcessor {
+	static createSchemaProcessor(): SchemaProcessor {
 		return new SchemaProcessor()
 	}
 
-	static createMockUnifiedTypeMapper(context: BaseGeneratorContext = TestUtils.createMockContext()): UnifiedTypeMapper {
-		const typeFormatter = MockFactory.createMockTypeFormatter()
+	static createUnifiedTypeMapper(context: BaseGeneratorContext = TestFixtures.createContext()): UnifiedTypeMapper {
+		const typeFormatter = TestMockFactory.createTypeFormatter()
 		return new UnifiedTypeMapper(typeFormatter, context.models, context.enums, context.options)
 	}
 
-	static createMockGraphQLRegistry(): GraphQLRegistry {
-		const schemaComposer = MockFactory.createMockSchemaComposer()
+	static createTypeScriptRegistry(): TypeScriptRegistry {
+		return new TypeScriptRegistry()
+	}
+
+	static createGraphQLRegistry(): GraphQLRegistry {
+		const schemaComposer = TestMockFactory.createSchemaComposer()
 		const registry = new GraphQLRegistry(schemaComposer)
 
-		MockFactory.addEssentialScalarTypes(registry)
-
+		TestMockFactory.addEssentialTypes(registry, schemaComposer)
 		registry['syncFromSchemaComposer']()
 
 		return registry
 	}
 
-	private static addEssentialScalarTypes(registry: GraphQLRegistry): void {
+	private static addEssentialTypes(registry: GraphQLRegistry, schemaComposer: SchemaComposer): void {
 		registry.addRelayRequirements()
 
-		const schemaComposer = registry.schemaComposer
+		const scalars = [
+			{ name: 'DateTime', description: 'A date-time string at UTC' },
+			{ name: 'JSON', description: 'The `JSON` scalar type represents JSON values' },
+			{ name: 'Decimal', description: 'An arbitrary-precision Decimal type' },
+		]
 
-		MockFactory.addScalarToRegistry(registry, schemaComposer, 'DateTime', 'A date-time string at UTC')
-		MockFactory.addScalarToRegistry(registry, schemaComposer, 'JSON', 'The `JSON` scalar type represents JSON values')
-		MockFactory.addScalarToRegistry(registry, schemaComposer, 'Decimal', 'An arbitrary-precision Decimal type')
+		scalars.forEach(({ name, description }) => {
+			if (!schemaComposer.has(name)) {
+				const scalarTC = schemaComposer.createScalarTC({ name, description })
+				registry.registerType(name, TypeKind.SCALAR, scalarTC, true)
+			}
+		})
 
-		MockFactory.addFilterInputTypes(schemaComposer)
+		TestMockFactory.addFilterTypes(schemaComposer)
 
 		if (!schemaComposer.has('SortDirection')) {
 			const enumTC = schemaComposer.createEnumTC({
@@ -64,18 +73,7 @@ export class MockFactory {
 		}
 	}
 
-	private static addScalarToRegistry(registry: GraphQLRegistry, schemaComposer: any, name: string, description: string): void {
-		if (!schemaComposer.has(name)) {
-			const scalarTC = schemaComposer.createScalarTC({
-				name,
-				description,
-			})
-
-			registry.registerType(name, TypeKind.SCALAR, scalarTC, true)
-		}
-	}
-
-	private static addFilterInputTypes(schemaComposer: SchemaComposer): void {
+	private static addFilterTypes(schemaComposer: SchemaComposer): void {
 		if (!schemaComposer.has('StringFilterInput')) {
 			schemaComposer.createInputTC({
 				name: 'StringFilterInput',
@@ -150,50 +148,54 @@ export class MockFactory {
 		}
 	}
 
-	static createMockTypeScriptRegistry(): TypeScriptRegistry {
-		return new TypeScriptRegistry()
-	}
-
-	static createMockGraphQLTypeFactories(): GraphQLTypeFactories {
-		const schemaComposer = MockFactory.createMockSchemaComposer()
-		const typeFormatter = MockFactory.createMockTypeFormatter()
+	static createGraphQLTypeFactories(): GraphQLTypeFactories {
+		const schemaComposer = TestMockFactory.createSchemaComposer()
+		const typeFormatter = TestMockFactory.createTypeFormatter()
 		return new GraphQLTypeFactories(schemaComposer, typeFormatter)
 	}
 
-	static createMockOutputStrategy(): MockOutputStrategy {
-		return new MockOutputStrategy()
-	}
-
-	static createMockUnifiedGeneratorContext(context: BaseGeneratorContext = TestUtils.createMockContext()): UnifiedGeneratorContext {
-		return {
-			outputStrategy: MockFactory.createMockOutputStrategy(),
-			options: context.options,
-			models: context.models,
-			enums: context.enums,
-			typeFormatter: MockFactory.createMockTypeFormatter(),
-			attributeProcessor: MockFactory.createMockSchemaProcessor(),
-			typeMapper: MockFactory.createMockUnifiedTypeMapper(context),
-		}
-	}
-
-	static createMockGraphQLContext(context: BaseGeneratorContext = TestUtils.createMockContext()) {
-		const typeFormatter = MockFactory.createMockTypeFormatter()
-		const registry = MockFactory.createMockGraphQLRegistry()
+	static createGraphQLContext(context: BaseGeneratorContext = TestFixtures.createContext()): GeneratorContext {
+		const typeFormatter = TestMockFactory.createTypeFormatter()
+		const registry = TestMockFactory.createGraphQLRegistry()
 		const schemaComposer = registry.schemaComposer
 
 		return {
 			...context,
 			schemaComposer,
-			attributeProcessor: MockFactory.createMockSchemaProcessor(),
+			attributeProcessor: TestMockFactory.createSchemaProcessor(),
 			registry,
 			typeFormatter,
-			typeMapper: MockFactory.createMockUnifiedTypeMapper(context),
+			typeMapper: TestMockFactory.createUnifiedTypeMapper(context),
 			typeFactories: new GraphQLTypeFactories(schemaComposer, typeFormatter),
 		}
 	}
 
-	static createSpyOutputStrategy(): SpyOutputStrategy {
-		return new SpyOutputStrategy()
+	static createUnifiedContext(context: BaseGeneratorContext = TestFixtures.createContext()): UnifiedGeneratorContext {
+		return {
+			outputStrategy: new MockOutputStrategy(),
+			options: context.options,
+			models: context.models,
+			enums: context.enums,
+			typeFormatter: TestMockFactory.createTypeFormatter(),
+			attributeProcessor: TestMockFactory.createSchemaProcessor(),
+			typeMapper: TestMockFactory.createUnifiedTypeMapper(context),
+		}
+	}
+
+	static createSpyUnifiedContext(context: BaseGeneratorContext = TestFixtures.createContext()): UnifiedGeneratorContext & { spy: SpyOutputStrategy } {
+		const spy = new SpyOutputStrategy()
+		const typeFormatter = TestMockFactory.createTypeFormatter()
+
+		return {
+			outputStrategy: spy,
+			options: context.options,
+			models: context.models,
+			enums: context.enums,
+			typeFormatter,
+			attributeProcessor: TestMockFactory.createSchemaProcessor(),
+			typeMapper: TestMockFactory.createUnifiedTypeMapper(context),
+			spy,
+		}
 	}
 }
 
@@ -213,8 +215,9 @@ export class MockOutputStrategy implements OutputStrategy {
 	}
 
 	createConnectionType(typeName: string): string {
-		this.generatedTypes.push(typeName)
-		return typeName
+		const connectionTypeName = `${typeName}Connection`
+		this.generatedTypes.push(connectionTypeName)
+		return connectionTypeName
 	}
 
 	createObjectType(typeName: string, _fields: Record<string, any>, _description?: string): string {
@@ -242,7 +245,7 @@ export class MockOutputStrategy implements OutputStrategy {
 	}
 
 	createCommonFilterTypes(): void {
-		this.generatedTypes.push('StringFilterInput', 'IntFilterInput', 'BooleanFilterInput')
+		this.generatedTypes.push('StringFilterInput', 'NumericFilterInput', 'BooleanFilterInput', 'DateTimeFilterInput')
 	}
 
 	createSortDirectionEnum(): void {
@@ -312,6 +315,16 @@ export class SpyOutputStrategy extends MockOutputStrategy {
 	override createInputType(typeName: string, model: DataModel, inputType: 'create' | 'update', description?: string): string {
 		this.calls.push({ method: 'createInputType', args: [typeName, model, inputType, description] })
 		return super.createInputType(typeName, model, inputType, description)
+	}
+
+	override createQueryArgsInputType(typeName: string, model: DataModel, description?: string): string {
+		this.calls.push({ method: 'createQueryArgsInputType', args: [typeName, model, description] })
+		return super.createQueryArgsInputType(typeName, model, description)
+	}
+
+	override processRelation(relation: RelationField): void {
+		this.calls.push({ method: 'processRelation', args: [relation] })
+		return super.processRelation(relation)
 	}
 
 	override createEnumType(enumType: Enum): string {

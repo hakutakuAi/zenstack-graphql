@@ -1,7 +1,6 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { UnifiedFilterInputGenerator } from '@generators/unified/unified-filter-input-generator'
-import { TestBuilders, ContextBuilder, SpyOutputStrategy } from '../../helpers'
-import { DataModel } from '@zenstackhq/sdk/ast'
+import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
 describe('UnifiedFilterInputGenerator', () => {
 	let generator: UnifiedFilterInputGenerator
@@ -9,30 +8,30 @@ describe('UnifiedFilterInputGenerator', () => {
 	let spyStrategy: SpyOutputStrategy
 
 	beforeEach(() => {
-		const baseContext = ContextBuilder.createBaseContext({
+		const baseContext = TestFixtures.createContext({
 			generateFilters: true,
 			models: [
-				TestBuilders.createDataModel('User', [
-					TestBuilders.createField('id', 'String'),
-					TestBuilders.createField('name', 'String'),
-					TestBuilders.createField('email', 'String'),
-					TestBuilders.createField('age', 'Int'),
-					TestBuilders.createField('isActive', 'Boolean'),
-					TestBuilders.createField('createdAt', 'DateTime'),
-					TestBuilders.createRelationField('posts', 'Post', false, true),
+				TestFixtures.createDataModel('User', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createField('email', 'String'),
+					TestFixtures.createField('age', 'Int'),
+					TestFixtures.createField('isActive', 'Boolean'),
+					TestFixtures.createField('createdAt', 'DateTime'),
+					TestFixtures.createRelationField('posts', 'Post', false, true),
 				]),
-				TestBuilders.createDataModel('Post', [
-					TestBuilders.createField('id', 'String'),
-					TestBuilders.createField('title', 'String'),
-					TestBuilders.createField('content', 'String', true),
-					TestBuilders.createField('published', 'Boolean'),
-					TestBuilders.createField('viewCount', 'Int'),
-					TestBuilders.createRelationField('author', 'User'),
+				TestFixtures.createDataModel('Post', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('title', 'String'),
+					TestFixtures.createField('content', 'String', true),
+					TestFixtures.createField('published', 'Boolean'),
+					TestFixtures.createField('viewCount', 'Int'),
+					TestFixtures.createRelationField('author', 'User'),
 				]),
 			],
 		})
 
-		const spyContext = ContextBuilder.createSpyUnifiedContext(baseContext)
+		const spyContext = TestMockFactory.createSpyUnifiedContext(baseContext)
 		context = spyContext
 		spyStrategy = spyContext.spy
 		generator = new UnifiedFilterInputGenerator(context)
@@ -47,7 +46,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('StringFilterInput')
-			expect(spyStrategy.getGeneratedTypeNames()).toContain('IntFilterInput')
+			expect(spyStrategy.getGeneratedTypeNames()).toContain('NumericFilterInput')
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('BooleanFilterInput')
 		})
 	})
@@ -62,12 +61,12 @@ describe('UnifiedFilterInputGenerator', () => {
 		})
 
 		test('should not generate filters when disabled', () => {
-			const disabledContext = ContextBuilder.createBaseContext({
+			const disabledContext = TestFixtures.createContext({
 				generateFilters: false,
-				models: [TestBuilders.createDataModel('UserFilterInput', [TestBuilders.createField('name', 'String')])],
+				models: [TestFixtures.createDataModel('UserFilterInput', [TestFixtures.createField('name', 'String')])],
 			})
 
-			const disabledUnifiedContext = ContextBuilder.createUnifiedContext(disabledContext)
+			const disabledUnifiedContext = TestMockFactory.createUnifiedContext(disabledContext)
 			const disabledGenerator = new UnifiedFilterInputGenerator(disabledUnifiedContext)
 
 			const result = disabledGenerator.generate()
@@ -85,8 +84,9 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result).toContain('PostFilterInput')
 
 			expect(result).toContain('StringFilterInput')
-			expect(result).toContain('IntFilterInput')
+			expect(result).toContain('NumericFilterInput')
 			expect(result).toContain('BooleanFilterInput')
+			expect(result).toContain('DateTimeFilterInput')
 		})
 
 		test('should respect field visibility rules', () => {
@@ -173,8 +173,8 @@ describe('UnifiedFilterInputGenerator', () => {
 
 	describe('Error Handling', () => {
 		test('should handle empty models gracefully', () => {
-			const emptyContext = ContextBuilder.createUnifiedContext(
-				ContextBuilder.createBaseContext({
+			const emptyContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateFilters: true,
 					models: [],
 				}),
@@ -188,10 +188,10 @@ describe('UnifiedFilterInputGenerator', () => {
 		})
 
 		test('should handle models with no filterable fields gracefully', () => {
-			const noFieldsContext = ContextBuilder.createUnifiedContext(
-				ContextBuilder.createBaseContext({
+			const noFieldsContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateFilters: true,
-					models: [TestBuilders.createDataModel('Empty', [])],
+					models: [TestFixtures.createDataModel('Empty', [])],
 				}),
 			)
 			const noFieldsGenerator = new UnifiedFilterInputGenerator(noFieldsContext)
@@ -203,10 +203,10 @@ describe('UnifiedFilterInputGenerator', () => {
 		})
 
 		test('should handle malformed field types gracefully', () => {
-			const malformedContext = ContextBuilder.createBaseContext({
+			const malformedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [
-					TestBuilders.createDataModel('Test', [
+					TestFixtures.createDataModel('Test', [
 						{
 							$type: 'DataModelField',
 							name: 'invalidField',
@@ -222,7 +222,7 @@ describe('UnifiedFilterInputGenerator', () => {
 				],
 			})
 
-			const malformedUnifiedContext = ContextBuilder.createUnifiedContext(malformedContext)
+			const malformedUnifiedContext = TestMockFactory.createUnifiedContext(malformedContext)
 			const malformedGenerator = new UnifiedFilterInputGenerator(malformedUnifiedContext)
 
 			expect(() => {
@@ -245,14 +245,14 @@ describe('UnifiedFilterInputGenerator', () => {
 		})
 
 		test('should handle custom naming conventions', () => {
-			const customContext = ContextBuilder.createBaseContext({
+			const customContext = TestFixtures.createContext({
 				generateFilters: true,
 				typeNaming: 'camelCase',
 				fieldNaming: 'snake_case',
-				models: [TestBuilders.createDataModel('user_profile', [TestBuilders.createField('first_name', 'String')])],
+				models: [TestFixtures.createDataModel('user_profile', [TestFixtures.createField('first_name', 'String')])],
 			})
 
-			const customUnifiedContext = ContextBuilder.createSpyUnifiedContext(customContext)
+			const customUnifiedContext = TestMockFactory.createSpyUnifiedContext(customContext)
 			const customGenerator = new UnifiedFilterInputGenerator(customUnifiedContext)
 
 			customGenerator.generate()
@@ -324,8 +324,9 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result).toContain('PostFilterInput')
 
 			expect(result).toContain('StringFilterInput')
-			expect(result).toContain('IntFilterInput')
+			expect(result).toContain('NumericFilterInput')
 			expect(result).toContain('BooleanFilterInput')
+			expect(result).toContain('DateTimeFilterInput')
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
 			expect(filterCalls.length).toBe(2)
@@ -347,22 +348,22 @@ describe('UnifiedFilterInputGenerator', () => {
 
 	describe('Complex Scenarios', () => {
 		test('should handle models with mixed field types', () => {
-			const mixedContext = ContextBuilder.createBaseContext({
+			const mixedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [
-					TestBuilders.createDataModel('ComplexModel', [
-						TestBuilders.createField('stringField', 'String'),
-						TestBuilders.createField('intField', 'Int'),
-						TestBuilders.createField('floatField', 'Float'),
-						TestBuilders.createField('boolField', 'Boolean'),
-						TestBuilders.createField('dateField', 'DateTime'),
-						TestBuilders.createField('decimalField', 'Decimal'),
-						TestBuilders.createRelationField('relation', 'OtherModel'),
+					TestFixtures.createDataModel('ComplexModel', [
+						TestFixtures.createField('stringField', 'String'),
+						TestFixtures.createField('intField', 'Int'),
+						TestFixtures.createField('floatField', 'Float'),
+						TestFixtures.createField('boolField', 'Boolean'),
+						TestFixtures.createField('dateField', 'DateTime'),
+						TestFixtures.createField('decimalField', 'Decimal'),
+						TestFixtures.createRelationField('relation', 'OtherModel'),
 					]),
 				],
 			})
 
-			const mixedUnifiedContext = ContextBuilder.createSpyUnifiedContext(mixedContext)
+			const mixedUnifiedContext = TestMockFactory.createSpyUnifiedContext(mixedContext)
 			const mixedGenerator = new UnifiedFilterInputGenerator(mixedUnifiedContext)
 
 			mixedGenerator.generate()
@@ -378,18 +379,18 @@ describe('UnifiedFilterInputGenerator', () => {
 		})
 
 		test('should handle deeply nested type definitions', () => {
-			const nestedContext = ContextBuilder.createBaseContext({
+			const nestedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [
-					TestBuilders.createDataModel('NestedModel', [
-						TestBuilders.createField('level1', 'String'),
-						TestBuilders.createField('level2', 'Int'),
-						TestBuilders.createField('level3', 'Boolean'),
+					TestFixtures.createDataModel('NestedModel', [
+						TestFixtures.createField('level1', 'String'),
+						TestFixtures.createField('level2', 'Int'),
+						TestFixtures.createField('level3', 'Boolean'),
 					]),
 				],
 			})
 
-			const nestedUnifiedContext = ContextBuilder.createUnifiedContext(nestedContext)
+			const nestedUnifiedContext = TestMockFactory.createUnifiedContext(nestedContext)
 			const nestedGenerator = new UnifiedFilterInputGenerator(nestedUnifiedContext)
 
 			expect(() => {

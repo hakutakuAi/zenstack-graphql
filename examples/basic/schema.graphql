@@ -4,15 +4,13 @@ interface Node {
   id: ID!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+"""Essential scalar type: DateTime"""
 scalar DateTime
 
-"""
-The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: JSON)
-"""
+"""Essential scalar type: JSON"""
 scalar JSON
 
-"""An arbitrary-precision Decimal type"""
+"""Essential scalar type: Decimal"""
 scalar Decimal
 
 enum BookCategory {
@@ -253,32 +251,32 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for Author connections"""
-input AuthorSortInput {
+"""Sort input for AuthorSortInput connections"""
+input AuthorSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Book connections"""
-input BookSortInput {
+"""Sort input for BookSortInput connections"""
+input BookSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Review connections"""
-input ReviewSortInput {
+"""Sort input for ReviewSortInput connections"""
+input ReviewSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Article connections"""
-input ArticleSortInput {
+"""Sort input for ArticleSortInput connections"""
+input ArticleSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Publisher connections"""
-input PublisherSortInput {
+"""Sort input for PublisherSortInput connections"""
+input PublisherSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -348,9 +346,6 @@ input DateTimeFilterInput {
 
 """Query arguments for Author with optional filter, sort, and pagination"""
 input AuthorQueryArgs {
-  """Sort options for Author"""
-  sort: AuthorSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -369,9 +364,6 @@ input AuthorQueryArgs {
 
 """Query arguments for Book with optional filter, sort, and pagination"""
 input BookQueryArgs {
-  """Sort options for Book"""
-  sort: BookSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -390,9 +382,6 @@ input BookQueryArgs {
 
 """Query arguments for Review with optional filter, sort, and pagination"""
 input ReviewQueryArgs {
-  """Sort options for Review"""
-  sort: ReviewSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -411,9 +400,6 @@ input ReviewQueryArgs {
 
 """Query arguments for Article with optional filter, sort, and pagination"""
 input ArticleQueryArgs {
-  """Sort options for Article"""
-  sort: ArticleSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -434,9 +420,6 @@ input ArticleQueryArgs {
 Query arguments for Publisher with optional filter, sort, and pagination
 """
 input PublisherQueryArgs {
-  """Sort options for Publisher"""
-  sort: PublisherSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 

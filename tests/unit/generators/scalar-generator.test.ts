@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { UnifiedScalarGenerator } from '@generators/unified/unified-scalar-generator'
 import { OutputFormat } from '@utils/constants'
-import { TestUtils, MockFactory } from '../../helpers'
+import { TestFixtures, TestMockFactory } from '../../helpers'
 import { BaseGeneratorContext } from '@core/types'
 
 describe('Unified Scalar Generator', () => {
@@ -9,8 +9,8 @@ describe('Unified Scalar Generator', () => {
 	let generator: UnifiedScalarGenerator
 
 	beforeEach(() => {
-		context = MockFactory.createMockGraphQLContext(
-			TestUtils.createMockContext({
+		context = TestMockFactory.createGraphQLContext(
+			TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					DateTime: 'DateTime',
@@ -46,7 +46,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should not generate scalars when disabled', () => {
-			const disabledContext = TestUtils.createMockContext({
+			const disabledContext = TestFixtures.createContext({
 				generateScalars: false,
 			})
 			const disabledGenerator = new UnifiedScalarGenerator(disabledContext, OutputFormat.GRAPHQL)
@@ -57,7 +57,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should use custom scalar mappings', () => {
-			const customContext = TestUtils.createMockContext({
+			const customContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					DateTime: 'CustomDateTime',
@@ -89,8 +89,8 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should respect scalar type configuration', () => {
-			const customScalarContext = MockFactory.createMockGraphQLContext(
-				TestUtils.createMockContext({
+			const customScalarContext = TestMockFactory.createGraphQLContext(
+				TestFixtures.createContext({
 					generateScalars: true,
 					scalarTypes: {
 						DateTime: 'Timestamp',
@@ -130,7 +130,7 @@ describe('Unified Scalar Generator', () => {
 
 	describe('Error Handling', () => {
 		test('should handle invalid scalar configurations gracefully', () => {
-			const invalidContext = TestUtils.createMockContext({
+			const invalidContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {},
 			})
@@ -143,7 +143,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle missing scalar types gracefully', () => {
-			const minimalContext = TestUtils.createMockContext({
+			const minimalContext = TestFixtures.createContext({
 				generateScalars: true,
 			})
 			const minimalGenerator = new UnifiedScalarGenerator(minimalContext, OutputFormat.GRAPHQL)
@@ -174,13 +174,13 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should respect generateScalars flag', () => {
-			const enabledContext = MockFactory.createMockGraphQLContext(
-				TestUtils.createMockContext({
+			const enabledContext = TestMockFactory.createGraphQLContext(
+				TestFixtures.createContext({
 					generateScalars: true,
 				}),
 			)
-			const disabledContext = MockFactory.createMockGraphQLContext(
-				TestUtils.createMockContext({
+			const disabledContext = TestMockFactory.createGraphQLContext(
+				TestFixtures.createContext({
 					generateScalars: false,
 				}),
 			)
@@ -198,7 +198,7 @@ describe('Unified Scalar Generator', () => {
 
 	describe('Scalar Type Mappings', () => {
 		test('should handle DateTime scalar mapping', () => {
-			const dateTimeContext = TestUtils.createMockContext({
+			const dateTimeContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					DateTime: 'DateTime',
@@ -211,7 +211,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle JSON scalar mapping', () => {
-			const jsonContext = TestUtils.createMockContext({
+			const jsonContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					Json: 'JSON',
@@ -224,7 +224,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle Decimal scalar mapping', () => {
-			const decimalContext = TestUtils.createMockContext({
+			const decimalContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					Decimal: 'Decimal',
@@ -237,7 +237,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle Bytes scalar mapping', () => {
-			const bytesContext = TestUtils.createMockContext({
+			const bytesContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
 					Bytes: 'String',
@@ -252,7 +252,7 @@ describe('Unified Scalar Generator', () => {
 
 	describe('Edge Cases', () => {
 		test('should handle empty scalar configuration', () => {
-			const emptyContext = TestUtils.createMockContext({
+			const emptyContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {},
 			})
@@ -267,7 +267,7 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle null scalar types gracefully', () => {
-			const nullContext = TestUtils.createMockContext({
+			const nullContext = TestFixtures.createContext({
 				generateScalars: true,
 			})
 
@@ -282,8 +282,8 @@ describe('Unified Scalar Generator', () => {
 		})
 
 		test('should handle mixed valid scalar mappings', () => {
-			const mixedContext = MockFactory.createMockGraphQLContext(
-				TestUtils.createMockContext({
+			const mixedContext = TestMockFactory.createGraphQLContext(
+				TestFixtures.createContext({
 					generateScalars: true,
 					scalarTypes: {
 						DateTime: 'DateTime',

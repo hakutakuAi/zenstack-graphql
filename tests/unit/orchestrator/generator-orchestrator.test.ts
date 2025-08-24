@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { GeneratorOrchestrator } from '@orchestrator/generator-orchestrator'
 import { OutputFormat } from '@utils/constants'
-import { TestUtils, MockFactory } from '../../helpers'
+import { TestFixtures, TestMockFactory } from '../../helpers'
 import { BaseGeneratorContext, GenerationType } from '@core/types'
 
 describe('GeneratorOrchestrator', () => {
@@ -9,24 +9,24 @@ describe('GeneratorOrchestrator', () => {
 	let baseContext: BaseGeneratorContext
 
 	beforeEach(() => {
-		baseContext = TestUtils.createMockContext({
+		baseContext = TestFixtures.createContext({
 			generateScalars: true,
 			generateEnums: true,
 			generateFilters: true,
 			generateSorts: true,
 			connectionTypes: true,
 			includeRelations: true,
-			enums: [TestUtils.createMockEnum('UserRole', ['ADMIN', 'USER', 'MODERATOR']), TestUtils.createMockEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])],
+			enums: [TestFixtures.createEnum('UserRole', ['ADMIN', 'USER', 'MODERATOR']), TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])],
 			models: [
-				TestUtils.createMockDataModel('User', [
-					TestUtils.createMockField('id', 'String'),
-					TestUtils.createMockField('name', 'String'),
-					TestUtils.createMockField('email', 'String'),
+				TestFixtures.createDataModel('User', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createField('email', 'String'),
 				]),
-				TestUtils.createMockDataModel('Post', [
-					TestUtils.createMockField('id', 'String'),
-					TestUtils.createMockField('title', 'String'),
-					TestUtils.createMockRelationField('author', 'User'),
+				TestFixtures.createDataModel('Post', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('title', 'String'),
+					TestFixtures.createRelationField('author', 'User'),
 				]),
 			],
 		})
@@ -77,9 +77,9 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect generateEnums flag', async () => {
-			const contextWithoutEnums = TestUtils.createMockContext({
+			const contextWithoutEnums = TestFixtures.createContext({
 				generateEnums: false,
-				enums: [TestUtils.createMockEnum('Test', ['A', 'B'])],
+				enums: [TestFixtures.createEnum('Test', ['A', 'B'])],
 			})
 			const orchestratorWithoutEnums = new GeneratorOrchestrator(contextWithoutEnums, OutputFormat.GRAPHQL)
 
@@ -89,7 +89,7 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect generateScalars flag', async () => {
-			const contextWithoutScalars = TestUtils.createMockContext({
+			const contextWithoutScalars = TestFixtures.createContext({
 				generateScalars: false,
 			})
 			const orchestratorWithoutScalars = new GeneratorOrchestrator(contextWithoutScalars, OutputFormat.GRAPHQL)
@@ -100,9 +100,9 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect generateFilters flag', async () => {
-			const contextWithoutFilters = TestUtils.createMockContext({
+			const contextWithoutFilters = TestFixtures.createContext({
 				generateFilters: false,
-				models: [TestUtils.createMockDataModel('User')],
+				models: [TestFixtures.createDataModel('User')],
 			})
 			const orchestratorWithoutFilters = new GeneratorOrchestrator(contextWithoutFilters, OutputFormat.GRAPHQL)
 
@@ -112,9 +112,9 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect generateSorts flag', async () => {
-			const contextWithoutSorts = TestUtils.createMockContext({
+			const contextWithoutSorts = TestFixtures.createContext({
 				generateSorts: false,
-				models: [TestUtils.createMockDataModel('User')],
+				models: [TestFixtures.createDataModel('User')],
 			})
 			const orchestratorWithoutSorts = new GeneratorOrchestrator(contextWithoutSorts, OutputFormat.GRAPHQL)
 
@@ -124,9 +124,9 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect connectionTypes flag', async () => {
-			const contextWithoutConnections = TestUtils.createMockContext({
+			const contextWithoutConnections = TestFixtures.createContext({
 				connectionTypes: false,
-				models: [TestUtils.createMockDataModel('User')],
+				models: [TestFixtures.createDataModel('User')],
 			})
 			const orchestratorWithoutConnections = new GeneratorOrchestrator(contextWithoutConnections, OutputFormat.GRAPHQL)
 
@@ -136,9 +136,9 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should respect includeRelations flag', async () => {
-			const contextWithoutRelations = TestUtils.createMockContext({
+			const contextWithoutRelations = TestFixtures.createContext({
 				includeRelations: false,
-				models: [TestUtils.createMockDataModel('User'), TestUtils.createMockDataModel('Post', [TestUtils.createMockRelationField('author', 'User')])],
+				models: [TestFixtures.createDataModel('User'), TestFixtures.createDataModel('Post', [TestFixtures.createRelationField('author', 'User')])],
 			})
 			const orchestratorWithoutRelations = new GeneratorOrchestrator(contextWithoutRelations, OutputFormat.GRAPHQL)
 
@@ -181,7 +181,7 @@ describe('GeneratorOrchestrator', () => {
 
 	describe('Error Handling', () => {
 		test('should handle empty context gracefully', async () => {
-			const emptyContext = TestUtils.createMockContext({
+			const emptyContext = TestFixtures.createContext({
 				models: [],
 				enums: [],
 			})
@@ -195,7 +195,7 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should handle malformed models gracefully', async () => {
-			const malformedContext = TestUtils.createMockContext({
+			const malformedContext = TestFixtures.createContext({
 				models: [],
 			})
 			const malformedOrchestrator = new GeneratorOrchestrator(malformedContext, OutputFormat.GRAPHQL)
@@ -317,7 +317,7 @@ describe('GeneratorOrchestrator', () => {
 
 	describe('Configuration Validation', () => {
 		test('should handle all flags disabled', async () => {
-			const minimalContext = TestUtils.createMockContext({
+			const minimalContext = TestFixtures.createContext({
 				generateScalars: false,
 				generateEnums: false,
 				generateFilters: false,
@@ -334,22 +334,22 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		test('should handle complex model relationships', async () => {
-			const complexContext = TestUtils.createMockContext({
+			const complexContext = TestFixtures.createContext({
 				models: [
-					TestUtils.createMockDataModel('User', [
-						TestUtils.createMockField('id', 'String'),
-						TestUtils.createMockRelationField('posts', 'Post', false, true),
-						TestUtils.createMockRelationField('profile', 'Profile'),
+					TestFixtures.createDataModel('User', [
+						TestFixtures.createField('id', 'String'),
+						TestFixtures.createRelationField('posts', 'Post', false, true),
+						TestFixtures.createRelationField('profile', 'Profile'),
 					]),
-					TestUtils.createMockDataModel('Post', [
-						TestUtils.createMockField('id', 'String'),
-						TestUtils.createMockRelationField('author', 'User'),
-						TestUtils.createMockRelationField('categories', 'Category', false, true),
+					TestFixtures.createDataModel('Post', [
+						TestFixtures.createField('id', 'String'),
+						TestFixtures.createRelationField('author', 'User'),
+						TestFixtures.createRelationField('categories', 'Category', false, true),
 					]),
-					TestUtils.createMockDataModel('Profile', [TestUtils.createMockField('id', 'String'), TestUtils.createMockRelationField('user', 'User')]),
-					TestUtils.createMockDataModel('Category', [
-						TestUtils.createMockField('id', 'String'),
-						TestUtils.createMockRelationField('posts', 'Post', false, true),
+					TestFixtures.createDataModel('Profile', [TestFixtures.createField('id', 'String'), TestFixtures.createRelationField('user', 'User')]),
+					TestFixtures.createDataModel('Category', [
+						TestFixtures.createField('id', 'String'),
+						TestFixtures.createRelationField('posts', 'Post', false, true),
 					]),
 				],
 			})

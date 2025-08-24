@@ -1,23 +1,23 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { UnifiedEnumGenerator } from '@generators/unified/unified-enum-generator'
 import { OutputFormat } from '@utils/constants'
-import { TestUtils, MockFactory } from '../../helpers'
+import { TestFixtures, TestMockFactory } from '../../helpers'
 
 describe('Unified Enum Generator', () => {
 	let context: any
 	let generator: UnifiedEnumGenerator
 
 	beforeEach(() => {
-		const baseContext = TestUtils.createMockContext({
+		const baseContext = TestFixtures.createContext({
 			generateEnums: true,
 			enums: [
-				TestUtils.createMockEnum('UserRole', ['ADMIN', 'USER', 'MODERATOR']),
-				TestUtils.createMockEnum('PostStatus', ['DRAFT', 'PUBLISHED', 'ARCHIVED']),
-				TestUtils.createMockEnum('OrderStatus', ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']),
+				TestFixtures.createEnum('UserRole', ['ADMIN', 'USER', 'MODERATOR']),
+				TestFixtures.createEnum('PostStatus', ['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+				TestFixtures.createEnum('OrderStatus', ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED']),
 			],
 		})
 
-		context = MockFactory.createMockUnifiedGeneratorContext(baseContext)
+		context = TestMockFactory.createUnifiedContext(baseContext)
 		generator = new UnifiedEnumGenerator(context, OutputFormat.GRAPHQL)
 	})
 
@@ -43,10 +43,10 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should not generate enums when disabled', () => {
-			const disabledContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const disabledContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: false,
-					enums: [TestUtils.createMockEnum('UserRole', ['ADMIN', 'USER'])],
+					enums: [TestFixtures.createEnum('UserRole', ['ADMIN', 'USER'])],
 				}),
 			)
 			const disabledGenerator = new UnifiedEnumGenerator(disabledContext, OutputFormat.GRAPHQL)
@@ -74,10 +74,10 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle enum with values', () => {
-			const singleEnumContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const singleEnumContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
-					enums: [TestUtils.createMockEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])],
+					enums: [TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])],
 				}),
 			)
 			const singleGenerator = new UnifiedEnumGenerator(singleEnumContext, OutputFormat.GRAPHQL)
@@ -89,10 +89,10 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle enum without values', () => {
-			const emptyEnumContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const emptyEnumContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
-					enums: [TestUtils.createMockEnum('EmptyEnum', [])],
+					enums: [TestFixtures.createEnum('EmptyEnum', [])],
 				}),
 			)
 			const emptyGenerator = new UnifiedEnumGenerator(emptyEnumContext, OutputFormat.GRAPHQL)
@@ -115,11 +115,11 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle different enum naming', () => {
-			const customContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const customContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					typeNaming: 'camelCase',
-					enums: [TestUtils.createMockEnum('user_role', ['ADMIN', 'USER'])],
+					enums: [TestFixtures.createEnum('user_role', ['ADMIN', 'USER'])],
 				}),
 			)
 			const customGenerator = new UnifiedEnumGenerator(customContext, OutputFormat.TYPE_GRAPHQL)
@@ -133,8 +133,8 @@ describe('Unified Enum Generator', () => {
 
 	describe('Error Handling', () => {
 		test('should handle missing enums gracefully', () => {
-			const emptyContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const emptyContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [],
 				}),
@@ -149,9 +149,9 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle malformed enum gracefully', () => {
-			const malformedEnum = TestUtils.createMockEnum('', [])
-			const malformedContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const malformedEnum = TestFixtures.createEnum('', [])
+			const malformedContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [malformedEnum],
 				}),
@@ -167,13 +167,13 @@ describe('Unified Enum Generator', () => {
 
 	describe('Enum Processing', () => {
 		test('should process all enums', () => {
-			const multiEnumContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const multiEnumContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [
-						TestUtils.createMockEnum('Color', ['RED', 'GREEN', 'BLUE']),
-						TestUtils.createMockEnum('Size', ['SMALL', 'MEDIUM', 'LARGE']),
-						TestUtils.createMockEnum('Category', ['A', 'B', 'C']),
+						TestFixtures.createEnum('Color', ['RED', 'GREEN', 'BLUE']),
+						TestFixtures.createEnum('Size', ['SMALL', 'MEDIUM', 'LARGE']),
+						TestFixtures.createEnum('Category', ['A', 'B', 'C']),
 					],
 				}),
 			)
@@ -185,9 +185,9 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle enums with many values', () => {
-			const manyValuesEnum = TestUtils.createMockEnum('Alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
-			const manyValuesContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const manyValuesEnum = TestFixtures.createEnum('Alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
+			const manyValuesContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [manyValuesEnum],
 				}),
@@ -201,9 +201,9 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle enums with special characters in names', () => {
-			const specialEnum = TestUtils.createMockEnum('Special_Enum_123', ['VALUE_1', 'VALUE_2'])
-			const specialContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const specialEnum = TestFixtures.createEnum('Special_Enum_123', ['VALUE_1', 'VALUE_2'])
+			const specialContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [specialEnum],
 				}),
@@ -260,16 +260,16 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should respect generateEnums flag', () => {
-			const enabledContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const enabledContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
-					enums: [TestUtils.createMockEnum('Test', ['A', 'B'])],
+					enums: [TestFixtures.createEnum('Test', ['A', 'B'])],
 				}),
 			)
-			const disabledContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const disabledContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: false,
-					enums: [TestUtils.createMockEnum('Test', ['A', 'B'])],
+					enums: [TestFixtures.createEnum('Test', ['A', 'B'])],
 				}),
 			)
 
@@ -286,10 +286,10 @@ describe('Unified Enum Generator', () => {
 
 	describe('Edge Cases', () => {
 		test('should handle single enum', () => {
-			const singleContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const singleContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
-					enums: [TestUtils.createMockEnum('Single', ['ONLY'])],
+					enums: [TestFixtures.createEnum('Single', ['ONLY'])],
 				}),
 			)
 			const singleGenerator = new UnifiedEnumGenerator(singleContext, OutputFormat.GRAPHQL)
@@ -300,9 +300,9 @@ describe('Unified Enum Generator', () => {
 		})
 
 		test('should handle enum with duplicate values', () => {
-			const duplicateEnum = TestUtils.createMockEnum('Duplicate', ['A', 'B', 'A', 'C'])
-			const duplicateContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const duplicateEnum = TestFixtures.createEnum('Duplicate', ['A', 'B', 'A', 'C'])
+			const duplicateContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [duplicateEnum],
 				}),
@@ -317,9 +317,9 @@ describe('Unified Enum Generator', () => {
 
 		test('should handle enum with very long names', () => {
 			const longName = 'A'.repeat(100)
-			const longEnum = TestUtils.createMockEnum(longName, ['VALUE'])
-			const longContext = MockFactory.createMockUnifiedGeneratorContext(
-				TestUtils.createMockContext({
+			const longEnum = TestFixtures.createEnum(longName, ['VALUE'])
+			const longContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateEnums: true,
 					enums: [longEnum],
 				}),

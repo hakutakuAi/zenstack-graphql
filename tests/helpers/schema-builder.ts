@@ -1,5 +1,5 @@
 import { DataModel, Enum, Model } from '@zenstackhq/sdk/ast'
-import { TestUtils } from './test-utils'
+import { TestFixtures } from './test-fixtures'
 
 export class SchemaBuilder {
 	private models: DataModel[] = []
@@ -14,12 +14,12 @@ export class SchemaBuilder {
 	}
 
 	addEnum(name: string, values: string[] = []): SchemaBuilder {
-		this.enums.push(TestUtils.createMockEnum(name, values))
+		this.enums.push(TestFixtures.createEnum(name, values))
 		return this
 	}
 
 	build(): Model {
-		return TestUtils.createMockModel(this.models, this.enums)
+		return TestFixtures.createModel(this.models, this.enums)
 	}
 
 	getModels(): DataModel[] {
@@ -133,17 +133,17 @@ export class ModelBuilder {
 	}
 
 	addField(name: string, type: string, optional = false): ModelBuilder {
-		this.fields.push(TestUtils.createMockField(name, type, optional))
+		this.fields.push(TestFixtures.createField(name, type, optional))
 		return this
 	}
 
 	addRelation(name: string, referencedModel: string, optional = false, isArray = false): ModelBuilder {
-		this.fields.push(TestUtils.createMockRelationField(name, referencedModel, optional, isArray))
+		this.fields.push(TestFixtures.createRelationField(name, referencedModel, optional, isArray))
 		return this
 	}
 
 	addAttribute(name: string, args: Array<{ name?: string; value: any }> = []): ModelBuilder {
-		this.attributes.push(TestUtils.createMockAttribute(name, args))
+		this.attributes.push(TestFixtures.createAttribute(name, args))
 		return this
 	}
 
@@ -174,7 +174,7 @@ export class ModelBuilder {
 
 	private build(): DataModel {
 		return {
-			...TestUtils.createMockDataModel(this.name, this.fields),
+			...TestFixtures.createDataModel(this.name, this.fields),
 			attributes: this.attributes,
 		}
 	}
@@ -215,6 +215,6 @@ export class FieldBuilder {
 	}
 
 	build() {
-		return TestUtils.createMockField(this.name, this.type)
+		return TestFixtures.createField(this.name, this.type)
 	}
 }

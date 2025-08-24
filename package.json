@@ -2,7 +2,7 @@
 	"name": "@hakutakuai/zenstack-graphql",
 	"version": "1.2.2",
 	"description": "ZenStack plugin for generating GraphQL schemas",
-	"main": "index.js",
+	"main": "dist/index.js",
 	"module": "index.ts",
 	"homepage": "https://github.com/hakutakuAi/zenstack-graphql",
 	"repository": {
@@ -13,9 +13,10 @@
 		"bun": "^1.0.0"
 	},
 	"files": [
-		"**/*",
-		"!**/*.test.{ts,js}",
-		"!**/node_modules/**"
+		"dist/**/*",
+		"README.md",
+		"LICENSE",
+		"package.json"
 	],
 	"publishConfig": {
 		"access": "public"
@@ -29,7 +30,7 @@
 	],
 	"license": "GPL-3.0",
 	"scripts": {
-		"build": "rm -rf dist && tsc && tsc-alias -p tsconfig.json && cp ./src/plugin.zmodel ./package.json README.md LICENSE ./dist/",
+		"build": "rm -rf dist && tsc && tsc-alias -p tsconfig.json && cp ./src/plugin.zmodel README.md LICENSE ./dist/ && sed 's|\"main\": \"dist/index.js\"|\"main\": \"index.js\"|' package.json > dist/package.json",
 		"generate:basic": "cd ./examples/basic && zenstack generate",
 		"generate:full": "cd ./examples/full-features && zenstack generate",
 		"generate:custom": "cd ./examples/custom-naming && zenstack generate",
@@ -50,7 +51,7 @@
 		"test:type-graphql": "cd ./examples/type-graphql && bun test",
 		"test:advanced-graphql": "cd ./examples/advanced-graphql && bun test",
 		"test:examples": "cd ./examples && bun test",
-		"e2e": "bun run build && bun generate:all && bun test:all",
+		"e2e": "bun run build && bun generate:all && bun test:examples",
 		"push": "cd dist && bun publish --access public",
 		"release": "bun run test:all && bun run publish"
 	},
@@ -71,6 +72,7 @@
 	},
 	"dependencies": {
 		"@prisma/client": "^6.14.0",
+		"@zenstackhq/language": "^2.18.1",
 		"@zenstackhq/runtime": "2.18.1",
 		"@zenstackhq/sdk": "2.18.1",
 		"change-case": "^5.4.4",

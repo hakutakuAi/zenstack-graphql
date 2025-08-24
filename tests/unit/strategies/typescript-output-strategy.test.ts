@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { TypeScriptOutputStrategy } from '@generators/strategies/typescript-output-strategy'
 import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
-import { TestUtils } from '../../helpers'
+import { TestFixtures } from '../../helpers'
 import { CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from '@generators/strategies/output-strategy'
 
 describe('TypeScript Output Strategy', () => {
@@ -135,7 +135,7 @@ describe('TypeScript Output Strategy', () => {
 				return { name: enumType.name, kind: 'Enum' } as any
 			}
 
-			const enumMock = TestUtils.createMockEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
+			const enumMock = TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
 
 			const result = strategy.createEnumType(enumMock)
 
@@ -150,7 +150,7 @@ describe('TypeScript Output Strategy', () => {
 				return { name: enumType.name, kind: 'Enum' } as any
 			}
 
-			const enumMock = TestUtils.createMockEnum('EmptyEnum', [])
+			const enumMock = TestFixtures.createEnum('EmptyEnum', [])
 
 			const result = strategy.createEnumType(enumMock)
 
@@ -159,7 +159,7 @@ describe('TypeScript Output Strategy', () => {
 		})
 
 		test('should handle null enum name', () => {
-			const enumMock = { ...TestUtils.createMockEnum('', ['VALUE']), name: null }
+			const enumMock = { ...TestFixtures.createEnum('', ['VALUE']), name: null }
 
 			const result = strategy.createEnumType(enumMock)
 
@@ -501,7 +501,7 @@ describe('TypeScript Output Strategy', () => {
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
 
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createInputType('UserCreateInput', model, 'create', 'Create input for User')
 
@@ -521,7 +521,7 @@ describe('TypeScript Output Strategy', () => {
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
 
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createInputType('UserUpdateInput', model, 'update')
 
@@ -539,7 +539,7 @@ describe('TypeScript Output Strategy', () => {
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
 
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -561,10 +561,10 @@ describe('TypeScript Output Strategy', () => {
 			}
 
 			const mockField = {
-				...TestUtils.createMockField('name', 'String'),
-				attributes: [TestUtils.createMockAttribute('graphql.filterable'), TestUtils.createMockAttribute('graphql.sortable')],
+				...TestFixtures.createField('name', 'String'),
+				attributes: [TestFixtures.createAttribute('graphql.filterable'), TestFixtures.createAttribute('graphql.sortable')],
 			}
-			const model = TestUtils.createMockDataModel('User', [mockField])
+			const model = TestFixtures.createDataModel('User', [mockField])
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -588,10 +588,10 @@ describe('TypeScript Output Strategy', () => {
 			}
 
 			const mockField = {
-				...TestUtils.createMockField('name', 'String'),
-				attributes: [TestUtils.createMockAttribute('graphql.filterable')],
+				...TestFixtures.createField('name', 'String'),
+				attributes: [TestFixtures.createAttribute('graphql.filterable')],
 			}
-			const model = TestUtils.createMockDataModel('User', [mockField])
+			const model = TestFixtures.createDataModel('User', [mockField])
 
 			strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -610,10 +610,10 @@ describe('TypeScript Output Strategy', () => {
 			}
 
 			const mockField = {
-				...TestUtils.createMockField('name', 'String'),
-				attributes: [TestUtils.createMockAttribute('graphql.sortable')],
+				...TestFixtures.createField('name', 'String'),
+				attributes: [TestFixtures.createAttribute('graphql.sortable')],
 			}
-			const model = TestUtils.createMockDataModel('User', [mockField])
+			const model = TestFixtures.createDataModel('User', [mockField])
 
 			strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -625,7 +625,7 @@ describe('TypeScript Output Strategy', () => {
 		})
 
 		test('should handle description parameter', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model, 'Custom query args description')
 

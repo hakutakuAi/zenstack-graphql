@@ -4,18 +4,15 @@ interface Node {
   id: ID!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+"""Essential scalar type: DateTime"""
 scalar DateTime
 
-"""
-The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: JSON)
-"""
+"""Essential scalar type: JSON"""
 scalar JSON
 
-"""An arbitrary-precision Decimal type"""
+"""Essential scalar type: Decimal"""
 scalar Decimal
 
-"""/// Types of reactions users can leave"""
 enum ReactionType {
   LIKE
   LOVE
@@ -376,8 +373,8 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for Member connections"""
-input MemberSortInput {
+"""Sort input for MemberSortInput connections"""
+input MemberSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -385,14 +382,14 @@ input MemberSortInput {
   birthdate: SortDirection
 }
 
-"""Sort input for UserProfile connections"""
-input UserProfileSortInput {
+"""Sort input for UserProfileSortInput connections"""
+input UserProfileSortInputSortInput {
   """Sort by karmaPoints"""
   karmaPoints: SortDirection
 }
 
-"""Sort input for Post connections"""
-input PostSortInput {
+"""Sort input for PostSortInput connections"""
+input PostSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -403,32 +400,32 @@ input PostSortInput {
   latitude: SortDirection
 }
 
-"""Sort input for Comment connections"""
-input CommentSortInput {
+"""Sort input for CommentSortInput connections"""
+input CommentSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for Reaction connections"""
-input ReactionSortInput {
+"""Sort input for ReactionSortInput connections"""
+input ReactionSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for Follow connections"""
-input FollowSortInput {
+"""Sort input for FollowSortInput connections"""
+input FollowSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for Tag connections"""
-input TagSortInput {
+"""Sort input for TagSortInput connections"""
+input TagSortInputSortInput {
   """Sort by useCount"""
   useCount: SortDirection
 }
 
-"""Sort input for TagsOnPosts connections"""
-input TagsOnPostsSortInput {
+"""Sort input for TagsOnPostsSortInput connections"""
+input TagsOnPostsSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -496,8 +493,8 @@ input DateTimeFilterInput {
   lt: DateTime
 }
 
-"""Filter input type for Member"""
-input MemberFilterInput {
+"""Filter input type for MemberFilterInput"""
+input MemberFilterInputFilterInput {
   """Filter by username"""
   username: StringFilterInput
 
@@ -505,14 +502,14 @@ input MemberFilterInput {
   fullName: StringFilterInput
 
   """Logical AND operation"""
-  AND: [MemberFilterInput!]
+  AND: [MemberFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [MemberFilterInput!]
+  OR: [MemberFilterInputFilterInput!]
 }
 
-"""Filter input type for UserProfile"""
-input UserProfileFilterInput {
+"""Filter input type for UserProfileFilterInput"""
+input UserProfileFilterInputFilterInput {
   """Filter by location"""
   location: StringFilterInput
 
@@ -520,14 +517,14 @@ input UserProfileFilterInput {
   karmaPoints: NumericFilterInput
 
   """Logical AND operation"""
-  AND: [UserProfileFilterInput!]
+  AND: [UserProfileFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [UserProfileFilterInput!]
+  OR: [UserProfileFilterInputFilterInput!]
 }
 
-"""Filter input type for Post"""
-input PostFilterInput {
+"""Filter input type for PostFilterInput"""
+input PostFilterInputFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -538,46 +535,46 @@ input PostFilterInput {
   isPublished: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [PostFilterInput!]
+  AND: [PostFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [PostFilterInput!]
+  OR: [PostFilterInputFilterInput!]
 }
 
-"""Filter input type for Comment"""
-input CommentFilterInput {
+"""Filter input type for CommentFilterInput"""
+input CommentFilterInputFilterInput {
   """Filter by isApproved"""
   isApproved: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [CommentFilterInput!]
+  AND: [CommentFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [CommentFilterInput!]
+  OR: [CommentFilterInputFilterInput!]
 }
 
-"""Filter input type for Follow"""
-input FollowFilterInput {
+"""Filter input type for FollowFilterInput"""
+input FollowFilterInputFilterInput {
   """Filter by isActive"""
   isActive: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [FollowFilterInput!]
+  AND: [FollowFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [FollowFilterInput!]
+  OR: [FollowFilterInputFilterInput!]
 }
 
-"""Filter input type for Tag"""
-input TagFilterInput {
+"""Filter input type for TagFilterInput"""
+input TagFilterInputFilterInput {
   """Filter by name"""
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [TagFilterInput!]
+  AND: [TagFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [TagFilterInput!]
+  OR: [TagFilterInputFilterInput!]
 }
 
 """Query arguments for User with optional filter, sort, and pagination"""
@@ -602,12 +599,6 @@ input UserQueryArgs {
 Query arguments for UserProfile with optional filter, sort, and pagination
 """
 input UserProfileQueryArgs {
-  """Filter conditions for UserProfile"""
-  filter: UserProfileFilterInput
-
-  """Sort options for UserProfile"""
-  sort: UserProfileSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -626,12 +617,6 @@ input UserProfileQueryArgs {
 
 """Query arguments for Post with optional filter, sort, and pagination"""
 input PostQueryArgs {
-  """Filter conditions for Post"""
-  filter: PostFilterInput
-
-  """Sort options for Post"""
-  sort: PostSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -650,12 +635,6 @@ input PostQueryArgs {
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
 input CommentQueryArgs {
-  """Filter conditions for Comment"""
-  filter: CommentFilterInput
-
-  """Sort options for Comment"""
-  sort: CommentSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -692,12 +671,6 @@ input LikeQueryArgs {
 
 """Query arguments for Follow with optional filter, sort, and pagination"""
 input FollowQueryArgs {
-  """Filter conditions for Follow"""
-  filter: FollowFilterInput
-
-  """Sort options for Follow"""
-  sort: FollowSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -716,12 +689,6 @@ input FollowQueryArgs {
 
 """Query arguments for Tag with optional filter, sort, and pagination"""
 input TagQueryArgs {
-  """Filter conditions for Tag"""
-  filter: TagFilterInput
-
-  """Sort options for Tag"""
-  sort: TagSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -742,9 +709,6 @@ input TagQueryArgs {
 Query arguments for TagsOnPosts with optional filter, sort, and pagination
 """
 input TagsOnPostsQueryArgs {
-  """Sort options for TagsOnPosts"""
-  sort: TagsOnPostsSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 

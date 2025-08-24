@@ -233,7 +233,7 @@ registerEnumType(SortDirection, {
 })
 
 @InputType()
-export class UserSortInput {
+export class UserSortInputSortInput {
     @Field(() => SortDirection, { nullable: true })
     createdAt?: SortDirection | undefined;
     @Field(() => SortDirection, { nullable: true })
@@ -241,7 +241,7 @@ export class UserSortInput {
 }
 
 @InputType()
-export class PostSortInput {
+export class PostSortInputSortInput {
     @Field(() => SortDirection, { nullable: true })
     createdAt?: SortDirection | undefined;
     @Field(() => SortDirection, { nullable: true })
@@ -251,19 +251,19 @@ export class PostSortInput {
 }
 
 @InputType()
-export class CategorySortInput {
+export class CategorySortInputSortInput {
     @Field(() => SortDirection, { nullable: true })
     _placeholder?: SortDirection | undefined;
 }
 
 @InputType()
-export class PostCategorySortInput {
+export class PostCategorySortInputSortInput {
     @Field(() => SortDirection, { nullable: true })
     _placeholder?: SortDirection | undefined;
 }
 
 @InputType()
-export class CommentSortInput {
+export class CommentSortInputSortInput {
     @Field(() => SortDirection, { nullable: true })
     createdAt?: SortDirection | undefined;
 }
@@ -319,55 +319,231 @@ export class DateTimeFilterInput {
 }
 
 @InputType()
-export class UserFilterInput {
+export class UserFilterInputFilterInput {
     @Field(() => DateTimeFilterInput, { nullable: true })
     createdAt?: DateTimeFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
     email?: StringFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
     name?: StringFilterInput | undefined;
-    @Field(() => [UserFilterInput!], { nullable: true })
-    AND?: UserFilterInput[] | undefined;
-    @Field(() => [UserFilterInput!], { nullable: true })
-    OR?: UserFilterInput[] | undefined;
+    @Field(() => [UserFilterInputFilterInput!], { nullable: true })
+    AND?: UserFilterInputFilterInput[] | undefined;
+    @Field(() => [UserFilterInputFilterInput!], { nullable: true })
+    OR?: UserFilterInputFilterInput[] | undefined;
 }
 
 @InputType()
-export class PostFilterInput {
+export class PostFilterInputFilterInput {
     @Field(() => DateTimeFilterInput, { nullable: true })
     createdAt?: DateTimeFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
     title?: StringFilterInput | undefined;
     @Field(() => BooleanFilterInput, { nullable: true })
     published?: BooleanFilterInput | undefined;
-    @Field(() => [PostFilterInput!], { nullable: true })
-    AND?: PostFilterInput[] | undefined;
-    @Field(() => [PostFilterInput!], { nullable: true })
-    OR?: PostFilterInput[] | undefined;
+    @Field(() => [PostFilterInputFilterInput!], { nullable: true })
+    AND?: PostFilterInputFilterInput[] | undefined;
+    @Field(() => [PostFilterInputFilterInput!], { nullable: true })
+    OR?: PostFilterInputFilterInput[] | undefined;
 }
 
 @InputType()
-export class CategoryFilterInput {
+export class CategoryFilterInputFilterInput {
     @Field(() => StringFilterInput, { nullable: true })
     name?: StringFilterInput | undefined;
-    @Field(() => [CategoryFilterInput!], { nullable: true })
-    AND?: CategoryFilterInput[] | undefined;
-    @Field(() => [CategoryFilterInput!], { nullable: true })
-    OR?: CategoryFilterInput[] | undefined;
+    @Field(() => [CategoryFilterInputFilterInput!], { nullable: true })
+    AND?: CategoryFilterInputFilterInput[] | undefined;
+    @Field(() => [CategoryFilterInputFilterInput!], { nullable: true })
+    OR?: CategoryFilterInputFilterInput[] | undefined;
+}
+
+@InputType({ description: "Create input for User" })
+export class UserCreateInput {
+    @Field(() => String!)
+    email!: string;
+    @Field(() => String!)
+    name!: string;
+    @Field(() => String, { nullable: true })
+    bio?: string;
+}
+
+@InputType({ description: "Update input for User" })
+export class UserUpdateInput {
+    @Field(() => String)
+    id?: string;
+    @Field(() => DateTime)
+    createdAt?: Date;
+    @Field(() => DateTime)
+    updatedAt?: Date;
+    @Field(() => String)
+    email?: string;
+    @Field(() => String)
+    name?: string;
+    @Field(() => String, { nullable: true })
+    bio?: string;
+}
+
+@InputType({ description: "Create input for Post" })
+export class PostCreateInput {
+    @Field(() => String!)
+    title!: string;
+    @Field(() => String!)
+    content!: string;
+    @Field(() => Boolean!)
+    published!: boolean;
+    @Field(() => Int!)
+    viewCount!: number;
+    @Field(() => String!)
+    authorId!: string;
+}
+
+@InputType({ description: "Update input for Post" })
+export class PostUpdateInput {
+    @Field(() => String)
+    id?: string;
+    @Field(() => DateTime)
+    createdAt?: Date;
+    @Field(() => DateTime)
+    updatedAt?: Date;
+    @Field(() => String)
+    title?: string;
+    @Field(() => String)
+    content?: string;
+    @Field(() => Boolean)
+    published?: boolean;
+    @Field(() => Int)
+    viewCount?: number;
+    @Field(() => String)
+    authorId?: string;
+}
+
+@InputType({ description: "Create input for Category" })
+export class CategoryCreateInput {
+    @Field(() => String!)
+    name!: string;
+    @Field(() => String, { nullable: true })
+    description?: string;
+}
+
+@InputType({ description: "Update input for Category" })
+export class CategoryUpdateInput {
+    @Field(() => String)
+    id?: string;
+    @Field(() => String)
+    name?: string;
+    @Field(() => String, { nullable: true })
+    description?: string;
+}
+
+@InputType({ description: "Create input for CategoryOnPost" })
+export class CategoryOnPostCreateInput {
+    @Field(() => String!)
+    postId!: string;
+    @Field(() => String!)
+    categoryId!: string;
+    @Field(() => DateTime!)
+    assignedAt!: Date;
+}
+
+@InputType({ description: "Update input for CategoryOnPost" })
+export class CategoryOnPostUpdateInput {
+    @Field(() => String)
+    postId?: string;
+    @Field(() => String)
+    categoryId?: string;
+    @Field(() => DateTime)
+    assignedAt?: Date;
+}
+
+@InputType({ description: "Create input for Comment" })
+export class CommentCreateInput {
+    @Field(() => String!)
+    content!: string;
+    @Field(() => String!)
+    postId!: string;
+    @Field(() => String!)
+    authorId!: string;
+}
+
+@InputType({ description: "Update input for Comment" })
+export class CommentUpdateInput {
+    @Field(() => String)
+    id?: string;
+    @Field(() => DateTime)
+    createdAt?: Date;
+    @Field(() => String)
+    content?: string;
+    @Field(() => String)
+    postId?: string;
+    @Field(() => String)
+    authorId?: string;
 }
 
 @InputType()
-export class PostCategoryFilterInput {
-    @Field(() => [PostCategoryFilterInput!], { nullable: true })
-    AND?: PostCategoryFilterInput[] | undefined;
-    @Field(() => [PostCategoryFilterInput!], { nullable: true })
-    OR?: PostCategoryFilterInput[] | undefined;
+export class UserQueryArgs {
+    @Field(() => Int, { nullable: true })
+    first?: number | undefined;
+    @Field(() => String, { nullable: true })
+    after?: string | undefined;
+    @Field(() => Int, { nullable: true })
+    last?: number | undefined;
+    @Field(() => String, { nullable: true })
+    before?: string | undefined;
+    @Field(() => Boolean, { nullable: true })
+    connection?: boolean | undefined;
 }
 
 @InputType()
-export class CommentFilterInput {
-    @Field(() => [CommentFilterInput!], { nullable: true })
-    AND?: CommentFilterInput[] | undefined;
-    @Field(() => [CommentFilterInput!], { nullable: true })
-    OR?: CommentFilterInput[] | undefined;
+export class PostQueryArgs {
+    @Field(() => Int, { nullable: true })
+    first?: number | undefined;
+    @Field(() => String, { nullable: true })
+    after?: string | undefined;
+    @Field(() => Int, { nullable: true })
+    last?: number | undefined;
+    @Field(() => String, { nullable: true })
+    before?: string | undefined;
+    @Field(() => Boolean, { nullable: true })
+    connection?: boolean | undefined;
+}
+
+@InputType()
+export class CategoryQueryArgs {
+    @Field(() => Int, { nullable: true })
+    first?: number | undefined;
+    @Field(() => String, { nullable: true })
+    after?: string | undefined;
+    @Field(() => Int, { nullable: true })
+    last?: number | undefined;
+    @Field(() => String, { nullable: true })
+    before?: string | undefined;
+    @Field(() => Boolean, { nullable: true })
+    connection?: boolean | undefined;
+}
+
+@InputType()
+export class CategoryOnPostQueryArgs {
+    @Field(() => Int, { nullable: true })
+    first?: number | undefined;
+    @Field(() => String, { nullable: true })
+    after?: string | undefined;
+    @Field(() => Int, { nullable: true })
+    last?: number | undefined;
+    @Field(() => String, { nullable: true })
+    before?: string | undefined;
+    @Field(() => Boolean, { nullable: true })
+    connection?: boolean | undefined;
+}
+
+@InputType()
+export class CommentQueryArgs {
+    @Field(() => Int, { nullable: true })
+    first?: number | undefined;
+    @Field(() => String, { nullable: true })
+    after?: string | undefined;
+    @Field(() => Int, { nullable: true })
+    last?: number | undefined;
+    @Field(() => String, { nullable: true })
+    before?: string | undefined;
+    @Field(() => Boolean, { nullable: true })
+    connection?: boolean | undefined;
 }

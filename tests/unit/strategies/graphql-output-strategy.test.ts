@@ -4,7 +4,7 @@ import { GraphQLOutputStrategy } from '@generators/strategies/graphql-output-str
 import { GraphQLRegistry } from '@utils/registry'
 import { GraphQLTypeFactories } from '@utils/schema/graphql-type-factories'
 import { OutputFormat } from '@utils/constants'
-import { TestUtils, MockFactory } from '../../helpers'
+import { TestFixtures, TestMockFactory } from '../../helpers'
 import { CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from '@generators/strategies/output-strategy'
 import { ErrorCategory, PluginError } from '@utils/error'
 import { TypeKind } from '@utils/registry'
@@ -17,12 +17,12 @@ describe('GraphQL Output Strategy', () => {
 	let options: any
 
 	beforeEach(() => {
-		const baseContext = TestUtils.createMockContext({
+		const baseContext = TestFixtures.createContext({
 			outputFormat: OutputFormat.GRAPHQL,
 			scalarTypes: { DateTime: 'DateTime' },
 		})
 
-		const mockContext = MockFactory.createMockGraphQLContext(baseContext)
+		const mockContext = TestMockFactory.createGraphQLContext(baseContext)
 
 		registry = mockContext.registry
 		schemaComposer = mockContext.schemaComposer
@@ -124,7 +124,7 @@ describe('GraphQL Output Strategy', () => {
 
 	describe('Enum Type Creation', () => {
 		test('should create enum type with fields', () => {
-			const enumMock = TestUtils.createMockEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
+			const enumMock = TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
 
 			const result = strategy.createEnumType(enumMock)
 
@@ -133,7 +133,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should return existing enum name if already created', () => {
-			const enumMock = TestUtils.createMockEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
+			const enumMock = TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
 
 			const firstResult = strategy.createEnumType(enumMock)
 			const secondResult = strategy.createEnumType(enumMock)
@@ -143,7 +143,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should handle enum with no fields', () => {
-			const enumMock = TestUtils.createMockEnum('EmptyEnum', [])
+			const enumMock = TestFixtures.createEnum('EmptyEnum', [])
 
 			const result = strategy.createEnumType(enumMock)
 
@@ -153,7 +153,7 @@ describe('GraphQL Output Strategy', () => {
 
 		test('should handle enum with comments', () => {
 			const enumMock = {
-				...TestUtils.createMockEnum('Priority', ['HIGH', 'LOW']),
+				...TestFixtures.createEnum('Priority', ['HIGH', 'LOW']),
 				comments: ['Priority level for tasks'],
 			}
 
@@ -441,7 +441,7 @@ describe('GraphQL Output Strategy', () => {
 
 	describe('Query Args Input Type Creation', () => {
 		test('should create query args input type', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -450,7 +450,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should include pagination fields', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			strategy.createQueryArgsInputType('UserQueryArgs', model)
 
@@ -463,7 +463,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should include filter and sort if they exist', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			strategy.createFilterInputType('User', [{ name: 'name', type: 'String' }])
 			strategy.createSortInputType('User', [{ name: 'name' }])
@@ -476,7 +476,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should return existing if already created', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const firstResult = strategy.createQueryArgsInputType('UserQueryArgs', model)
 			const secondResult = strategy.createQueryArgsInputType('UserQueryArgs', model)
@@ -486,7 +486,7 @@ describe('GraphQL Output Strategy', () => {
 		})
 
 		test('should throw PluginError on creation failure', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 			const mockComposer = {
 				has: () => false,
 				createInputTC: () => {
@@ -589,7 +589,7 @@ describe('GraphQL Output Strategy', () => {
 
 	describe('Input Type Creation', () => {
 		test('should return empty string for createInputType', () => {
-			const model = TestUtils.createMockDataModel('User')
+			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createInputType('UserInput', model, 'create')
 

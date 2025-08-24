@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { TypeFormatter } from '@utils/schema/type-formatter'
-import { TestUtils, SchemaBuilder } from '../../helpers'
+import { TestFixtures, SchemaBuilder } from '../../helpers'
 import { DataModel } from '@zenstackhq/sdk/ast'
 
 describe('Schema Processor', () => {
@@ -13,36 +13,36 @@ describe('Schema Processor', () => {
 		processor = new SchemaProcessor()
 		typeFormatter = TypeFormatter.fromOptions('PascalCase', 'camelCase')
 
-		model = TestUtils.createMockDataModel('User', [
+		model = TestFixtures.createDataModel('User', [
 			{
-				...TestUtils.createMockField('id', 'String'),
+				...TestFixtures.createField('id', 'String'),
 				attributes: [],
 			},
 			{
-				...TestUtils.createMockField('name', 'String'),
-				attributes: [TestUtils.createMockAttribute('@graphql.name', [{ value: 'fullName' }])],
+				...TestFixtures.createField('name', 'String'),
+				attributes: [TestFixtures.createAttribute('@graphql.name', [{ value: 'fullName' }])],
 			},
 			{
-				...TestUtils.createMockField('email', 'String'),
-				attributes: [TestUtils.createMockAttribute('@graphql.ignore')],
+				...TestFixtures.createField('email', 'String'),
+				attributes: [TestFixtures.createAttribute('@graphql.ignore')],
 			},
 			{
-				...TestUtils.createMockField('age', 'Int'),
-				attributes: [TestUtils.createMockAttribute('@graphql.sortable')],
+				...TestFixtures.createField('age', 'Int'),
+				attributes: [TestFixtures.createAttribute('@graphql.sortable')],
 			},
 			{
-				...TestUtils.createMockField('bio', 'String'),
-				attributes: [TestUtils.createMockAttribute('@graphql.filterable')],
+				...TestFixtures.createField('bio', 'String'),
+				attributes: [TestFixtures.createAttribute('@graphql.filterable')],
 			},
 			{
-				...TestUtils.createMockField('score', 'Float'),
-				attributes: [TestUtils.createMockAttribute('@graphql.sortable'), TestUtils.createMockAttribute('@graphql.filterable')],
+				...TestFixtures.createField('score', 'Float'),
+				attributes: [TestFixtures.createAttribute('@graphql.sortable'), TestFixtures.createAttribute('@graphql.filterable')],
 			},
 		])
 
 		model.attributes = [
-			TestUtils.createMockAttribute('@@graphql.name', [{ value: 'UserType' }]),
-			TestUtils.createMockAttribute('@@graphql.description', [{ value: 'A user in the system' }]),
+			TestFixtures.createAttribute('@@graphql.name', [{ value: 'UserType' }]),
+			TestFixtures.createAttribute('@@graphql.description', [{ value: 'A user in the system' }]),
 		]
 	})
 
@@ -63,7 +63,7 @@ describe('Schema Processor', () => {
 		})
 
 		test('should fall back to original model name when no attribute', () => {
-			const simpleModel = TestUtils.createMockDataModel('SimpleUser')
+			const simpleModel = TestFixtures.createDataModel('SimpleUser')
 			const modelChain = processor.model(simpleModel)
 
 			expect(modelChain.name()).toBe('SimpleUser')
@@ -76,15 +76,15 @@ describe('Schema Processor', () => {
 		})
 
 		test('should return undefined for missing description', () => {
-			const simpleModel = TestUtils.createMockDataModel('SimpleUser')
+			const simpleModel = TestFixtures.createDataModel('SimpleUser')
 			const modelChain = processor.model(simpleModel)
 
 			expect(modelChain.description()).toBeUndefined()
 		})
 
 		test('should detect ignored models', () => {
-			const ignoredModel = TestUtils.createMockDataModel('IgnoredUser')
-			ignoredModel.attributes = [TestUtils.createMockAttribute('@@graphql.ignore')]
+			const ignoredModel = TestFixtures.createDataModel('IgnoredUser')
+			ignoredModel.attributes = [TestFixtures.createAttribute('@@graphql.ignore')]
 
 			const modelChain = processor.model(ignoredModel)
 			expect(modelChain.isIgnored()).toBe(true)
@@ -103,7 +103,7 @@ describe('Schema Processor', () => {
 		})
 
 		test('should format original name when no attribute', () => {
-			const simpleModel = TestUtils.createMockDataModel('simpleUser')
+			const simpleModel = TestFixtures.createDataModel('simpleUser')
 			const modelChain = processor.model(simpleModel)
 			const formattedName = modelChain.getFormattedTypeName(typeFormatter)
 
@@ -204,7 +204,7 @@ describe('Schema Processor', () => {
 			]
 
 			for (const testCase of testCases) {
-				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+				const testModel = TestFixtures.createDataModel('TestModel', [TestFixtures.createField(testCase.name, testCase.type)])
 
 				const fieldChain = processor.field(testModel, testCase.name)
 				expect(fieldChain.isSortableType()).toBe(testCase.expected)
@@ -222,7 +222,7 @@ describe('Schema Processor', () => {
 			]
 
 			for (const testCase of testCases) {
-				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+				const testModel = TestFixtures.createDataModel('TestModel', [TestFixtures.createField(testCase.name, testCase.type)])
 
 				const fieldChain = processor.field(testModel, testCase.name)
 				expect(fieldChain.isRangeFilterableType()).toBe(testCase.expected)
@@ -237,7 +237,7 @@ describe('Schema Processor', () => {
 			]
 
 			for (const testCase of testCases) {
-				const testModel = TestUtils.createMockDataModel('TestModel', [TestUtils.createMockField(testCase.name, testCase.type)])
+				const testModel = TestFixtures.createDataModel('TestModel', [TestFixtures.createField(testCase.name, testCase.type)])
 
 				const fieldChain = processor.field(testModel, testCase.name)
 				expect(fieldChain.isStringSearchableType()).toBe(testCase.expected)
@@ -267,7 +267,7 @@ describe('Schema Processor', () => {
 		})
 
 		test('should include relations when requested', () => {
-			const modelWithRelation = TestUtils.createMockDataModel('User', [TestUtils.createMockRelationField('posts', 'Post', false, true)])
+			const modelWithRelation = TestFixtures.createDataModel('User', [TestFixtures.createRelationField('posts', 'Post', false, true)])
 
 			const fieldChain = processor.field(modelWithRelation, 'posts')
 
@@ -275,7 +275,7 @@ describe('Schema Processor', () => {
 		})
 
 		test('should exclude relations when not requested', () => {
-			const modelWithRelation = TestUtils.createMockDataModel('User', [TestUtils.createMockRelationField('posts', 'Post', false, true)])
+			const modelWithRelation = TestFixtures.createDataModel('User', [TestFixtures.createRelationField('posts', 'Post', false, true)])
 
 			const fieldChain = processor.field(modelWithRelation, 'posts')
 
@@ -311,11 +311,11 @@ describe('Schema Processor', () => {
 		})
 
 		test('should handle complex attribute structures', () => {
-			const complexModel = TestUtils.createMockDataModel('Complex', [
+			const complexModel = TestFixtures.createDataModel('Complex', [
 				{
-					...TestUtils.createMockField('priority', 'Int'),
+					...TestFixtures.createField('priority', 'Int'),
 					attributes: [
-						TestUtils.createMockAttribute('@graphql.sortable', [
+						TestFixtures.createAttribute('@graphql.sortable', [
 							{ name: 'enabled', value: true },
 							{ name: 'priority', value: 10 },
 						]),
@@ -332,7 +332,7 @@ describe('Schema Processor', () => {
 
 	describe('Edge Cases', () => {
 		test('should handle empty model', () => {
-			const emptyModel = TestUtils.createMockDataModel('Empty')
+			const emptyModel = TestFixtures.createDataModel('Empty')
 			const modelChain = processor.model(emptyModel)
 
 			expect(modelChain.name()).toBe('Empty')
@@ -341,7 +341,7 @@ describe('Schema Processor', () => {
 		})
 
 		test('should handle model with no fields', () => {
-			const emptyModel = TestUtils.createMockDataModel('Empty')
+			const emptyModel = TestFixtures.createDataModel('Empty')
 			const fieldChain = processor.field(emptyModel, 'nonexistent')
 
 			expect(fieldChain.exists()).toBe(false)
@@ -349,10 +349,10 @@ describe('Schema Processor', () => {
 		})
 
 		test('should handle attributes with no arguments', () => {
-			const simpleModel = TestUtils.createMockDataModel('Simple', [
+			const simpleModel = TestFixtures.createDataModel('Simple', [
 				{
-					...TestUtils.createMockField('active', 'Boolean'),
-					attributes: [TestUtils.createMockAttribute('@graphql.sortable')],
+					...TestFixtures.createField('active', 'Boolean'),
+					attributes: [TestFixtures.createAttribute('@graphql.sortable')],
 				},
 			])
 
@@ -361,9 +361,9 @@ describe('Schema Processor', () => {
 		})
 
 		test('should handle malformed attributes gracefully', () => {
-			const malformedModel = TestUtils.createMockDataModel('Malformed', [
+			const malformedModel = TestFixtures.createDataModel('Malformed', [
 				{
-					...TestUtils.createMockField('broken', 'String'),
+					...TestFixtures.createField('broken', 'String'),
 					attributes: [{ decl: null, args: [] }],
 				},
 			])

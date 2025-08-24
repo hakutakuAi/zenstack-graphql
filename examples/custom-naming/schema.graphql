@@ -4,17 +4,13 @@ interface Node {
   id: ID!
 }
 
-"""
-A date-time string at UTC, such as 2007-12-03T10:15:30Z (custom scalar type: Time)
-"""
-scalar Time
+"""Essential scalar type: DateTime"""
+scalar DateTime
 
-"""
-The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: json)
-"""
-scalar json
+"""Essential scalar type: JSON"""
+scalar JSON
 
-"""An arbitrary-precision Decimal type"""
+"""Essential scalar type: Decimal"""
 scalar Decimal
 
 enum OrderStatus {
@@ -24,6 +20,16 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
 }
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z (custom scalar type: Time)
+"""
+scalar Time
+
+"""
+The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: json)
+"""
+scalar json
 
 type Customer {
   id: String!
@@ -285,38 +291,38 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for Customer connections"""
-input CustomerSortInput {
+"""Sort input for CustomerSortInput connections"""
+input CustomerSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Product connections"""
-input ProductSortInput {
+"""Sort input for ProductSortInput connections"""
+input ProductSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Address connections"""
-input AddressSortInput {
+"""Sort input for AddressSortInput connections"""
+input AddressSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Order connections"""
-input OrderSortInput {
+"""Sort input for OrderSortInput connections"""
+input OrderSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for OrderItem connections"""
-input OrderItemSortInput {
+"""Sort input for OrderItemSortInput connections"""
+input OrderItemSortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Category connections"""
-input CategorySortInput {
+"""Sort input for CategorySortInput connections"""
+input CategorySortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -388,9 +394,6 @@ input TimeFilterInput {
 Query arguments for Customer with optional filter, sort, and pagination
 """
 input CustomerQueryArgs {
-  """Sort options for Customer"""
-  sort: CustomerSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -429,9 +432,6 @@ input ProductItemQueryArgs {
 
 """Query arguments for Address with optional filter, sort, and pagination"""
 input AddressQueryArgs {
-  """Sort options for Address"""
-  sort: AddressSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -450,9 +450,6 @@ input AddressQueryArgs {
 
 """Query arguments for Order with optional filter, sort, and pagination"""
 input OrderQueryArgs {
-  """Sort options for Order"""
-  sort: OrderSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -473,9 +470,6 @@ input OrderQueryArgs {
 Query arguments for OrderItem with optional filter, sort, and pagination
 """
 input OrderItemQueryArgs {
-  """Sort options for OrderItem"""
-  sort: OrderItemSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -496,9 +490,6 @@ input OrderItemQueryArgs {
 Query arguments for Category with optional filter, sort, and pagination
 """
 input CategoryQueryArgs {
-  """Sort options for Category"""
-  sort: CategorySortInput
-
   """Number of items to return from the beginning"""
   first: Int
 

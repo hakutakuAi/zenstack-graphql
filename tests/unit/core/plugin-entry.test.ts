@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import run, { name, description } from '@/index'
 import { PluginError, ErrorCategory } from '@utils/error'
-import { TestUtils, SchemaBuilder } from '../../helpers'
+import { TestFixtures, SchemaBuilder } from '../../helpers'
 import { OutputFormat } from '@utils/constants'
 import { getTestOutputPath } from '../../test-setup'
 
@@ -18,19 +18,19 @@ describe('Plugin Entry Point', () => {
 
 	describe('Model Validation', () => {
 		test('should throw PluginError when model is null', async () => {
-			const options = TestUtils.createMockSdkOptions()
+			const options = TestFixtures.createSdkOptions()
 
 			expect(run(null as any, options)).rejects.toThrow(PluginError)
 		})
 
 		test('should throw PluginError when model is undefined', async () => {
-			const options = TestUtils.createMockSdkOptions()
+			const options = TestFixtures.createSdkOptions()
 
 			expect(run(undefined as any, options)).rejects.toThrow(PluginError)
 		})
 
 		test('should throw validation error with correct category', async () => {
-			const options = TestUtils.createMockSdkOptions()
+			const options = TestFixtures.createSdkOptions()
 
 			try {
 				await run(null as any, options)
@@ -45,7 +45,7 @@ describe('Plugin Entry Point', () => {
 	describe('Options Validation', () => {
 		test('should validate and normalize options', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
-			const options = TestUtils.createMockSdkOptions({
+			const options = TestFixtures.createSdkOptions({
 				output: getTestOutputPath('test-output.graphql'),
 				outputFormat: OutputFormat.GRAPHQL,
 			})
@@ -59,7 +59,7 @@ describe('Plugin Entry Point', () => {
 
 		test('should handle invalid options gracefully', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
-			const options = TestUtils.createMockSdkOptions({
+			const options = TestFixtures.createSdkOptions({
 				outputFormat: 'invalid-format' as any,
 			})
 
@@ -71,7 +71,7 @@ describe('Plugin Entry Point', () => {
 
 			const result = await run(
 				schema,
-				TestUtils.createMockSdkOptions({
+				TestFixtures.createSdkOptions({
 					output: getTestOutputPath('default-output.graphql'),
 				}),
 			)
@@ -87,7 +87,7 @@ describe('Plugin Entry Point', () => {
 
 			const result = await run(
 				testSchema,
-				TestUtils.createMockSdkOptions({
+				TestFixtures.createSdkOptions({
 					output: getTestOutputPath('filtered-models.graphql'),
 				}),
 			)
@@ -106,7 +106,7 @@ describe('Plugin Entry Point', () => {
 
 			const result = await run(
 				schema,
-				TestUtils.createMockSdkOptions({
+				TestFixtures.createSdkOptions({
 					output: getTestOutputPath('enums-context.graphql'),
 				}),
 			)
@@ -118,7 +118,7 @@ describe('Plugin Entry Point', () => {
 	describe('Generation Flow', () => {
 		test('should generate GraphQL SDL format', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
-			const options = TestUtils.createMockSdkOptions({
+			const options = TestFixtures.createSdkOptions({
 				outputFormat: OutputFormat.GRAPHQL,
 			})
 
@@ -130,7 +130,7 @@ describe('Plugin Entry Point', () => {
 
 		test('should generate TypeScript format', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
-			const options = TestUtils.createMockSdkOptions({
+			const options = TestFixtures.createSdkOptions({
 				outputFormat: OutputFormat.TYPE_GRAPHQL,
 			})
 
@@ -144,7 +144,7 @@ describe('Plugin Entry Point', () => {
 	describe('Error Handling', () => {
 		test('should handle generation errors gracefully', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
-			const options = TestUtils.createMockSdkOptions({
+			const options = TestFixtures.createSdkOptions({
 				output: '/invalid/path/that/does/not/exist/schema.graphql',
 			})
 
@@ -152,14 +152,25 @@ describe('Plugin Entry Point', () => {
 		})
 
 		test('should wrap unknown errors as PluginError', async () => {
-			expect(true).toBe(true)
+			const schema = SchemaBuilder.createSimpleUser().build()
+			const options = TestFixtures.createSdkOptions({
+				output: '/invalid/path/schema.graphql',
+			})
+
+			try {
+				await run(schema, options)
+				expect(true).toBe(false)
+			} catch (error) {
+				expect(error).toBeInstanceOf(PluginError)
+				expect((error as PluginError).category).toBe(ErrorCategory.FILE)
+			}
 		})
 
 		test('should provide helpful suggestions in error messages', async () => {
 			try {
 				await run(
 					null as any,
-					TestUtils.createMockSdkOptions({
+					TestFixtures.createSdkOptions({
 						output: getTestOutputPath('null-schema.graphql'),
 					}),
 				)
@@ -182,7 +193,7 @@ describe('Plugin Entry Point', () => {
 		test('should return correct metadata structure', async () => {
 			const result = await run(
 				schema,
-				TestUtils.createMockSdkOptions({
+				TestFixtures.createSdkOptions({
 					output: getTestOutputPath('metadata-structure.graphql'),
 				}),
 			)
@@ -195,7 +206,7 @@ describe('Plugin Entry Point', () => {
 		test('should include generation statistics', async () => {
 			const result = await run(
 				schema,
-				TestUtils.createMockSdkOptions({
+				TestFixtures.createSdkOptions({
 					output: getTestOutputPath('generation-stats.graphql'),
 				}),
 			)
@@ -209,7 +220,7 @@ describe('Plugin Entry Point', () => {
 
 		test('should track output path correctly', async () => {
 			const customOutput = getTestOutputPath('custom-schema.graphql')
-			const result = await run(schema, TestUtils.createMockSdkOptions({ output: customOutput }))
+			const result = await run(schema, TestFixtures.createSdkOptions({ output: customOutput }))
 
 			expect(result.metadata.outputPath).toContain('custom-schema.graphql')
 		})

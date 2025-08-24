@@ -4,15 +4,13 @@ interface Node {
   id: ID!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+"""Essential scalar type: DateTime"""
 scalar DateTime
 
-"""
-The `JSON` scalar type represents JSON values as specified by ECMA-404 (custom scalar type: JSON)
-"""
+"""Essential scalar type: JSON"""
 scalar JSON
 
-"""An arbitrary-precision Decimal type"""
+"""Essential scalar type: Decimal"""
 scalar Decimal
 
 """User of the blog system"""
@@ -236,8 +234,8 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for User connections"""
-input UserSortInput {
+"""Sort input for UserSortInput connections"""
+input UserSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -245,8 +243,8 @@ input UserSortInput {
   updatedAt: SortDirection
 }
 
-"""Sort input for Post connections"""
-input PostSortInput {
+"""Sort input for PostSortInput connections"""
+input PostSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -257,20 +255,20 @@ input PostSortInput {
   viewCount: SortDirection
 }
 
-"""Sort input for Category connections"""
-input CategorySortInput {
+"""Sort input for CategorySortInput connections"""
+input CategorySortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for PostCategory connections"""
-input PostCategorySortInput {
+"""Sort input for PostCategorySortInput connections"""
+input PostCategorySortInputSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for Comment connections"""
-input CommentSortInput {
+"""Sort input for CommentSortInput connections"""
+input CommentSortInputSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
@@ -338,8 +336,8 @@ input DateTimeFilterInput {
   lt: DateTime
 }
 
-"""Filter input type for User"""
-input UserFilterInput {
+"""Filter input type for UserFilterInput"""
+input UserFilterInputFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -350,14 +348,14 @@ input UserFilterInput {
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [UserFilterInput!]
+  AND: [UserFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [UserFilterInput!]
+  OR: [UserFilterInputFilterInput!]
 }
 
-"""Filter input type for Post"""
-input PostFilterInput {
+"""Filter input type for PostFilterInput"""
+input PostFilterInputFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -368,32 +366,26 @@ input PostFilterInput {
   published: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [PostFilterInput!]
+  AND: [PostFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [PostFilterInput!]
+  OR: [PostFilterInputFilterInput!]
 }
 
-"""Filter input type for Category"""
-input CategoryFilterInput {
+"""Filter input type for CategoryFilterInput"""
+input CategoryFilterInputFilterInput {
   """Filter by name"""
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [CategoryFilterInput!]
+  AND: [CategoryFilterInputFilterInput!]
 
   """Logical OR operation"""
-  OR: [CategoryFilterInput!]
+  OR: [CategoryFilterInputFilterInput!]
 }
 
 """Query arguments for User with optional filter, sort, and pagination"""
 input UserQueryArgs {
-  """Filter conditions for User"""
-  filter: UserFilterInput
-
-  """Sort options for User"""
-  sort: UserSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -412,12 +404,6 @@ input UserQueryArgs {
 
 """Query arguments for Post with optional filter, sort, and pagination"""
 input PostQueryArgs {
-  """Filter conditions for Post"""
-  filter: PostFilterInput
-
-  """Sort options for Post"""
-  sort: PostSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -438,12 +424,6 @@ input PostQueryArgs {
 Query arguments for Category with optional filter, sort, and pagination
 """
 input CategoryQueryArgs {
-  """Filter conditions for Category"""
-  filter: CategoryFilterInput
-
-  """Sort options for Category"""
-  sort: CategorySortInput
-
   """Number of items to return from the beginning"""
   first: Int
 
@@ -482,9 +462,6 @@ input CategoryOnPostQueryArgs {
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
 input CommentQueryArgs {
-  """Sort options for Comment"""
-  sort: CommentSortInput
-
   """Number of items to return from the beginning"""
   first: Int
 

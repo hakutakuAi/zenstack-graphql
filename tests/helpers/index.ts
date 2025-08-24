@@ -1,8 +1,5 @@
-export * from './test-utils'
+export { TestFixtures, TestAssertions, TestUtilities } from './test-fixtures'
+export { TestMockFactory, MockOutputStrategy, SpyOutputStrategy, MockGenerator, MockRegistry } from './test-mock-factory'
+export type { MockGenerationResult } from './test-mock-factory'
+
 export * from './schema-builder'
-export * from './test-builders'
-
-export { MockFactory } from './mock-factory'
-export { TestUtils } from './test-utils'
-
-export * from './mock-strategy'

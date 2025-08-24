@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { UnifiedSortInputGenerator } from '@generators/unified/unified-sort-input-generator'
-import { TestBuilders, ContextBuilder, SpyOutputStrategy } from '../../helpers'
+import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
 describe('UnifiedSortInputGenerator', () => {
 	let generator: UnifiedSortInputGenerator
@@ -8,30 +8,30 @@ describe('UnifiedSortInputGenerator', () => {
 	let spyStrategy: SpyOutputStrategy
 
 	beforeEach(() => {
-		const baseContext = ContextBuilder.createBaseContext({
+		const baseContext = TestFixtures.createContext({
 			generateSorts: true,
 			models: [
-				TestBuilders.createDataModel('User', [
-					TestBuilders.createField('id', 'String'),
-					TestBuilders.createField('name', 'String'),
-					TestBuilders.createField('email', 'String'),
-					TestBuilders.createField('age', 'Int'),
-					TestBuilders.createField('isActive', 'Boolean'),
-					TestBuilders.createField('createdAt', 'DateTime'),
-					TestBuilders.createRelationField('posts', 'Post', false, true),
+				TestFixtures.createDataModel('User', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createField('email', 'String'),
+					TestFixtures.createField('age', 'Int'),
+					TestFixtures.createField('isActive', 'Boolean'),
+					TestFixtures.createField('createdAt', 'DateTime'),
+					TestFixtures.createRelationField('posts', 'Post', false, true),
 				]),
-				TestBuilders.createDataModel('Post', [
-					TestBuilders.createField('id', 'String'),
-					TestBuilders.createField('title', 'String'),
-					TestBuilders.createField('content', 'String', true),
-					TestBuilders.createField('published', 'Boolean'),
-					TestBuilders.createField('viewCount', 'Int'),
-					TestBuilders.createRelationField('author', 'User'),
+				TestFixtures.createDataModel('Post', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('title', 'String'),
+					TestFixtures.createField('content', 'String', true),
+					TestFixtures.createField('published', 'Boolean'),
+					TestFixtures.createField('viewCount', 'Int'),
+					TestFixtures.createRelationField('author', 'User'),
 				]),
 			],
 		})
 
-		const spyContext = ContextBuilder.createSpyUnifiedContext(baseContext)
+		const spyContext = TestMockFactory.createSpyUnifiedContext(baseContext)
 		context = spyContext
 		spyStrategy = spyContext.spy
 		generator = new UnifiedSortInputGenerator(context)
@@ -59,12 +59,12 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should not generate sorts when disabled', () => {
-			const disabledContext = ContextBuilder.createBaseContext({
+			const disabledContext = TestFixtures.createContext({
 				generateSorts: false,
-				models: [TestBuilders.createDataModel('User', [TestBuilders.createField('name', 'String')])],
+				models: [TestFixtures.createDataModel('User', [TestFixtures.createField('name', 'String')])],
 			})
 
-			const disabledUnifiedContext = ContextBuilder.createUnifiedContext(disabledContext)
+			const disabledUnifiedContext = TestMockFactory.createUnifiedContext(disabledContext)
 			const disabledGenerator = new UnifiedSortInputGenerator(disabledUnifiedContext)
 
 			const result = disabledGenerator.generate()
@@ -120,12 +120,12 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle models with no sortable fields', () => {
-			const noSortableContext = ContextBuilder.createBaseContext({
+			const noSortableContext = TestFixtures.createContext({
 				generateSorts: true,
-				models: [TestBuilders.createDataModel('EmptyModel', [TestBuilders.createRelationField('relation', 'OtherModel')])],
+				models: [TestFixtures.createDataModel('EmptyModel', [TestFixtures.createRelationField('relation', 'OtherModel')])],
 			})
 
-			const noSortableUnifiedContext = ContextBuilder.createSpyUnifiedContext(noSortableContext)
+			const noSortableUnifiedContext = TestMockFactory.createSpyUnifiedContext(noSortableContext)
 			const noSortableGenerator = new UnifiedSortInputGenerator(noSortableUnifiedContext)
 
 			noSortableGenerator.generate()
@@ -142,8 +142,8 @@ describe('UnifiedSortInputGenerator', () => {
 
 	describe('Error Handling', () => {
 		test('should handle empty models gracefully', () => {
-			const emptyContext = ContextBuilder.createUnifiedContext(
-				ContextBuilder.createBaseContext({
+			const emptyContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateSorts: true,
 					models: [],
 				}),
@@ -157,10 +157,10 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle models with no fields gracefully', () => {
-			const noFieldsContext = ContextBuilder.createUnifiedContext(
-				ContextBuilder.createBaseContext({
+			const noFieldsContext = TestMockFactory.createUnifiedContext(
+				TestFixtures.createContext({
 					generateSorts: true,
-					models: [TestBuilders.createDataModel('Empty', [])],
+					models: [TestFixtures.createDataModel('Empty', [])],
 				}),
 			)
 			const noFieldsGenerator = new UnifiedSortInputGenerator(noFieldsContext)
@@ -172,10 +172,10 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle malformed field types gracefully', () => {
-			const malformedContext = ContextBuilder.createBaseContext({
+			const malformedContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [
-					TestBuilders.createDataModel('Test', [
+					TestFixtures.createDataModel('Test', [
 						{
 							$type: 'DataModelField',
 							name: 'invalidField',
@@ -191,7 +191,7 @@ describe('UnifiedSortInputGenerator', () => {
 				],
 			})
 
-			const malformedUnifiedContext = ContextBuilder.createUnifiedContext(malformedContext)
+			const malformedUnifiedContext = TestMockFactory.createUnifiedContext(malformedContext)
 			const malformedGenerator = new UnifiedSortInputGenerator(malformedUnifiedContext)
 
 			expect(() => {
@@ -214,14 +214,14 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle custom naming conventions', () => {
-			const customContext = ContextBuilder.createBaseContext({
+			const customContext = TestFixtures.createContext({
 				generateSorts: true,
 				typeNaming: 'camelCase',
 				fieldNaming: 'snake_case',
-				models: [TestBuilders.createDataModel('user_profile', [TestBuilders.createField('first_name', 'String')])],
+				models: [TestFixtures.createDataModel('user_profile', [TestFixtures.createField('first_name', 'String')])],
 			})
 
-			const customUnifiedContext = ContextBuilder.createSpyUnifiedContext(customContext)
+			const customUnifiedContext = TestMockFactory.createSpyUnifiedContext(customContext)
 			const customGenerator = new UnifiedSortInputGenerator(customUnifiedContext)
 
 			customGenerator.generate()
@@ -250,22 +250,22 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle different field types for sorting', () => {
-			const mixedContext = ContextBuilder.createBaseContext({
+			const mixedContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [
-					TestBuilders.createDataModel('ComplexModel', [
-						TestBuilders.createField('stringField', 'String'),
-						TestBuilders.createField('intField', 'Int'),
-						TestBuilders.createField('floatField', 'Float'),
-						TestBuilders.createField('boolField', 'Boolean'),
-						TestBuilders.createField('dateField', 'DateTime'),
-						TestBuilders.createField('decimalField', 'Decimal'),
-						TestBuilders.createRelationField('relation', 'OtherModel'),
+					TestFixtures.createDataModel('ComplexModel', [
+						TestFixtures.createField('stringField', 'String'),
+						TestFixtures.createField('intField', 'Int'),
+						TestFixtures.createField('floatField', 'Float'),
+						TestFixtures.createField('boolField', 'Boolean'),
+						TestFixtures.createField('dateField', 'DateTime'),
+						TestFixtures.createField('decimalField', 'Decimal'),
+						TestFixtures.createRelationField('relation', 'OtherModel'),
 					]),
 				],
 			})
 
-			const mixedUnifiedContext = ContextBuilder.createSpyUnifiedContext(mixedContext)
+			const mixedUnifiedContext = TestMockFactory.createSpyUnifiedContext(mixedContext)
 			const mixedGenerator = new UnifiedSortInputGenerator(mixedUnifiedContext)
 
 			mixedGenerator.generate()
@@ -281,6 +281,23 @@ describe('UnifiedSortInputGenerator', () => {
 
 			const stringField = fields.find((f: any) => f.name === 'stringField')
 			expect(stringField).toBeDefined()
+			expect(stringField.description).toContain('Sort by stringField')
+
+			const intField = fields.find((f: any) => f.name === 'intField')
+			expect(intField).toBeDefined()
+			expect(intField.description).toContain('Sort by intField')
+
+			const dateField = fields.find((f: any) => f.name === 'dateField')
+			expect(dateField).toBeDefined()
+			expect(dateField.description).toContain('Sort by dateField')
+
+			const boolField = fields.find((f: any) => f.name === 'boolField')
+			expect(boolField).toBeDefined()
+			expect(boolField.description).toContain('Sort by boolField')
+
+			const expectedFieldNames = ['stringField', 'intField', 'floatField', 'boolField', 'dateField', 'decimalField']
+			const actualFieldNames = fields.map((f: any) => f.name).sort()
+			expect(actualFieldNames).toEqual(expectedFieldNames.sort())
 		})
 	})
 
@@ -317,12 +334,12 @@ describe('UnifiedSortInputGenerator', () => {
 		})
 
 		test('should handle single model correctly', () => {
-			const singleContext = ContextBuilder.createBaseContext({
+			const singleContext = TestFixtures.createContext({
 				generateSorts: true,
-				models: [TestBuilders.createDataModel('Single', [TestBuilders.createField('name', 'String')])],
+				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],
 			})
 
-			const singleUnifiedContext = ContextBuilder.createUnifiedContext(singleContext)
+			const singleUnifiedContext = TestMockFactory.createUnifiedContext(singleContext)
 			const singleGenerator = new UnifiedSortInputGenerator(singleUnifiedContext)
 
 			const result = singleGenerator.generate()

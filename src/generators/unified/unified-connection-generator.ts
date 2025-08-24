@@ -3,7 +3,17 @@ import { UnifiedGeneratorBase } from './unified-generator-base'
 
 export class UnifiedConnectionGenerator extends UnifiedGeneratorBase {
 	protected override beforeGeneration(): void {
-		this.outputStrategy.createPaginationTypes()
+		if (this.options.connectionTypes) {
+			this.outputStrategy.createPaginationTypes()
+		}
+	}
+
+	override generate(): string[] {
+		if (!this.options.connectionTypes) {
+			return []
+		}
+
+		return super.generate()
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
