@@ -24,13 +24,13 @@ enum ProductStatus {
     DRAFT
     PUBLISHED
     ARCHIVED
-    
+	
     @@graphql.description("Product status in the system")
 }
 
 enum ReviewRating {
     ONE
-    TWO  
+    TWO
     THREE
     FOUR
     FIVE

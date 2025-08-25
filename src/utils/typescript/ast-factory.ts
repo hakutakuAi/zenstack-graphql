@@ -197,7 +197,8 @@ registerEnumType(${typeName}, {
 	}
 
 	private getFieldDecoratorArgs(field: DataModelField, fieldType: string): string[] {
-		const args = [`() => ${fieldType}`]
+		const decoratorType = fieldType.replace(/DateTime/g, 'Date')
+		const args = [`() => ${decoratorType}`]
 
 		if (field.type.optional) {
 			args.push('{ nullable: true }')
@@ -222,6 +223,14 @@ registerEnumType(${typeName}, {
 				}
 				return relationTypeName
 			}
+		}
+
+		if (field.type.reference?.ref?.name) {
+			const enumTypeName = this.typeFormatter.formatTypeName(field.type.reference.ref.name)
+			if (field.type.array) {
+				return `[${enumTypeName}]`
+			}
+			return enumTypeName
 		}
 
 		if (field.type.array) {
@@ -280,6 +289,10 @@ registerEnumType(${typeName}, {
 	}
 
 	private getTypeScriptBaseType(field: DataModelField): string {
+		if (field.type.reference?.ref?.name) {
+			return this.typeFormatter.formatTypeName(field.type.reference.ref.name)
+		}
+
 		switch (field.type.type) {
 			case 'String':
 			case 'Bytes':
@@ -381,7 +394,7 @@ registerEnumType(SortDirection, {
 	}
 
 	createSortInputType(modelName: string, fields: Array<{ name: string; description?: string }>): ClassDeclaration {
-		const sortInputName = this.typeFormatter.formatTypeName(`${modelName}SortInput`)
+		const sortInputName = modelName
 
 		const classDeclaration = this.sourceFile.addClass({
 			name: sortInputName,
@@ -710,7 +723,7 @@ registerEnumType(SortDirection, {
 				}
 			}
 
-			return field.type.type && !this.typeMapper?.isRelationField(field)
+			return (field.type.type || field.type.reference) && !this.typeMapper?.isRelationField(field)
 		})
 
 		for (const field of fields) {

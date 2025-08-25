@@ -25,8 +25,7 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	}
 
 	createSortInputType(typeName: string, fields: SortFieldDefinition[]): string {
-		const sortInputName = `${typeName}SortInput`
-
+		const sortInputName = typeName.endsWith('SortInput') ? typeName : `${typeName}SortInput`
 		const sortFields = fields.length === 0 ? [{ name: '_placeholder', description: 'Placeholder field when no sortable fields are available' }] : fields
 
 		this.astFactory.createSortInputType(typeName, sortFields)
@@ -34,7 +33,7 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 	}
 
 	createFilterInputType(typeName: string, fields: FilterFieldDefinition[]): string {
-		const filterInputName = `${typeName}FilterInput`
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
 
 		const astFields = fields.map((field) => ({
 			name: field.name,
@@ -91,19 +90,12 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 
 		const fields: Array<{ name: string; type: string; nullable: boolean }> = []
 
-		// Only add filter and sort if they would exist (based on model attributes)
-		const hasFilterableFields = model.fields.some(field => field.attributes && field.attributes.some(attr => attr.decl?.ref?.name === 'graphql.filterable'))
-		const hasSortableFields = model.fields.some(field => field.attributes && field.attributes.some(attr => attr.decl?.ref?.name === 'graphql.sortable'))
-		
-		if (hasFilterableFields) {
+		if (this.hasType(filterInputName)) {
 			fields.push({ name: 'filter', type: filterInputName, nullable: true })
 		}
-		
-		if (hasSortableFields) {
+		if (this.hasType(sortInputName)) {
 			fields.push({ name: 'sort', type: sortInputName, nullable: true })
 		}
-
-		// Always add pagination fields
 		fields.push(
 			{ name: 'first', type: 'Int', nullable: true },
 			{ name: 'after', type: 'String', nullable: true },

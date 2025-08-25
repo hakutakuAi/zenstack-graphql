@@ -49,7 +49,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 
 		const enumTC = this.schemaComposer.createEnumTC({
 			name: enumName,
-			description: enumType.comments?.[0],
+			description: enumType.documentation || enumType.comments?.[0],
 			values: enumValues,
 		})
 

@@ -6,16 +6,18 @@ import { Context } from './types'
 export class ReviewResolver {
 	@Query(() => Review, { nullable: true })
 	async review(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Review | null> {
-		return ctx.prisma.review.findUnique({
+		const result = await ctx.prisma.review.findUnique({
 			where: { id },
 			include: {
 				product: true,
 			},
 		})
+
+		return result as Review | null
 	}
 
 	@Query(() => ReviewConnection)
-	async reviews(@Arg('args', { nullable: true }) args: ReviewQueryArgs, @Ctx() ctx: Context): Promise<ReviewConnection> {
+	async reviews(@Arg('args', () => ReviewQueryArgs, { nullable: true }) args: ReviewQueryArgs, @Ctx() ctx: Context): Promise<ReviewConnection> {
 		const take = args?.first || 10
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined
@@ -35,7 +37,7 @@ export class ReviewResolver {
 		const nodes = hasNextPage ? reviews.slice(0, -1) : reviews
 
 		const edges = nodes.map((review) => ({
-			node: review,
+			node: review as Review,
 			cursor: review.id,
 		}))
 
@@ -54,24 +56,28 @@ export class ReviewResolver {
 	}
 
 	@Mutation(() => Review)
-	async createReview(@Arg('input') input: ReviewCreateInput, @Ctx() ctx: Context): Promise<Review> {
-		return ctx.prisma.review.create({
+	async createReview(@Arg('input', () => ReviewCreateInput) input: ReviewCreateInput, @Ctx() ctx: Context): Promise<Review> {
+		const result = await ctx.prisma.review.create({
 			data: input,
 			include: {
 				product: true,
 			},
 		})
+
+		return result as Review
 	}
 
 	@Mutation(() => Review)
-	async updateReview(@Arg('id', () => ID) id: string, @Arg('input') input: ReviewUpdateInput, @Ctx() ctx: Context): Promise<Review> {
-		return ctx.prisma.review.update({
+	async updateReview(@Arg('id', () => ID) id: string, @Arg('input', () => ReviewUpdateInput) input: ReviewUpdateInput, @Ctx() ctx: Context): Promise<Review> {
+		const result = await ctx.prisma.review.update({
 			where: { id },
 			data: input,
 			include: {
 				product: true,
 			},
 		})
+
+		return result as Review
 	}
 
 	@Mutation(() => Boolean)

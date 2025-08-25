@@ -118,7 +118,7 @@ export class GeneratorOrchestrator {
 			if (!context.schemaComposer.has(scalarName)) {
 				const scalarTC = context.schemaComposer.createScalarTC({
 					name: scalarName,
-					description: `Essential scalar type: ${scalarName}`,
+					description: scalarName === 'DateTime' ? 'A date-time string at UTC, such as 2007-12-03T10:15:30Z' : `Essential scalar type: ${scalarName}`,
 				})
 				context.registry.registerType(scalarName, TypeKind.SCALAR, scalarTC, true)
 			}

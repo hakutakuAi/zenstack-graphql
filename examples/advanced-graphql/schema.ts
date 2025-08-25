@@ -219,7 +219,7 @@ registerEnumType(SortDirection, {
 })
 
 @InputType()
-export class ProductSortInputSortInput {
+export class ProductSortInput {
     @Field(() => SortDirection, { nullable: true })
     createdAt?: SortDirection | undefined;
     @Field(() => SortDirection, { nullable: true })
@@ -229,7 +229,7 @@ export class ProductSortInputSortInput {
 }
 
 @InputType()
-export class ReviewSortInputSortInput {
+export class ReviewSortInput {
     @Field(() => SortDirection, { nullable: true })
     createdAt?: SortDirection | undefined;
     @Field(() => SortDirection, { nullable: true })
@@ -237,13 +237,13 @@ export class ReviewSortInputSortInput {
 }
 
 @InputType()
-export class TagSortInputSortInput {
+export class TagSortInput {
     @Field(() => SortDirection, { nullable: true })
     _placeholder?: SortDirection | undefined;
 }
 
 @InputType()
-export class ProductTagSortInputSortInput {
+export class ProductTagSortInput {
     @Field(() => SortDirection, { nullable: true })
     _placeholder?: SortDirection | undefined;
 }
@@ -299,7 +299,7 @@ export class DateTimeFilterInput {
 }
 
 @InputType()
-export class ProductFilterInputFilterInput {
+export class ProductFilterInput {
     @Field(() => DateTimeFilterInput, { nullable: true })
     createdAt?: DateTimeFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
@@ -308,14 +308,14 @@ export class ProductFilterInputFilterInput {
     price?: NumericFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
     status?: StringFilterInput | undefined;
-    @Field(() => [ProductFilterInputFilterInput!], { nullable: true })
-    AND?: ProductFilterInputFilterInput[] | undefined;
-    @Field(() => [ProductFilterInputFilterInput!], { nullable: true })
-    OR?: ProductFilterInputFilterInput[] | undefined;
+    @Field(() => [ProductFilterInput!], { nullable: true })
+    AND?: ProductFilterInput[] | undefined;
+    @Field(() => [ProductFilterInput!], { nullable: true })
+    OR?: ProductFilterInput[] | undefined;
 }
 
 @InputType()
-export class ReviewFilterInputFilterInput {
+export class ReviewFilterInput {
     @Field(() => DateTimeFilterInput, { nullable: true })
     createdAt?: DateTimeFilterInput | undefined;
     @Field(() => StringFilterInput, { nullable: true })
@@ -324,20 +324,20 @@ export class ReviewFilterInputFilterInput {
     rating?: StringFilterInput | undefined;
     @Field(() => BooleanFilterInput, { nullable: true })
     verified?: BooleanFilterInput | undefined;
-    @Field(() => [ReviewFilterInputFilterInput!], { nullable: true })
-    AND?: ReviewFilterInputFilterInput[] | undefined;
-    @Field(() => [ReviewFilterInputFilterInput!], { nullable: true })
-    OR?: ReviewFilterInputFilterInput[] | undefined;
+    @Field(() => [ReviewFilterInput!], { nullable: true })
+    AND?: ReviewFilterInput[] | undefined;
+    @Field(() => [ReviewFilterInput!], { nullable: true })
+    OR?: ReviewFilterInput[] | undefined;
 }
 
 @InputType()
-export class TagFilterInputFilterInput {
+export class TagFilterInput {
     @Field(() => StringFilterInput, { nullable: true })
     name?: StringFilterInput | undefined;
-    @Field(() => [TagFilterInputFilterInput!], { nullable: true })
-    AND?: TagFilterInputFilterInput[] | undefined;
-    @Field(() => [TagFilterInputFilterInput!], { nullable: true })
-    OR?: TagFilterInputFilterInput[] | undefined;
+    @Field(() => [TagFilterInput!], { nullable: true })
+    AND?: TagFilterInput[] | undefined;
+    @Field(() => [TagFilterInput!], { nullable: true })
+    OR?: TagFilterInput[] | undefined;
 }
 
 @InputType({ description: "Create input for Product" })
@@ -348,6 +348,8 @@ export class ProductCreateInput {
     description?: string;
     @Field(() => Float!)
     price!: number;
+    @Field(() => ProductStatus!)
+    status!: ProductStatus;
     @Field(() => JSON, { nullable: true })
     metadata?: any;
 }
@@ -356,9 +358,9 @@ export class ProductCreateInput {
 export class ProductUpdateInput {
     @Field(() => String)
     id?: string;
-    @Field(() => DateTime)
+    @Field(() => Date)
     createdAt?: Date;
-    @Field(() => DateTime)
+    @Field(() => Date)
     updatedAt?: Date;
     @Field(() => String)
     name?: string;
@@ -366,6 +368,8 @@ export class ProductUpdateInput {
     description?: string;
     @Field(() => Float)
     price?: number;
+    @Field(() => ProductStatus)
+    status?: ProductStatus;
     @Field(() => JSON, { nullable: true })
     metadata?: any;
 }
@@ -376,6 +380,8 @@ export class ReviewCreateInput {
     title!: string;
     @Field(() => String!)
     content!: string;
+    @Field(() => ReviewRating!)
+    rating!: ReviewRating;
     @Field(() => Boolean!)
     verified!: boolean;
     @Field(() => Int!)
@@ -388,12 +394,14 @@ export class ReviewCreateInput {
 export class ReviewUpdateInput {
     @Field(() => String)
     id?: string;
-    @Field(() => DateTime)
+    @Field(() => Date)
     createdAt?: Date;
     @Field(() => String)
     title?: string;
     @Field(() => String)
     content?: string;
+    @Field(() => ReviewRating)
+    rating?: ReviewRating;
     @Field(() => Boolean)
     verified?: boolean;
     @Field(() => Int)
@@ -426,7 +434,7 @@ export class ProductTagCreateInput {
     productId!: string;
     @Field(() => String!)
     tagId!: string;
-    @Field(() => DateTime!)
+    @Field(() => Date!)
     assignedAt!: Date;
 }
 
@@ -436,12 +444,16 @@ export class ProductTagUpdateInput {
     productId?: string;
     @Field(() => String)
     tagId?: string;
-    @Field(() => DateTime)
+    @Field(() => Date)
     assignedAt?: Date;
 }
 
 @InputType()
 export class ProductQueryArgs {
+    @Field(() => ProductFilterInput, { nullable: true })
+    filter?: ProductFilterInput | undefined;
+    @Field(() => ProductSortInput, { nullable: true })
+    sort?: ProductSortInput | undefined;
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
     @Field(() => String, { nullable: true })
@@ -456,6 +468,10 @@ export class ProductQueryArgs {
 
 @InputType()
 export class ReviewQueryArgs {
+    @Field(() => ReviewFilterInput, { nullable: true })
+    filter?: ReviewFilterInput | undefined;
+    @Field(() => ReviewSortInput, { nullable: true })
+    sort?: ReviewSortInput | undefined;
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
     @Field(() => String, { nullable: true })
@@ -470,6 +486,10 @@ export class ReviewQueryArgs {
 
 @InputType()
 export class TagQueryArgs {
+    @Field(() => TagFilterInput, { nullable: true })
+    filter?: TagFilterInput | undefined;
+    @Field(() => TagSortInput, { nullable: true })
+    sort?: TagSortInput | undefined;
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
     @Field(() => String, { nullable: true })
@@ -484,6 +504,8 @@ export class TagQueryArgs {
 
 @InputType()
 export class ProductTagQueryArgs {
+    @Field(() => ProductTagSortInput, { nullable: true })
+    sort?: ProductTagSortInput | undefined;
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
     @Field(() => String, { nullable: true })

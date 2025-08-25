@@ -6,7 +6,7 @@ import { Context } from './types'
 export class ProductResolver {
 	@Query(() => Product, { nullable: true })
 	async product(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Product | null> {
-		return ctx.prisma.product.findUnique({
+		const result = await ctx.prisma.product.findUnique({
 			where: { id },
 			include: {
 				reviews: true,
@@ -17,10 +17,12 @@ export class ProductResolver {
 				},
 			},
 		})
+
+		return result as Product | null
 	}
 
 	@Query(() => ProductConnection)
-	async products(@Arg('args', { nullable: true }) args: ProductQueryArgs, @Ctx() ctx: Context): Promise<ProductConnection> {
+	async products(@Arg('args', () => ProductQueryArgs, { nullable: true }) args: ProductQueryArgs, @Ctx() ctx: Context): Promise<ProductConnection> {
 		const take = args?.first || 20
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined
@@ -45,7 +47,7 @@ export class ProductResolver {
 		const nodes = hasNextPage ? products.slice(0, -1) : products
 
 		const edges = nodes.map((product, index) => ({
-			node: product,
+			node: product as Product,
 			cursor: product.id,
 		}))
 
@@ -64,8 +66,8 @@ export class ProductResolver {
 	}
 
 	@Mutation(() => Product)
-	async createProduct(@Arg('input') input: ProductCreateInput, @Ctx() ctx: Context): Promise<Product> {
-		return ctx.prisma.product.create({
+	async createProduct(@Arg('input', () => ProductCreateInput) input: ProductCreateInput, @Ctx() ctx: Context): Promise<Product> {
+		const result = await ctx.prisma.product.create({
 			data: input,
 			include: {
 				reviews: true,
@@ -76,11 +78,17 @@ export class ProductResolver {
 				},
 			},
 		})
+
+		return result as Product
 	}
 
 	@Mutation(() => Product)
-	async updateProduct(@Arg('id', () => ID) id: string, @Arg('input') input: ProductUpdateInput, @Ctx() ctx: Context): Promise<Product> {
-		return ctx.prisma.product.update({
+	async updateProduct(
+		@Arg('id', () => ID) id: string,
+		@Arg('input', () => ProductUpdateInput) input: ProductUpdateInput,
+		@Ctx() ctx: Context,
+	): Promise<Product> {
+		const result = await ctx.prisma.product.update({
 			where: { id },
 			data: input,
 			include: {
@@ -92,6 +100,8 @@ export class ProductResolver {
 				},
 			},
 		})
+
+		return result as Product
 	}
 
 	@Mutation(() => Boolean)

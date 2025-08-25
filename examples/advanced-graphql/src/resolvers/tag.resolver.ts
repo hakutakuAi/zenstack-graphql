@@ -6,7 +6,7 @@ import { Context } from './types'
 export class TagResolver {
 	@Query(() => Tag, { nullable: true })
 	async tag(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Tag | null> {
-		return ctx.prisma.tag.findUnique({
+		const result = await ctx.prisma.tag.findUnique({
 			where: { id },
 			include: {
 				products: {
@@ -16,6 +16,8 @@ export class TagResolver {
 				},
 			},
 		})
+
+		return result as Tag | null
 	}
 
 	@Query(() => TagConnection)
@@ -43,7 +45,7 @@ export class TagResolver {
 		const nodes = hasNextPage ? tags.slice(0, -1) : tags
 
 		const edges = nodes.map((tag) => ({
-			node: tag,
+			node: tag as Tag,
 			cursor: tag.id,
 		}))
 
@@ -62,8 +64,8 @@ export class TagResolver {
 	}
 
 	@Mutation(() => Tag)
-	async createTag(@Arg('input') input: TagCreateInput, @Ctx() ctx: Context): Promise<Tag> {
-		return ctx.prisma.tag.create({
+	async createTag(@Arg('input', () => TagCreateInput) input: TagCreateInput, @Ctx() ctx: Context): Promise<Tag> {
+		const result = await ctx.prisma.tag.create({
 			data: input,
 			include: {
 				products: {
@@ -73,11 +75,13 @@ export class TagResolver {
 				},
 			},
 		})
+
+		return result as Tag
 	}
 
 	@Mutation(() => Tag)
-	async updateTag(@Arg('id', () => ID) id: string, @Arg('input') input: TagUpdateInput, @Ctx() ctx: Context): Promise<Tag> {
-		return ctx.prisma.tag.update({
+	async updateTag(@Arg('id', () => ID) id: string, @Arg('input', () => TagUpdateInput) input: TagUpdateInput, @Ctx() ctx: Context): Promise<Tag> {
+		const result = await ctx.prisma.tag.update({
 			where: { id },
 			data: input,
 			include: {
@@ -88,6 +92,8 @@ export class TagResolver {
 				},
 			},
 		})
+
+		return result as Tag
 	}
 
 	@Mutation(() => Boolean)
