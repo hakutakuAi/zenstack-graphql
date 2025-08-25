@@ -236,8 +236,8 @@ describe('UnifiedInputGenerator', () => {
 			expect(inputCalls.length).toBe(2)
 
 			const typeNames = inputCalls.map((call) => call.args[0])
-			expect(typeNames).toContain('user_profileCreateInput')
-			expect(typeNames).toContain('user_profileUpdateInput')
+			expect(typeNames).toContain('userProfileCreateInput')
+			expect(typeNames).toContain('userProfileUpdateInput')
 		})
 	})
 

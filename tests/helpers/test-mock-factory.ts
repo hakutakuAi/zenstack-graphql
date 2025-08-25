@@ -184,7 +184,7 @@ export class TestMockFactory {
 
 	static createSpyUnifiedContext(context: BaseGeneratorContext = TestFixtures.createContext()): UnifiedGeneratorContext & { spy: SpyOutputStrategy } {
 		const spy = new SpyOutputStrategy()
-		const typeFormatter = TestMockFactory.createTypeFormatter()
+		const typeFormatter = TypeFormatter.fromOptions(context.options.typeNaming, context.options.fieldNaming)
 
 		return {
 			outputStrategy: spy,

@@ -559,6 +559,7 @@ describe('TypeScript Output Strategy', () => {
 				createdArgs = { typeName, fields }
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
+			mockASTFactory.hasType = (typeName: string) => ['UserFilterInput', 'UserSortInput'].includes(typeName)
 
 			const mockField = {
 				...TestFixtures.createField('name', 'String'),
@@ -586,6 +587,7 @@ describe('TypeScript Output Strategy', () => {
 				createdArgs = { typeName, fields }
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
+			mockASTFactory.hasType = (typeName: string) => typeName === 'UserFilterInput'
 
 			const mockField = {
 				...TestFixtures.createField('name', 'String'),
@@ -608,6 +610,7 @@ describe('TypeScript Output Strategy', () => {
 				createdArgs = { typeName, fields }
 				return { name: 'MockClass', kind: 'Class' } as any
 			}
+			mockASTFactory.hasType = (typeName: string) => typeName === 'UserSortInput'
 
 			const mockField = {
 				...TestFixtures.createField('name', 'String'),

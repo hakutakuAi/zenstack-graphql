@@ -23,7 +23,7 @@ export class UnifiedInputGenerator extends UnifiedGeneratorBase {
 	private generateCreateInput(model: DataModel): string | null {
 		try {
 			const typeName = this.getFormattedTypeName(model)
-			const inputName = `${typeName}CreateInput`
+			const inputName = this.typeFormatter.formatCreateInputTypeName(typeName)
 			const description = `Create input for ${typeName}`
 
 			return this.outputStrategy.createInputType(inputName, model, 'create', description)
@@ -43,7 +43,7 @@ export class UnifiedInputGenerator extends UnifiedGeneratorBase {
 	private generateUpdateInput(model: DataModel): string | null {
 		try {
 			const typeName = this.getFormattedTypeName(model)
-			const inputName = `${typeName}UpdateInput`
+			const inputName = this.typeFormatter.formatUpdateInputTypeName(typeName)
 			const description = `Update input for ${typeName}`
 
 			return this.outputStrategy.createInputType(inputName, model, 'update', description)

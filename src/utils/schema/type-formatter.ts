@@ -56,6 +56,14 @@ export class TypeFormatter {
 		return this.formatNameWithSuffix(typeName, 'FilterInput')
 	}
 
+	formatCreateInputTypeName(typeName: string): string {
+		return this.formatNameWithSuffix(typeName, 'CreateInput')
+	}
+
+	formatUpdateInputTypeName(typeName: string): string {
+		return this.formatNameWithSuffix(typeName, 'UpdateInput')
+	}
+
 	static fromOptions(typeNaming: TypeNaming, fieldNaming: FieldNaming): TypeFormatter {
 		return new TypeFormatter(typeNaming, fieldNaming)
 	}
