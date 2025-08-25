@@ -118,7 +118,7 @@ export class GeneratorOrchestrator {
 			if (!context.schemaComposer.has(scalarName)) {
 				const scalarTC = context.schemaComposer.createScalarTC({
 					name: scalarName,
-					description: scalarName === 'DateTime' ? 'A date-time string at UTC, such as 2007-12-03T10:15:30Z' : `Essential scalar type: ${scalarName}`,
+					description: this.getScalarDescription(scalarName),
 				})
 				context.registry.registerType(scalarName, TypeKind.SCALAR, scalarTC, true)
 			}
@@ -127,8 +127,11 @@ export class GeneratorOrchestrator {
 		for (const enumType of this.context.enums) {
 			const enumName = enumType.name
 			if (!context.schemaComposer.has(enumName)) {
+				const description = context.attributeProcessor.enum(enumType).description()
+
 				const enumTC = context.schemaComposer.createEnumTC({
 					name: enumName,
+					description,
 					values: enumType.fields.reduce(
 						(acc, field) => {
 							acc[field.name] = { value: field.name }
@@ -244,5 +247,18 @@ export class GeneratorOrchestrator {
 		}
 
 		return results
+	}
+
+	private getScalarDescription(scalarName: string): string {
+		switch (scalarName) {
+			case 'DateTime':
+				return 'A date-time string at UTC, such as 2007-12-03T10:15:30Z'
+			case 'JSON':
+				return 'The `JSON` scalar type represents JSON values'
+			case 'Decimal':
+				return 'An arbitrary-precision Decimal type'
+			default:
+				return `Essential scalar type: ${scalarName}`
+		}
 	}
 }

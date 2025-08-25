@@ -7,10 +7,10 @@ interface Node {
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
-"""Essential scalar type: JSON"""
+"""The `JSON` scalar type represents JSON values"""
 scalar JSON
 
-"""Essential scalar type: Decimal"""
+"""An arbitrary-precision Decimal type"""
 scalar Decimal
 
 enum BookCategory {
@@ -251,32 +251,32 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for AuthorSortInput connections"""
-input AuthorSortInputSortInput {
+"""Sort input for Author connections"""
+input AuthorSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for BookSortInput connections"""
-input BookSortInputSortInput {
+"""Sort input for Book connections"""
+input BookSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for ReviewSortInput connections"""
-input ReviewSortInputSortInput {
+"""Sort input for Review connections"""
+input ReviewSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for ArticleSortInput connections"""
-input ArticleSortInputSortInput {
+"""Sort input for Article connections"""
+input ArticleSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for PublisherSortInput connections"""
-input PublisherSortInputSortInput {
+"""Sort input for Publisher connections"""
+input PublisherSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -356,57 +356,59 @@ input DateTimeFilterInput {
   lte: DateTime
 }
 
-"""Filter input type for AuthorFilterInput (empty - no filterable fields)"""
-input AuthorFilterInputFilterInput {
+"""Filter input type for Author (empty - no filterable fields)"""
+input AuthorFilterInput {
   """Logical AND operation"""
-  AND: [AuthorFilterInputFilterInput!]
+  AND: [AuthorFilterInput!]
 
   """Logical OR operation"""
-  OR: [AuthorFilterInputFilterInput!]
+  OR: [AuthorFilterInput!]
 }
 
-"""Filter input type for BookFilterInput (empty - no filterable fields)"""
-input BookFilterInputFilterInput {
+"""Filter input type for Book (empty - no filterable fields)"""
+input BookFilterInput {
   """Logical AND operation"""
-  AND: [BookFilterInputFilterInput!]
+  AND: [BookFilterInput!]
 
   """Logical OR operation"""
-  OR: [BookFilterInputFilterInput!]
+  OR: [BookFilterInput!]
 }
 
-"""Filter input type for ReviewFilterInput (empty - no filterable fields)"""
-input ReviewFilterInputFilterInput {
+"""Filter input type for Review (empty - no filterable fields)"""
+input ReviewFilterInput {
   """Logical AND operation"""
-  AND: [ReviewFilterInputFilterInput!]
+  AND: [ReviewFilterInput!]
 
   """Logical OR operation"""
-  OR: [ReviewFilterInputFilterInput!]
+  OR: [ReviewFilterInput!]
 }
 
-"""
-Filter input type for ArticleFilterInput (empty - no filterable fields)
-"""
-input ArticleFilterInputFilterInput {
+"""Filter input type for Article (empty - no filterable fields)"""
+input ArticleFilterInput {
   """Logical AND operation"""
-  AND: [ArticleFilterInputFilterInput!]
+  AND: [ArticleFilterInput!]
 
   """Logical OR operation"""
-  OR: [ArticleFilterInputFilterInput!]
+  OR: [ArticleFilterInput!]
 }
 
-"""
-Filter input type for PublisherFilterInput (empty - no filterable fields)
-"""
-input PublisherFilterInputFilterInput {
+"""Filter input type for Publisher (empty - no filterable fields)"""
+input PublisherFilterInput {
   """Logical AND operation"""
-  AND: [PublisherFilterInputFilterInput!]
+  AND: [PublisherFilterInput!]
 
   """Logical OR operation"""
-  OR: [PublisherFilterInputFilterInput!]
+  OR: [PublisherFilterInput!]
 }
 
 """Query arguments for Author with optional filter, sort, and pagination"""
 input AuthorQueryArgs {
+  """Filter conditions for Author"""
+  filter: AuthorFilterInput
+
+  """Sort options for Author"""
+  sort: AuthorSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -425,6 +427,12 @@ input AuthorQueryArgs {
 
 """Query arguments for Book with optional filter, sort, and pagination"""
 input BookQueryArgs {
+  """Filter conditions for Book"""
+  filter: BookFilterInput
+
+  """Sort options for Book"""
+  sort: BookSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -443,6 +451,12 @@ input BookQueryArgs {
 
 """Query arguments for Review with optional filter, sort, and pagination"""
 input ReviewQueryArgs {
+  """Filter conditions for Review"""
+  filter: ReviewFilterInput
+
+  """Sort options for Review"""
+  sort: ReviewSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -461,6 +475,12 @@ input ReviewQueryArgs {
 
 """Query arguments for Article with optional filter, sort, and pagination"""
 input ArticleQueryArgs {
+  """Filter conditions for Article"""
+  filter: ArticleFilterInput
+
+  """Sort options for Article"""
+  sort: ArticleSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -481,6 +501,12 @@ input ArticleQueryArgs {
 Query arguments for Publisher with optional filter, sort, and pagination
 """
 input PublisherQueryArgs {
+  """Filter conditions for Publisher"""
+  filter: PublisherFilterInput
+
+  """Sort options for Publisher"""
+  sort: PublisherSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 

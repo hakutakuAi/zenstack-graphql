@@ -7,10 +7,10 @@ interface Node {
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
-"""Essential scalar type: JSON"""
+"""The `JSON` scalar type represents JSON values"""
 scalar JSON
 
-"""Essential scalar type: Decimal"""
+"""An arbitrary-precision Decimal type"""
 scalar Decimal
 
 enum OrderStatus {
@@ -291,38 +291,38 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for CustomerSortInput connections"""
-input CustomerSortInputSortInput {
+"""Sort input for Customer connections"""
+input CustomerSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for ProductSortInput connections"""
-input ProductSortInputSortInput {
+"""Sort input for Product connections"""
+input ProductSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for AddressSortInput connections"""
-input AddressSortInputSortInput {
+"""Sort input for Address connections"""
+input AddressSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for OrderSortInput connections"""
-input OrderSortInputSortInput {
+"""Sort input for Order connections"""
+input OrderSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for OrderItemSortInput connections"""
-input OrderItemSortInputSortInput {
+"""Sort input for OrderItem connections"""
+input OrderItemSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for CategorySortInput connections"""
-input CategorySortInputSortInput {
+"""Sort input for Category connections"""
+input CategorySortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -402,74 +402,70 @@ input TimeFilterInput {
   lte: Time
 }
 
-"""
-Filter input type for CustomerFilterInput (empty - no filterable fields)
-"""
-input CustomerFilterInputFilterInput {
+"""Filter input type for Customer (empty - no filterable fields)"""
+input CustomerFilterInput {
   """Logical AND operation"""
-  AND: [CustomerFilterInputFilterInput!]
+  AND: [CustomerFilterInput!]
 
   """Logical OR operation"""
-  OR: [CustomerFilterInputFilterInput!]
+  OR: [CustomerFilterInput!]
 }
 
-"""
-Filter input type for ProductFilterInput (empty - no filterable fields)
-"""
-input ProductFilterInputFilterInput {
+"""Filter input type for Product (empty - no filterable fields)"""
+input ProductFilterInput {
   """Logical AND operation"""
-  AND: [ProductFilterInputFilterInput!]
+  AND: [ProductFilterInput!]
 
   """Logical OR operation"""
-  OR: [ProductFilterInputFilterInput!]
+  OR: [ProductFilterInput!]
 }
 
-"""
-Filter input type for AddressFilterInput (empty - no filterable fields)
-"""
-input AddressFilterInputFilterInput {
+"""Filter input type for Address (empty - no filterable fields)"""
+input AddressFilterInput {
   """Logical AND operation"""
-  AND: [AddressFilterInputFilterInput!]
+  AND: [AddressFilterInput!]
 
   """Logical OR operation"""
-  OR: [AddressFilterInputFilterInput!]
+  OR: [AddressFilterInput!]
 }
 
-"""Filter input type for OrderFilterInput (empty - no filterable fields)"""
-input OrderFilterInputFilterInput {
+"""Filter input type for Order (empty - no filterable fields)"""
+input OrderFilterInput {
   """Logical AND operation"""
-  AND: [OrderFilterInputFilterInput!]
+  AND: [OrderFilterInput!]
 
   """Logical OR operation"""
-  OR: [OrderFilterInputFilterInput!]
+  OR: [OrderFilterInput!]
 }
 
-"""
-Filter input type for OrderItemFilterInput (empty - no filterable fields)
-"""
-input OrderItemFilterInputFilterInput {
+"""Filter input type for OrderItem (empty - no filterable fields)"""
+input OrderItemFilterInput {
   """Logical AND operation"""
-  AND: [OrderItemFilterInputFilterInput!]
+  AND: [OrderItemFilterInput!]
 
   """Logical OR operation"""
-  OR: [OrderItemFilterInputFilterInput!]
+  OR: [OrderItemFilterInput!]
 }
 
-"""
-Filter input type for CategoryFilterInput (empty - no filterable fields)
-"""
-input CategoryFilterInputFilterInput {
+"""Filter input type for Category (empty - no filterable fields)"""
+input CategoryFilterInput {
   """Logical AND operation"""
-  AND: [CategoryFilterInputFilterInput!]
+  AND: [CategoryFilterInput!]
 
   """Logical OR operation"""
-  OR: [CategoryFilterInputFilterInput!]
+  OR: [CategoryFilterInput!]
 }
 
 """
 Query arguments for Customer with optional filter, sort, and pagination
 """
 input CustomerQueryArgs {
+  """Filter conditions for Customer"""
+  filter: CustomerFilterInput
+
+  """Sort options for Customer"""
+  sort: CustomerSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -506,6 +502,12 @@ input ProductQueryArgs {
 
 """Query arguments for Address with optional filter, sort, and pagination"""
 input AddressQueryArgs {
+  """Filter conditions for Address"""
+  filter: AddressFilterInput
+
+  """Sort options for Address"""
+  sort: AddressSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -524,6 +526,12 @@ input AddressQueryArgs {
 
 """Query arguments for Order with optional filter, sort, and pagination"""
 input OrderQueryArgs {
+  """Filter conditions for Order"""
+  filter: OrderFilterInput
+
+  """Sort options for Order"""
+  sort: OrderSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -544,6 +552,12 @@ input OrderQueryArgs {
 Query arguments for OrderItem with optional filter, sort, and pagination
 """
 input OrderItemQueryArgs {
+  """Filter conditions for OrderItem"""
+  filter: OrderItemFilterInput
+
+  """Sort options for OrderItem"""
+  sort: OrderItemSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -564,6 +578,12 @@ input OrderItemQueryArgs {
 Query arguments for Category with optional filter, sort, and pagination
 """
 input CategoryQueryArgs {
+  """Filter conditions for Category"""
+  filter: CategoryFilterInput
+
+  """Sort options for Category"""
+  sort: CategorySortInput
+
   """Number of items to return from the beginning"""
   first: Int
 

@@ -7,12 +7,13 @@ interface Node {
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
-"""Essential scalar type: JSON"""
+"""The `JSON` scalar type represents JSON values"""
 scalar JSON
 
-"""Essential scalar type: Decimal"""
+"""An arbitrary-precision Decimal type"""
 scalar Decimal
 
+"""Types of reactions users can leave"""
 enum ReactionType {
   LIKE
   LOVE
@@ -373,8 +374,8 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for MemberSortInput connections"""
-input MemberSortInputSortInput {
+"""Sort input for Member connections"""
+input MemberSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -382,14 +383,14 @@ input MemberSortInputSortInput {
   birthdate: SortDirection
 }
 
-"""Sort input for UserProfileSortInput connections"""
-input UserProfileSortInputSortInput {
+"""Sort input for UserProfile connections"""
+input UserProfileSortInput {
   """Sort by karmaPoints"""
   karmaPoints: SortDirection
 }
 
-"""Sort input for PostSortInput connections"""
-input PostSortInputSortInput {
+"""Sort input for Post connections"""
+input PostSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -400,32 +401,32 @@ input PostSortInputSortInput {
   latitude: SortDirection
 }
 
-"""Sort input for CommentSortInput connections"""
-input CommentSortInputSortInput {
+"""Sort input for Comment connections"""
+input CommentSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for ReactionSortInput connections"""
-input ReactionSortInputSortInput {
+"""Sort input for Reaction connections"""
+input ReactionSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for FollowSortInput connections"""
-input FollowSortInputSortInput {
+"""Sort input for Follow connections"""
+input FollowSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
 
-"""Sort input for TagSortInput connections"""
-input TagSortInputSortInput {
+"""Sort input for Tag connections"""
+input TagSortInput {
   """Sort by useCount"""
   useCount: SortDirection
 }
 
-"""Sort input for TagsOnPostsSortInput connections"""
-input TagsOnPostsSortInputSortInput {
+"""Sort input for TagsOnPosts connections"""
+input TagsOnPostsSortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
@@ -505,8 +506,8 @@ input DateTimeFilterInput {
   lte: DateTime
 }
 
-"""Filter input type for MemberFilterInput"""
-input MemberFilterInputFilterInput {
+"""Filter input type for Member"""
+input MemberFilterInput {
   """Filter by username"""
   username: StringFilterInput
 
@@ -514,14 +515,14 @@ input MemberFilterInputFilterInput {
   fullName: StringFilterInput
 
   """Logical AND operation"""
-  AND: [MemberFilterInputFilterInput!]
+  AND: [MemberFilterInput!]
 
   """Logical OR operation"""
-  OR: [MemberFilterInputFilterInput!]
+  OR: [MemberFilterInput!]
 }
 
-"""Filter input type for UserProfileFilterInput"""
-input UserProfileFilterInputFilterInput {
+"""Filter input type for UserProfile"""
+input UserProfileFilterInput {
   """Filter by location"""
   location: StringFilterInput
 
@@ -529,14 +530,14 @@ input UserProfileFilterInputFilterInput {
   karmaPoints: NumericFilterInput
 
   """Logical AND operation"""
-  AND: [UserProfileFilterInputFilterInput!]
+  AND: [UserProfileFilterInput!]
 
   """Logical OR operation"""
-  OR: [UserProfileFilterInputFilterInput!]
+  OR: [UserProfileFilterInput!]
 }
 
-"""Filter input type for PostFilterInput"""
-input PostFilterInputFilterInput {
+"""Filter input type for Post"""
+input PostFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -547,68 +548,64 @@ input PostFilterInputFilterInput {
   isPublished: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [PostFilterInputFilterInput!]
+  AND: [PostFilterInput!]
 
   """Logical OR operation"""
-  OR: [PostFilterInputFilterInput!]
+  OR: [PostFilterInput!]
 }
 
-"""Filter input type for CommentFilterInput"""
-input CommentFilterInputFilterInput {
+"""Filter input type for Comment"""
+input CommentFilterInput {
   """Filter by isApproved"""
   isApproved: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [CommentFilterInputFilterInput!]
+  AND: [CommentFilterInput!]
 
   """Logical OR operation"""
-  OR: [CommentFilterInputFilterInput!]
+  OR: [CommentFilterInput!]
 }
 
-"""
-Filter input type for ReactionFilterInput (empty - no filterable fields)
-"""
-input ReactionFilterInputFilterInput {
+"""Filter input type for Reaction (empty - no filterable fields)"""
+input ReactionFilterInput {
   """Logical AND operation"""
-  AND: [ReactionFilterInputFilterInput!]
+  AND: [ReactionFilterInput!]
 
   """Logical OR operation"""
-  OR: [ReactionFilterInputFilterInput!]
+  OR: [ReactionFilterInput!]
 }
 
-"""Filter input type for FollowFilterInput"""
-input FollowFilterInputFilterInput {
+"""Filter input type for Follow"""
+input FollowFilterInput {
   """Filter by isActive"""
   isActive: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [FollowFilterInputFilterInput!]
+  AND: [FollowFilterInput!]
 
   """Logical OR operation"""
-  OR: [FollowFilterInputFilterInput!]
+  OR: [FollowFilterInput!]
 }
 
-"""Filter input type for TagFilterInput"""
-input TagFilterInputFilterInput {
+"""Filter input type for Tag"""
+input TagFilterInput {
   """Filter by name"""
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [TagFilterInputFilterInput!]
+  AND: [TagFilterInput!]
 
   """Logical OR operation"""
-  OR: [TagFilterInputFilterInput!]
+  OR: [TagFilterInput!]
 }
 
-"""
-Filter input type for TagsOnPostsFilterInput (empty - no filterable fields)
-"""
-input TagsOnPostsFilterInputFilterInput {
+"""Filter input type for TagsOnPosts (empty - no filterable fields)"""
+input TagsOnPostsFilterInput {
   """Logical AND operation"""
-  AND: [TagsOnPostsFilterInputFilterInput!]
+  AND: [TagsOnPostsFilterInput!]
 
   """Logical OR operation"""
-  OR: [TagsOnPostsFilterInputFilterInput!]
+  OR: [TagsOnPostsFilterInput!]
 }
 
 """Query arguments for Member with optional filter, sort, and pagination"""
@@ -633,6 +630,12 @@ input MemberQueryArgs {
 Query arguments for UserProfile with optional filter, sort, and pagination
 """
 input UserProfileQueryArgs {
+  """Filter conditions for UserProfile"""
+  filter: UserProfileFilterInput
+
+  """Sort options for UserProfile"""
+  sort: UserProfileSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -651,6 +654,12 @@ input UserProfileQueryArgs {
 
 """Query arguments for Post with optional filter, sort, and pagination"""
 input PostQueryArgs {
+  """Filter conditions for Post"""
+  filter: PostFilterInput
+
+  """Sort options for Post"""
+  sort: PostSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -669,6 +678,12 @@ input PostQueryArgs {
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
 input CommentQueryArgs {
+  """Filter conditions for Comment"""
+  filter: CommentFilterInput
+
+  """Sort options for Comment"""
+  sort: CommentSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -707,6 +722,12 @@ input ReactionQueryArgs {
 
 """Query arguments for Follow with optional filter, sort, and pagination"""
 input FollowQueryArgs {
+  """Filter conditions for Follow"""
+  filter: FollowFilterInput
+
+  """Sort options for Follow"""
+  sort: FollowSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -725,6 +746,12 @@ input FollowQueryArgs {
 
 """Query arguments for Tag with optional filter, sort, and pagination"""
 input TagQueryArgs {
+  """Filter conditions for Tag"""
+  filter: TagFilterInput
+
+  """Sort options for Tag"""
+  sort: TagSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -745,6 +772,12 @@ input TagQueryArgs {
 Query arguments for TagsOnPosts with optional filter, sort, and pagination
 """
 input TagsOnPostsQueryArgs {
+  """Filter conditions for TagsOnPosts"""
+  filter: TagsOnPostsFilterInput
+
+  """Sort options for TagsOnPosts"""
+  sort: TagsOnPostsSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 

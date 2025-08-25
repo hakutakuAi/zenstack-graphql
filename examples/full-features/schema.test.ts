@@ -27,7 +27,7 @@ describe('Full Features Example', () => {
 		expect(member.getDescription()).toBe('Platform member with social interactions')
 
 		const reactionTypeETC = schemaComposer.getETC('ReactionType')
-		expect(reactionTypeETC.getDescription()).toBe('/// Types of reactions users can leave')
+		expect(reactionTypeETC.getDescription()).toBe('Types of reactions users can leave')
 	})
 
 	test('Model is ignored via @@graphql.ignore', () => {

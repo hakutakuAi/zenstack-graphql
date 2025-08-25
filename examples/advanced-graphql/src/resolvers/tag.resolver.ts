@@ -21,7 +21,7 @@ export class TagResolver {
 	}
 
 	@Query(() => TagConnection)
-	async tags(@Arg('args', { nullable: true }) args: TagQueryArgs, @Ctx() ctx: Context): Promise<TagConnection> {
+	async tags(@Arg('args', () => TagQueryArgs, { nullable: true }) args: TagQueryArgs, @Ctx() ctx: Context): Promise<TagConnection> {
 		const take = args?.first || 50
 		const skip = args?.after ? 1 : 0
 		const cursor = args?.after ? { id: args.after } : undefined

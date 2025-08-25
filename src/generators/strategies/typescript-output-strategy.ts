@@ -28,7 +28,7 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 		const sortInputName = typeName.endsWith('SortInput') ? typeName : `${typeName}SortInput`
 		const sortFields = fields.length === 0 ? [{ name: '_placeholder', description: 'Placeholder field when no sortable fields are available' }] : fields
 
-		this.astFactory.createSortInputType(typeName, sortFields)
+		this.astFactory.createSortInputType(sortInputName, sortFields)
 		return sortInputName
 	}
 

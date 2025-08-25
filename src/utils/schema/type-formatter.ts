@@ -40,27 +40,55 @@ export class TypeFormatter {
 		return `${this.formatTypeName(typeName)}${suffix}`
 	}
 
+	appendSuffix(formattedTypeName: string, suffix: string): string {
+		return `${formattedTypeName}${suffix}`
+	}
+
 	formatConnectionTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('Connection')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'Connection')
 	}
 
 	formatEdgeTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('Edge')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'Edge')
 	}
 
 	formatSortInputTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('SortInput')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'SortInput')
 	}
 
 	formatFilterInputTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('FilterInput')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'FilterInput')
 	}
 
 	formatCreateInputTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('CreateInput')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'CreateInput')
 	}
 
 	formatUpdateInputTypeName(typeName: string): string {
+		// Safety check: prevent double suffixes
+		if (typeName.endsWith('UpdateInput')) {
+			return typeName
+		}
 		return this.formatNameWithSuffix(typeName, 'UpdateInput')
 	}
 

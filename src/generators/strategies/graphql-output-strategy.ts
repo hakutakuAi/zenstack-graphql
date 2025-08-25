@@ -58,7 +58,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	createSortInputType(typeName: string, fields: SortFieldDefinition[]): string {
-		const sortInputName = `${typeName}SortInput`
+		const sortInputName = typeName.endsWith('SortInput') ? typeName : `${typeName}SortInput`
 
 		if (this.schemaComposer.has(sortInputName)) {
 			return sortInputName
@@ -84,7 +84,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	createFilterInputType(typeName: string, fields: FilterFieldDefinition[]): string {
-		const filterInputName = `${typeName}FilterInput`
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
 
 		if (this.schemaComposer.has(filterInputName)) {
 			return filterInputName
@@ -123,7 +123,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	createEmptyFilterInputType(typeName: string): string {
-		const filterInputName = `${typeName}FilterInput`
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
 
 		if (this.schemaComposer.has(filterInputName)) {
 			return filterInputName
@@ -195,7 +195,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	}
 
 	createConnectionType(typeName: string): string {
-		const connectionName = `${typeName}Connection`
+		const connectionName = typeName.endsWith('Connection') ? typeName : `${typeName}Connection`
 
 		if (this.schemaComposer.has(connectionName)) {
 			return connectionName

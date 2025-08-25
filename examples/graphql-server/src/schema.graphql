@@ -7,10 +7,10 @@ interface Node {
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
-"""Essential scalar type: JSON"""
+"""The `JSON` scalar type represents JSON values"""
 scalar JSON
 
-"""Essential scalar type: Decimal"""
+"""An arbitrary-precision Decimal type"""
 scalar Decimal
 
 """User of the blog system"""
@@ -234,8 +234,8 @@ enum SortDirection {
   DESC
 }
 
-"""Sort input for UserSortInput connections"""
-input UserSortInputSortInput {
+"""Sort input for User connections"""
+input UserSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -243,8 +243,8 @@ input UserSortInputSortInput {
   updatedAt: SortDirection
 }
 
-"""Sort input for PostSortInput connections"""
-input PostSortInputSortInput {
+"""Sort input for Post connections"""
+input PostSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 
@@ -255,20 +255,20 @@ input PostSortInputSortInput {
   viewCount: SortDirection
 }
 
-"""Sort input for CategorySortInput connections"""
-input CategorySortInputSortInput {
+"""Sort input for Category connections"""
+input CategorySortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for PostCategorySortInput connections"""
-input PostCategorySortInputSortInput {
+"""Sort input for PostCategory connections"""
+input PostCategorySortInput {
   """Placeholder field when no sortable fields are available"""
   _placeholder: SortDirection
 }
 
-"""Sort input for CommentSortInput connections"""
-input CommentSortInputSortInput {
+"""Sort input for Comment connections"""
+input CommentSortInput {
   """Sort by createdAt"""
   createdAt: SortDirection
 }
@@ -348,8 +348,8 @@ input DateTimeFilterInput {
   lte: DateTime
 }
 
-"""Filter input type for UserFilterInput"""
-input UserFilterInputFilterInput {
+"""Filter input type for User"""
+input UserFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -360,14 +360,14 @@ input UserFilterInputFilterInput {
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [UserFilterInputFilterInput!]
+  AND: [UserFilterInput!]
 
   """Logical OR operation"""
-  OR: [UserFilterInputFilterInput!]
+  OR: [UserFilterInput!]
 }
 
-"""Filter input type for PostFilterInput"""
-input PostFilterInputFilterInput {
+"""Filter input type for Post"""
+input PostFilterInput {
   """Filter by createdAt"""
   createdAt: DateTimeFilterInput
 
@@ -378,48 +378,50 @@ input PostFilterInputFilterInput {
   published: BooleanFilterInput
 
   """Logical AND operation"""
-  AND: [PostFilterInputFilterInput!]
+  AND: [PostFilterInput!]
 
   """Logical OR operation"""
-  OR: [PostFilterInputFilterInput!]
+  OR: [PostFilterInput!]
 }
 
-"""Filter input type for CategoryFilterInput"""
-input CategoryFilterInputFilterInput {
+"""Filter input type for Category"""
+input CategoryFilterInput {
   """Filter by name"""
   name: StringFilterInput
 
   """Logical AND operation"""
-  AND: [CategoryFilterInputFilterInput!]
+  AND: [CategoryFilterInput!]
 
   """Logical OR operation"""
-  OR: [CategoryFilterInputFilterInput!]
+  OR: [CategoryFilterInput!]
 }
 
-"""
-Filter input type for PostCategoryFilterInput (empty - no filterable fields)
-"""
-input PostCategoryFilterInputFilterInput {
+"""Filter input type for PostCategory (empty - no filterable fields)"""
+input PostCategoryFilterInput {
   """Logical AND operation"""
-  AND: [PostCategoryFilterInputFilterInput!]
+  AND: [PostCategoryFilterInput!]
 
   """Logical OR operation"""
-  OR: [PostCategoryFilterInputFilterInput!]
+  OR: [PostCategoryFilterInput!]
 }
 
-"""
-Filter input type for CommentFilterInput (empty - no filterable fields)
-"""
-input CommentFilterInputFilterInput {
+"""Filter input type for Comment (empty - no filterable fields)"""
+input CommentFilterInput {
   """Logical AND operation"""
-  AND: [CommentFilterInputFilterInput!]
+  AND: [CommentFilterInput!]
 
   """Logical OR operation"""
-  OR: [CommentFilterInputFilterInput!]
+  OR: [CommentFilterInput!]
 }
 
 """Query arguments for User with optional filter, sort, and pagination"""
 input UserQueryArgs {
+  """Filter conditions for User"""
+  filter: UserFilterInput
+
+  """Sort options for User"""
+  sort: UserSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -438,6 +440,12 @@ input UserQueryArgs {
 
 """Query arguments for Post with optional filter, sort, and pagination"""
 input PostQueryArgs {
+  """Filter conditions for Post"""
+  filter: PostFilterInput
+
+  """Sort options for Post"""
+  sort: PostSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -458,6 +466,12 @@ input PostQueryArgs {
 Query arguments for Category with optional filter, sort, and pagination
 """
 input CategoryQueryArgs {
+  """Filter conditions for Category"""
+  filter: CategoryFilterInput
+
+  """Sort options for Category"""
+  sort: CategorySortInput
+
   """Number of items to return from the beginning"""
   first: Int
 
@@ -496,6 +510,12 @@ input PostCategoryQueryArgs {
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
 input CommentQueryArgs {
+  """Filter conditions for Comment"""
+  filter: CommentFilterInput
+
+  """Sort options for Comment"""
+  sort: CommentSortInput
+
   """Number of items to return from the beginning"""
   first: Int
 

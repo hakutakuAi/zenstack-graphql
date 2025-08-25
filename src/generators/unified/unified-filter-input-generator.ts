@@ -21,17 +21,17 @@ export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
-		const typeName = this.getFormattedTypeName(model)
 		const filterFields = this.getFilterableFields(model)
-		const filterInputTypeName = this.typeFormatter.formatFilterInputTypeName(typeName)
 
+		// Get the custom name (or model name) and pass raw name to output strategy
+		// Let the output strategy handle the formatting via TypeFactories
+		const customName = this.attributeProcessor.model(model).name()
+		
 		if (filterFields.length === 0) {
-			this.outputStrategy.createEmptyFilterInputType(filterInputTypeName)
+			return this.outputStrategy.createEmptyFilterInputType(customName)
 		} else {
-			this.outputStrategy.createFilterInputType(filterInputTypeName, filterFields)
+			return this.outputStrategy.createFilterInputType(customName, filterFields)
 		}
-
-		return filterInputTypeName
 	}
 
 	protected override processResults(results: string[]): string[] {

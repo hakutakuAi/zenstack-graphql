@@ -17,11 +17,12 @@ export class UnifiedConnectionGenerator extends UnifiedGeneratorBase {
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
-		const typeName = this.getFormattedTypeName(model)
+		// Get the custom name (or model name) and pass raw name to output strategy
+		// Let the output strategy handle the formatting via TypeFactories
+		const customName = this.attributeProcessor.model(model).name()
+		const connectionName = this.outputStrategy.createConnectionType(customName)
 
-		const connectionName = this.outputStrategy.createConnectionType(typeName)
-
-		return this.typeFormatter.formatConnectionTypeName(typeName)
+		return connectionName
 	}
 
 	protected override processResults(results: string[]): string[] {

@@ -1,4 +1,4 @@
-import { AttributeArg, DataModel, DataModelField, DataModelAttribute, DataModelFieldAttribute } from '@zenstackhq/sdk/ast'
+import { AttributeArg, DataModel, DataModelField, DataModelAttribute, DataModelFieldAttribute, Enum } from '@zenstackhq/sdk/ast'
 import { TypeFormatter } from './type-formatter'
 
 type AttributeType = DataModelAttribute | DataModelFieldAttribute | undefined
@@ -165,4 +165,19 @@ export class SchemaProcessor {
 		}
 		return undefined
 	}
+
+	enum(enumType: Enum): EnumAttributeChain {
+		const getAttrValue = <T>(attrName: string, getter: AttributeGetter<T>, argName?: string): T | undefined => {
+			const attr = this.findAttribute(enumType.attributes, attrName)
+			return getter(attr, argName)
+		}
+
+		return {
+			description: (): string | undefined => getAttrValue('@@graphql.description', this.getStringValue),
+		}
+	}
+}
+
+interface EnumAttributeChain {
+	description(): string | undefined
 }
