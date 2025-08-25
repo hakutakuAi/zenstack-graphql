@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
 import { fetch } from 'bun'
-import { server, prismaClient } from './src/server'
+import { server, prismaClient } from '../src/server'
 
 const TEST_PORT = 4568
 const GRAPHQL_ENDPOINT = `http://localhost:${TEST_PORT}/graphql`

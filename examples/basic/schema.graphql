@@ -292,8 +292,14 @@ input NumericFilterInput {
   """Greater than the given value"""
   gt: Float
 
+  """Greater than or equal to the given value"""
+  gte: Float
+
   """Less than the given value"""
   lt: Float
+
+  """Less than or equal to the given value"""
+  lte: Float
 }
 
 """Input type for string filtering operations"""
@@ -340,8 +346,63 @@ input DateTimeFilterInput {
   """Greater than the given value"""
   gt: DateTime
 
+  """Greater than or equal to the given value"""
+  gte: DateTime
+
   """Less than the given value"""
   lt: DateTime
+
+  """Less than or equal to the given value"""
+  lte: DateTime
+}
+
+"""Filter input type for AuthorFilterInput (empty - no filterable fields)"""
+input AuthorFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [AuthorFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [AuthorFilterInputFilterInput!]
+}
+
+"""Filter input type for BookFilterInput (empty - no filterable fields)"""
+input BookFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [BookFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [BookFilterInputFilterInput!]
+}
+
+"""Filter input type for ReviewFilterInput (empty - no filterable fields)"""
+input ReviewFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [ReviewFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ReviewFilterInputFilterInput!]
+}
+
+"""
+Filter input type for ArticleFilterInput (empty - no filterable fields)
+"""
+input ArticleFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [ArticleFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ArticleFilterInputFilterInput!]
+}
+
+"""
+Filter input type for PublisherFilterInput (empty - no filterable fields)
+"""
+input PublisherFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [PublisherFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [PublisherFilterInputFilterInput!]
 }
 
 """Query arguments for Author with optional filter, sort, and pagination"""

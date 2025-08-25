@@ -284,8 +284,14 @@ input NumericFilterInput {
   """Greater than the given value"""
   gt: Float
 
+  """Greater than or equal to the given value"""
+  gte: Float
+
   """Less than the given value"""
   lt: Float
+
+  """Less than or equal to the given value"""
+  lte: Float
 }
 
 """Input type for string filtering operations"""
@@ -332,8 +338,14 @@ input DateTimeFilterInput {
   """Greater than the given value"""
   gt: DateTime
 
+  """Greater than or equal to the given value"""
+  gte: DateTime
+
   """Less than the given value"""
   lt: DateTime
+
+  """Less than or equal to the given value"""
+  lte: DateTime
 }
 
 """Filter input type for UserFilterInput"""
@@ -382,6 +394,28 @@ input CategoryFilterInputFilterInput {
 
   """Logical OR operation"""
   OR: [CategoryFilterInputFilterInput!]
+}
+
+"""
+Filter input type for PostCategoryFilterInput (empty - no filterable fields)
+"""
+input PostCategoryFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [PostCategoryFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [PostCategoryFilterInputFilterInput!]
+}
+
+"""
+Filter input type for CommentFilterInput (empty - no filterable fields)
+"""
+input CommentFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [CommentFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CommentFilterInputFilterInput!]
 }
 
 """Query arguments for User with optional filter, sort, and pagination"""
@@ -441,9 +475,9 @@ input CategoryQueryArgs {
 }
 
 """
-Query arguments for CategoryOnPost with optional filter, sort, and pagination
+Query arguments for PostCategory with optional filter, sort, and pagination
 """
-input CategoryOnPostQueryArgs {
+input PostCategoryQueryArgs {
   """Number of items to return from the beginning"""
   first: Int
 

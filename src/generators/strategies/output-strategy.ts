@@ -12,6 +12,10 @@ export interface OutputStrategy {
 
 	createFilterInputType(typeName: string, fields: FilterFieldDefinition[]): string
 
+	createEmptyFilterInputType(typeName: string): string
+
+	createEnumFilterInputType(enumName: string): string
+
 	createConnectionType(typeName: string): string
 
 	createObjectType(typeName: string, fields: Record<string, any>, description?: string): string

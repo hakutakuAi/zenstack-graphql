@@ -10,16 +10,18 @@ export class UnifiedQueryArgsGenerator extends UnifiedGeneratorBase {
 
 	protected generateForModel(model: DataModel): string | null {
 		try {
-			const queryArgsName = `${model.name}QueryArgs`
-			const description = `Query arguments for ${model.name} with optional filter, sort, and pagination`
+			const formattedTypeName = this.getFormattedTypeName(model)
+			const queryArgsName = `${formattedTypeName}QueryArgs`
+			const description = `Query arguments for ${formattedTypeName} with optional filter, sort, and pagination`
 
 			return this.outputStrategy.createQueryArgsInputType(queryArgsName, model, description)
 		} catch (error) {
+			const formattedTypeName = this.getFormattedTypeName(model)
 			warning(
-				`Failed to create query args input for model ${model.name}: ${error instanceof Error ? error.message : String(error)}`,
+				`Failed to create query args input for model ${formattedTypeName}: ${error instanceof Error ? error.message : String(error)}`,
 				ErrorCategory.GENERATION,
 				{
-					modelName: model.name,
+					modelName: formattedTypeName,
 					error: error,
 				},
 			)

@@ -5,26 +5,19 @@ datasource db {
 
 generator client {
 	provider = 'prisma-client-js'
-	binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 plugin graphql {
 	provider = '../../dist'
     output = './schema.ts'
 	outputFormat = 'type-graphql'
-	generateFilters = true
-	generateSorts = true
-	connectionTypes = true
-	includeRelations = true
-	generateEnums = true
-	generateScalars = true
 }
 
 enum ProductStatus {
     DRAFT
     PUBLISHED
     ARCHIVED
-	
+
     @@graphql.description("Product status in the system")
 }
 
@@ -34,7 +27,7 @@ enum ReviewRating {
     THREE
     FOUR
     FIVE
-    
+
     @@graphql.description("Review rating from 1 to 5 stars")
 }
 
@@ -42,12 +35,12 @@ model Product {
 	id          String        @id @default(uuid())
 	createdAt   DateTime      @default(now()) @graphql.sortable @graphql.filterable
 	updatedAt   DateTime      @updatedAt @graphql.sortable
-	name        String        @graphql.filterable
+	name        String        @graphql.filterable @graphql.sortable
 	description String?
 	price       Float         @graphql.sortable @graphql.filterable
 	status      ProductStatus @default(DRAFT) @graphql.filterable
 	metadata    Json?         @graphql.description("Arbitrary product metadata as JSON")
-	
+
 	// Relations
 	reviews     Review[]
 	tags        ProductTag[]
@@ -65,11 +58,11 @@ model Review {
 	rating      ReviewRating @graphql.sortable @graphql.filterable
 	verified    Boolean      @default(false) @graphql.filterable
 	helpfulCount Int         @default(0) @graphql.sortable
-	
+
 	// Relations
 	product     Product      @relation(fields: [productId], references: [id])
 	productId   String
-	
+
 	@@graphql.description("Customer review for a product")
 	@@graphql.connection(pageSize: 10)
 	@@allow('all', true)

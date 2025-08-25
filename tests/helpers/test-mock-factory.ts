@@ -214,6 +214,17 @@ export class MockOutputStrategy implements OutputStrategy {
 		return typeName
 	}
 
+	createEmptyFilterInputType(typeName: string): string {
+		this.generatedTypes.push(typeName)
+		return typeName
+	}
+
+	createEnumFilterInputType(enumName: string): string {
+		const filterInputName = `${enumName}FilterInput`
+		this.generatedTypes.push(filterInputName)
+		return filterInputName
+	}
+
 	createConnectionType(typeName: string): string {
 		const connectionTypeName = `${typeName}Connection`
 		this.generatedTypes.push(connectionTypeName)
@@ -300,6 +311,16 @@ export class SpyOutputStrategy extends MockOutputStrategy {
 	override createFilterInputType(typeName: string, fields: FilterFieldDefinition[]): string {
 		this.calls.push({ method: 'createFilterInputType', args: [typeName, fields] })
 		return super.createFilterInputType(typeName, fields)
+	}
+
+	override createEmptyFilterInputType(typeName: string): string {
+		this.calls.push({ method: 'createEmptyFilterInputType', args: [typeName] })
+		return super.createEmptyFilterInputType(typeName)
+	}
+
+	override createEnumFilterInputType(enumName: string): string {
+		this.calls.push({ method: 'createEnumFilterInputType', args: [enumName] })
+		return super.createEnumFilterInputType(enumName)
 	}
 
 	override createConnectionType(typeName: string): string {

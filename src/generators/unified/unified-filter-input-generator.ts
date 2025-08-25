@@ -6,8 +6,11 @@ export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 	protected override beforeGeneration(): void {
 		if (this.options.generateFilters) {
 			this.outputStrategy.createCommonFilterTypes()
+			this.generateEnumFilterInputs()
 		}
 	}
+
+	protected override afterGeneration(): void {}
 
 	override generate(): string[] {
 		if (!this.options.generateFilters) {
@@ -20,13 +23,13 @@ export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 	protected override generateForModel(model: DataModel): string | null {
 		const typeName = this.getFormattedTypeName(model)
 		const filterFields = this.getFilterableFields(model)
+		const filterInputTypeName = this.typeFormatter.formatFilterInputTypeName(typeName)
 
 		if (filterFields.length === 0) {
-			return null
+			this.outputStrategy.createEmptyFilterInputType(filterInputTypeName)
+		} else {
+			this.outputStrategy.createFilterInputType(filterInputTypeName, filterFields)
 		}
-
-		const filterInputTypeName = this.typeFormatter.formatFilterInputTypeName(typeName)
-		this.outputStrategy.createFilterInputType(filterInputTypeName, filterFields)
 
 		return filterInputTypeName
 	}
@@ -51,6 +54,10 @@ export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 	private getFilterInputTypeForField(field: DataModelField): string {
 		const fieldProcessor = this.attributeProcessor.field(this.models.find((m) => m.fields.includes(field))!, field.name)
 
+		if (field.type.reference?.ref?.name && this.typeMapper?.isEnumType(field.type.reference.ref.name)) {
+			return `${field.type.reference.ref.name}FilterInput`
+		}
+
 		if (fieldProcessor.isRangeFilterableType()) {
 			if (field.type.type === 'DateTime') {
 				const dateTimeType = this.options.scalarTypes?.['DateTime'] || 'DateTime'
@@ -70,6 +77,23 @@ export class UnifiedFilterInputGenerator extends UnifiedGeneratorBase {
 		return model.fields.filter((field) => {
 			const fieldProcessor = this.attributeProcessor.field(model, field.name)
 			return fieldProcessor.isFilterable() && fieldProcessor.shouldInclude(true)
+		})
+	}
+
+	private generateEnumFilterInputs(): void {
+		const enumsUsed = new Set<string>()
+
+		this.models.forEach((model) => {
+			const filterableFields = this.getValidFilterableFields(model)
+			filterableFields.forEach((field) => {
+				if (field.type.reference?.ref?.name && this.typeMapper?.isEnumType(field.type.reference.ref.name)) {
+					enumsUsed.add(field.type.reference.ref.name)
+				}
+			})
+		})
+
+		enumsUsed.forEach((enumName) => {
+			this.outputStrategy.createEnumFilterInputType(enumName)
 		})
 	}
 }

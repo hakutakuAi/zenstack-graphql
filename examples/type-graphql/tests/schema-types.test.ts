@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 
 describe('TypeGraphQL Test Example', () => {
-	const schemaPath = join(__dirname, './schema.ts')
+	const schemaPath = join(__dirname, '../schema.ts')
 	let schemaContent: string
 
 	beforeAll(() => {

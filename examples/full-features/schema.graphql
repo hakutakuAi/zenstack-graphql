@@ -441,8 +441,14 @@ input NumericFilterInput {
   """Greater than the given value"""
   gt: Float
 
+  """Greater than or equal to the given value"""
+  gte: Float
+
   """Less than the given value"""
   lt: Float
+
+  """Less than or equal to the given value"""
+  lte: Float
 }
 
 """Input type for string filtering operations"""
@@ -489,8 +495,14 @@ input DateTimeFilterInput {
   """Greater than the given value"""
   gt: DateTime
 
+  """Greater than or equal to the given value"""
+  gte: DateTime
+
   """Less than the given value"""
   lt: DateTime
+
+  """Less than or equal to the given value"""
+  lte: DateTime
 }
 
 """Filter input type for MemberFilterInput"""
@@ -553,6 +565,17 @@ input CommentFilterInputFilterInput {
   OR: [CommentFilterInputFilterInput!]
 }
 
+"""
+Filter input type for ReactionFilterInput (empty - no filterable fields)
+"""
+input ReactionFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [ReactionFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ReactionFilterInputFilterInput!]
+}
+
 """Filter input type for FollowFilterInput"""
 input FollowFilterInputFilterInput {
   """Filter by isActive"""
@@ -577,8 +600,19 @@ input TagFilterInputFilterInput {
   OR: [TagFilterInputFilterInput!]
 }
 
-"""Query arguments for User with optional filter, sort, and pagination"""
-input UserQueryArgs {
+"""
+Filter input type for TagsOnPostsFilterInput (empty - no filterable fields)
+"""
+input TagsOnPostsFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [TagsOnPostsFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [TagsOnPostsFilterInputFilterInput!]
+}
+
+"""Query arguments for Member with optional filter, sort, and pagination"""
+input MemberQueryArgs {
   """Number of items to return from the beginning"""
   first: Int
 
@@ -651,8 +685,10 @@ input CommentQueryArgs {
   connection: Boolean
 }
 
-"""Query arguments for Like with optional filter, sort, and pagination"""
-input LikeQueryArgs {
+"""
+Query arguments for Reaction with optional filter, sort, and pagination
+"""
+input ReactionQueryArgs {
   """Number of items to return from the beginning"""
   first: Int
 

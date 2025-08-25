@@ -5,17 +5,12 @@ datasource db {
 
 generator client {
 	provider = 'prisma-client-js'
-	binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 plugin graphql {
 	provider = '../../dist'
     output = './schema.ts'
 	outputFormat = 'type-graphql'
-	generateFilters = true
-	generateSorts = true
-	connectionTypes = true
-	includeRelations = true
 }
 
 model User {
@@ -64,7 +59,7 @@ model CategoryOnPost {
 	postId      String
 	category    Category  @relation(fields: [categoryId], references: [id])
 	categoryId  String
-	assignedAt  DateTime  @default(now())
+	assignedAt  DateTime  @default(now()) @graphql.filterable
 
 	@@id([postId, categoryId])
 	@@graphql.name("PostCategory")
@@ -73,8 +68,8 @@ model CategoryOnPost {
 
 model Comment {
 	id          String    @id @default(uuid())
-	createdAt   DateTime  @default(now()) @graphql.sortable
-	content     String
+	createdAt   DateTime  @default(now()) @graphql.sortable @graphql.filterable
+	content     String    @graphql.filterable
 	post        Post      @relation(fields: [postId], references: [id])
 	postId      String
 	author      User      @relation(fields: [authorId], references: [id])

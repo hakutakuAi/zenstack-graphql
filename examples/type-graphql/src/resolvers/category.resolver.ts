@@ -1,7 +1,7 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int } from 'type-graphql'
 import { Category, PostCategory, CategoryFilterInput, CategorySortInput, CategoryConnection } from '../../schema'
 import { BaseResolver } from './base-resolver'
-import { Context } from './types'
+import type { Context } from './types'
 
 @Resolver(() => Category)
 export class CategoryResolver extends BaseResolver {

@@ -1,6 +1,6 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID } from 'type-graphql'
 import { Product, ProductCreateInput, ProductUpdateInput, ProductQueryArgs, ProductConnection } from '../../schema'
-import { Context } from './types'
+import type { Context } from './types'
 
 @Resolver(() => Product)
 export class ProductResolver {

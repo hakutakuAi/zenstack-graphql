@@ -277,7 +277,11 @@ export class NumericFilterInput {
     @Field(() => Float, { nullable: true })
     gt?: number | undefined;
     @Field(() => Float, { nullable: true })
+    gte?: number | undefined;
+    @Field(() => Float, { nullable: true })
     lt?: number | undefined;
+    @Field(() => Float, { nullable: true })
+    lte?: number | undefined;
 }
 
 @InputType()
@@ -315,7 +319,11 @@ export class DateTimeFilterInput {
     @Field(() => Date, { nullable: true })
     gt?: Date | undefined;
     @Field(() => Date, { nullable: true })
+    gte?: Date | undefined;
+    @Field(() => Date, { nullable: true })
     lt?: Date | undefined;
+    @Field(() => Date, { nullable: true })
+    lte?: Date | undefined;
 }
 
 @InputType()
@@ -354,6 +362,28 @@ export class CategoryFilterInput {
     AND?: CategoryFilterInput[] | undefined;
     @Field(() => [CategoryFilterInput!], { nullable: true })
     OR?: CategoryFilterInput[] | undefined;
+}
+
+@InputType()
+export class PostCategoryFilterInput {
+    @Field(() => DateTimeFilterInput, { nullable: true })
+    assignedAt?: DateTimeFilterInput | undefined;
+    @Field(() => [PostCategoryFilterInput!], { nullable: true })
+    AND?: PostCategoryFilterInput[] | undefined;
+    @Field(() => [PostCategoryFilterInput!], { nullable: true })
+    OR?: PostCategoryFilterInput[] | undefined;
+}
+
+@InputType()
+export class CommentFilterInput {
+    @Field(() => DateTimeFilterInput, { nullable: true })
+    createdAt?: DateTimeFilterInput | undefined;
+    @Field(() => StringFilterInput, { nullable: true })
+    content?: StringFilterInput | undefined;
+    @Field(() => [CommentFilterInput!], { nullable: true })
+    AND?: CommentFilterInput[] | undefined;
+    @Field(() => [CommentFilterInput!], { nullable: true })
+    OR?: CommentFilterInput[] | undefined;
 }
 
 @InputType({ description: "Create input for User" })
@@ -533,7 +563,7 @@ export class CategoryQueryArgs {
 }
 
 @InputType()
-export class CategoryOnPostQueryArgs {
+export class PostCategoryQueryArgs {
     @Field(() => Int, { nullable: true })
     first?: number | undefined;
     @Field(() => String, { nullable: true })
@@ -548,6 +578,8 @@ export class CategoryOnPostQueryArgs {
 
 @InputType()
 export class CommentQueryArgs {
+    @Field(() => CommentFilterInput, { nullable: true })
+    filter?: CommentFilterInput | undefined;
     @Field(() => CommentSortInput, { nullable: true })
     sort?: CommentSortInput | undefined;
     @Field(() => Int, { nullable: true })

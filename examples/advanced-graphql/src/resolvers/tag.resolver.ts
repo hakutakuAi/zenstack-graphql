@@ -1,6 +1,6 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID } from 'type-graphql'
 import { Tag, TagCreateInput, TagUpdateInput, TagQueryArgs, TagConnection } from '../../schema'
-import { Context } from './types'
+import type { Context } from './types'
 
 @Resolver(() => Tag)
 export class TagResolver {

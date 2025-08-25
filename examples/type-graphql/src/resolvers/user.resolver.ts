@@ -1,7 +1,7 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int } from 'type-graphql'
 import { User, Post, Comment, UserFilterInput, UserSortInput, UserConnection } from '../../schema'
 import { BaseResolver } from './base-resolver'
-import { Context } from './types'
+import type { Context } from './types'
 import { PRISMA_INCLUDES } from '../utils/resolver-helpers'
 
 @Resolver(() => User)

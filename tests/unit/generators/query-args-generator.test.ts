@@ -115,7 +115,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 
 			expect(result).toBeDefined()
 			expect(result.length).toBe(1)
-			expect(result).toContain('user_profileQueryArgs')
+			expect(result).toContain('userProfileQueryArgs')
 		})
 	})
 

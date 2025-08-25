@@ -2,18 +2,14 @@
 	"compilerOptions": {
 		"target": "es2021",
 		"module": "commonjs",
-		"lib": ["es2021"],
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
-		"strict": true,
-		"strictPropertyInitialization": false,
 		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"outDir": "dist",
+		"sourceMap": true,
 		"declaration": true,
-		"outDir": "./dist",
-		"rootDir": "./"
+		"skipLibCheck": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true
 	},
-	"include": ["src/**/*", "schema.ts"],
-	"exclude": ["node_modules", "dist"]
+	"include": ["src/**/*", "tests/**/*", "schema.ts"]
 }

@@ -108,6 +108,8 @@ export class TypeScriptASTFactory {
 		let decoratorType = cleanType
 		if (cleanType === 'DateTime') {
 			decoratorType = 'Date'
+		} else if (cleanType === 'JSON') {
+			decoratorType = 'GraphQLJSON'
 		}
 
 		if (isArray) {
@@ -197,7 +199,7 @@ registerEnumType(${typeName}, {
 	}
 
 	private getFieldDecoratorArgs(field: DataModelField, fieldType: string): string[] {
-		const decoratorType = fieldType.replace(/DateTime/g, 'Date')
+		const decoratorType = fieldType.replace(/DateTime/g, 'Date').replace(/JSON/g, 'GraphQLJSON')
 		const args = [`() => ${decoratorType}`]
 
 		if (field.type.optional) {

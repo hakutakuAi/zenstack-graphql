@@ -1,6 +1,6 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID } from 'type-graphql'
 import { Review, ReviewCreateInput, ReviewUpdateInput, ReviewQueryArgs, ReviewConnection } from '../../schema'
-import { Context } from './types'
+import type { Context } from './types'
 
 @Resolver(() => Review)
 export class ReviewResolver {
@@ -111,7 +111,6 @@ export class ReviewResolver {
 			if (filter.createdAt.lte) where.createdAt.lte = filter.createdAt.lte
 		}
 
-		// Handle AND/OR operations
 		if (filter.AND) {
 			where.AND = filter.AND.map((f: any) => this.buildWhereCondition(f))
 		}

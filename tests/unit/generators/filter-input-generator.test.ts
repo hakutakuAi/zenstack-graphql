@@ -202,6 +202,30 @@ describe('UnifiedFilterInputGenerator', () => {
 			}).not.toThrow()
 		})
 
+		test('should create empty filter input for models with no filterable fields', () => {
+			const noFilterFieldsContext = TestMockFactory.createSpyUnifiedContext(
+				TestFixtures.createContext({
+					generateFilters: true,
+					models: [
+						TestFixtures.createDataModel('NoFilters', [
+							TestFixtures.createField('id', 'String', false, [TestFixtures.createAttribute('@id')]),
+							TestFixtures.createField('name', 'String', false, [TestFixtures.createAttribute('@db.VarChar', [{ value: 255 }])]),
+						]),
+					],
+				}),
+			)
+			const noFilterFieldsGenerator = new UnifiedFilterInputGenerator(noFilterFieldsContext)
+
+			const result = noFilterFieldsGenerator.generate()
+
+			expect(result).toBeDefined()
+			expect(result).toContain('NoFiltersFilterInput')
+
+			const emptyCalls = noFilterFieldsContext.spy.getCallsForMethod('createEmptyFilterInputType')
+			expect(emptyCalls.length).toBe(1)
+			expect(emptyCalls[0].args[0]).toBe('NoFiltersFilterInput')
+		})
+
 		test('should handle malformed field types gracefully', () => {
 			const malformedContext = TestFixtures.createContext({
 				generateFilters: true,

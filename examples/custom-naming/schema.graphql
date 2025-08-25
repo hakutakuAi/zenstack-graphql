@@ -338,8 +338,14 @@ input NumericFilterInput {
   """Greater than the given value"""
   gt: Float
 
+  """Greater than or equal to the given value"""
+  gte: Float
+
   """Less than the given value"""
   lt: Float
+
+  """Less than or equal to the given value"""
+  lte: Float
 }
 
 """Input type for string filtering operations"""
@@ -386,8 +392,78 @@ input TimeFilterInput {
   """Greater than the given value"""
   gt: Time
 
+  """Greater than or equal to the given value"""
+  gte: Time
+
   """Less than the given value"""
   lt: Time
+
+  """Less than or equal to the given value"""
+  lte: Time
+}
+
+"""
+Filter input type for CustomerFilterInput (empty - no filterable fields)
+"""
+input CustomerFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [CustomerFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CustomerFilterInputFilterInput!]
+}
+
+"""
+Filter input type for ProductFilterInput (empty - no filterable fields)
+"""
+input ProductFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [ProductFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ProductFilterInputFilterInput!]
+}
+
+"""
+Filter input type for AddressFilterInput (empty - no filterable fields)
+"""
+input AddressFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [AddressFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [AddressFilterInputFilterInput!]
+}
+
+"""Filter input type for OrderFilterInput (empty - no filterable fields)"""
+input OrderFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [OrderFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [OrderFilterInputFilterInput!]
+}
+
+"""
+Filter input type for OrderItemFilterInput (empty - no filterable fields)
+"""
+input OrderItemFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [OrderItemFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [OrderItemFilterInputFilterInput!]
+}
+
+"""
+Filter input type for CategoryFilterInput (empty - no filterable fields)
+"""
+input CategoryFilterInputFilterInput {
+  """Logical AND operation"""
+  AND: [CategoryFilterInputFilterInput!]
+
+  """Logical OR operation"""
+  OR: [CategoryFilterInputFilterInput!]
 }
 
 """
@@ -410,10 +486,8 @@ input CustomerQueryArgs {
   connection: Boolean
 }
 
-"""
-Query arguments for ProductItem with optional filter, sort, and pagination
-"""
-input ProductItemQueryArgs {
+"""Query arguments for Product with optional filter, sort, and pagination"""
+input ProductQueryArgs {
   """Number of items to return from the beginning"""
   first: Int
 

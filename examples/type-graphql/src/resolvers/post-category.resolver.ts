@@ -1,7 +1,7 @@
 import { Resolver, Query, FieldResolver, Root, Ctx, Arg, Int } from 'type-graphql'
 import { PostCategory, Post, Category, PostCategoryFilterInput, PostCategorySortInput, PostCategoryConnection } from '../../schema'
 import { BaseResolver } from './base-resolver'
-import { Context } from './types'
+import type { Context } from './types'
 import { PRISMA_INCLUDES } from '../utils/resolver-helpers'
 
 @Resolver(() => PostCategory)

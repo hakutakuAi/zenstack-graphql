@@ -47,6 +47,34 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 		return filterInputName
 	}
 
+	createEmptyFilterInputType(typeName: string): string {
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
+
+		const astFields = [
+			{ name: 'AND', type: `[${filterInputName}!]`, nullable: true },
+			{ name: 'OR', type: `[${filterInputName}!]`, nullable: true },
+		]
+
+		this.astFactory.createFilterInputType(filterInputName, astFields)
+		return filterInputName
+	}
+
+	createEnumFilterInputType(enumName: string): string {
+		const filterInputName = `${enumName}FilterInput`
+
+		const astFields = [
+			{ name: 'equals', type: enumName, nullable: true },
+			{ name: 'not', type: enumName, nullable: true },
+			{ name: 'in', type: `[${enumName}!]`, nullable: true },
+			{ name: 'notIn', type: `[${enumName}!]`, nullable: true },
+			{ name: 'AND', type: `[${filterInputName}!]`, nullable: true },
+			{ name: 'OR', type: `[${filterInputName}!]`, nullable: true },
+		]
+
+		this.astFactory.createFilterInputType(filterInputName, astFields)
+		return filterInputName
+	}
+
 	createConnectionType(typeName: string): string {
 		const connectionName = `${typeName}Connection`
 		this.astFactory.createConnectionType(typeName)

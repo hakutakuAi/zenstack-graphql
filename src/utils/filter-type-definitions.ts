@@ -44,13 +44,15 @@ export function createFilterFields(definition: CommonFilterTypeDefinition): Filt
 
 	fields.push(
 		{ name: 'equals', type: definition.baseType, nullable: true, description: 'Equal to the given value' },
-		{ name: 'not', type: definition.baseType, nullable: true, description: 'Not equal to the given value' }
+		{ name: 'not', type: definition.baseType, nullable: true, description: 'Not equal to the given value' },
 	)
 
 	if (definition.includeComparisons) {
 		fields.push(
 			{ name: 'gt', type: definition.baseType, nullable: true, description: 'Greater than the given value' },
-			{ name: 'lt', type: definition.baseType, nullable: true, description: 'Less than the given value' }
+			{ name: 'gte', type: definition.baseType, nullable: true, description: 'Greater than or equal to the given value' },
+			{ name: 'lt', type: definition.baseType, nullable: true, description: 'Less than the given value' },
+			{ name: 'lte', type: definition.baseType, nullable: true, description: 'Less than or equal to the given value' },
 		)
 	}
 
@@ -60,16 +62,14 @@ export function createFilterFields(definition: CommonFilterTypeDefinition): Filt
 			{ name: 'notIn', type: `[${definition.baseType}!]`, nullable: true, description: 'Not in the given list of values' },
 			{ name: 'contains', type: definition.baseType, nullable: true, description: 'Contains the given value' },
 			{ name: 'startsWith', type: definition.baseType, nullable: true, description: 'Starts with the given value' },
-			{ name: 'endsWith', type: definition.baseType, nullable: true, description: 'Ends with the given value' }
+			{ name: 'endsWith', type: definition.baseType, nullable: true, description: 'Ends with the given value' },
 		)
 	}
 
 	return fields
 }
 
-export function createGraphQLFilterFields(
-	definition: CommonFilterTypeDefinition
-): Record<string, { type: string; description: string }> {
+export function createGraphQLFilterFields(definition: CommonFilterTypeDefinition): Record<string, { type: string; description: string }> {
 	const fields: Record<string, { type: string; description: string }> = {}
 
 	fields.equals = { type: definition.baseType, description: 'Equal to the given value' }
@@ -77,7 +77,9 @@ export function createGraphQLFilterFields(
 
 	if (definition.includeComparisons) {
 		fields.gt = { type: definition.baseType, description: 'Greater than the given value' }
+		fields.gte = { type: definition.baseType, description: 'Greater than or equal to the given value' }
 		fields.lt = { type: definition.baseType, description: 'Less than the given value' }
+		fields.lte = { type: definition.baseType, description: 'Less than or equal to the given value' }
 	}
 
 	if (definition.includeStringOperations) {

@@ -122,6 +122,78 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 		return filterInputName
 	}
 
+	createEmptyFilterInputType(typeName: string): string {
+		const filterInputName = `${typeName}FilterInput`
+
+		if (this.schemaComposer.has(filterInputName)) {
+			return filterInputName
+		}
+
+		const fieldsMap: Record<string, { type: string; description: string }> = {
+			AND: {
+				type: `[${filterInputName}!]`,
+				description: 'Logical AND operation',
+			},
+			OR: {
+				type: `[${filterInputName}!]`,
+				description: 'Logical OR operation',
+			},
+		}
+
+		const filterInputTC = this.schemaComposer.createInputTC({
+			name: filterInputName,
+			description: `Filter input type for ${typeName} (empty - no filterable fields)`,
+			fields: fieldsMap,
+		})
+
+		this.registry.registerType(filterInputName, TypeKind.INPUT, filterInputTC, true)
+		return filterInputName
+	}
+
+	createEnumFilterInputType(enumName: string): string {
+		const filterInputName = `${enumName}FilterInput`
+
+		if (this.schemaComposer.has(filterInputName)) {
+			return filterInputName
+		}
+
+		const fieldsMap: Record<string, { type: string; description: string }> = {
+			equals: {
+				type: enumName,
+				description: `Equal to the given ${enumName} value`,
+			},
+			not: {
+				type: enumName,
+				description: `Not equal to the given ${enumName} value`,
+			},
+			in: {
+				type: `[${enumName}!]`,
+				description: `In the given list of ${enumName} values`,
+			},
+			notIn: {
+				type: `[${enumName}!]`,
+				description: `Not in the given list of ${enumName} values`,
+			},
+			AND: {
+				type: `[${filterInputName}!]`,
+				description: 'Logical AND operation',
+			},
+			OR: {
+				type: `[${filterInputName}!]`,
+				description: 'Logical OR operation',
+			},
+		}
+
+		const filterInputTC = this.schemaComposer.createInputTC({
+			name: filterInputName,
+			description: `Filter input type for ${enumName} enum`,
+			fields: fieldsMap,
+		})
+
+		this.registry.registerType(filterInputName, TypeKind.INPUT, filterInputTC, true)
+		return filterInputName
+	}
+
 	createConnectionType(typeName: string): string {
 		const connectionName = `${typeName}Connection`
 
@@ -157,7 +229,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 	createCommonFilterTypes(): void {
 		COMMON_FILTER_TYPES.forEach((definition) => {
 			let actualDefinition = definition
-			
+
 			if (definition.type === 'datetime') {
 				const dateTimeType = this.options.scalarTypes?.['DateTime'] || 'DateTime'
 				actualDefinition = {
@@ -296,8 +368,7 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 
 	getGeneratedTypeNames(filter?: (name: string) => boolean): string[] {
 		const generatedTypes = this.registry.getGeneratedTypes()
-		const typeNames = generatedTypes.map(type => type.name)
+		const typeNames = generatedTypes.map((type) => type.name)
 		return filter ? typeNames.filter(filter) : typeNames
 	}
-
 }
