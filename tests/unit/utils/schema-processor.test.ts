@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { TestFixtures, SchemaBuilder } from '../../helpers'
@@ -47,7 +47,7 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Static Factory Method', () => {
-		test('should create processor from model', () => {
+		it('should create processor from model', () => {
 			const modelChain = SchemaProcessor.fromModel(model)
 
 			expect(modelChain.name()).toBe('UserType')
@@ -56,33 +56,33 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Model Processing', () => {
-		test('should extract model name from attribute', () => {
+		it('should extract model name from attribute', () => {
 			const modelChain = processor.model(model)
 
 			expect(modelChain.name()).toBe('UserType')
 		})
 
-		test('should fall back to original model name when no attribute', () => {
+		it('should fall back to original model name when no attribute', () => {
 			const simpleModel = TestFixtures.createDataModel('SimpleUser')
 			const modelChain = processor.model(simpleModel)
 
 			expect(modelChain.name()).toBe('SimpleUser')
 		})
 
-		test('should extract model description', () => {
+		it('should extract model description', () => {
 			const modelChain = processor.model(model)
 
 			expect(modelChain.description()).toBe('A user in the system')
 		})
 
-		test('should return undefined for missing description', () => {
+		it('should return undefined for missing description', () => {
 			const simpleModel = TestFixtures.createDataModel('SimpleUser')
 			const modelChain = processor.model(simpleModel)
 
 			expect(modelChain.description()).toBeUndefined()
 		})
 
-		test('should detect ignored models', () => {
+		it('should detect ignored models', () => {
 			const ignoredModel = TestFixtures.createDataModel('IgnoredUser')
 			ignoredModel.attributes = [TestFixtures.createAttribute('@@graphql.ignore')]
 
@@ -90,19 +90,19 @@ describe('Schema Processor', () => {
 			expect(modelChain.isIgnored()).toBe(true)
 		})
 
-		test('should detect non-ignored models', () => {
+		it('should detect non-ignored models', () => {
 			const modelChain = processor.model(model)
 			expect(modelChain.isIgnored()).toBe(false)
 		})
 
-		test('should format type name correctly', () => {
+		it('should format type name correctly', () => {
 			const modelChain = processor.model(model)
 			const formattedName = modelChain.getFormattedTypeName(typeFormatter)
 
 			expect(formattedName).toBe('UserType')
 		})
 
-		test('should format original name when no attribute', () => {
+		it('should format original name when no attribute', () => {
 			const simpleModel = TestFixtures.createDataModel('simpleUser')
 			const modelChain = processor.model(simpleModel)
 			const formattedName = modelChain.getFormattedTypeName(typeFormatter)
@@ -112,62 +112,62 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Field Processing', () => {
-		test('should extract field name from attribute', () => {
+		it('should extract field name from attribute', () => {
 			const fieldChain = processor.field(model, 'name')
 
 			expect(fieldChain.name()).toBe('fullName')
 		})
 
-		test('should fall back to original field name', () => {
+		it('should fall back to original field name', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.name()).toBe('id')
 		})
 
-		test('should detect ignored fields', () => {
+		it('should detect ignored fields', () => {
 			const fieldChain = processor.field(model, 'email')
 
 			expect(fieldChain.isIgnored()).toBe(true)
 		})
 
-		test('should detect non-ignored fields', () => {
+		it('should detect non-ignored fields', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.isIgnored()).toBe(false)
 		})
 
-		test('should detect sortable fields', () => {
+		it('should detect sortable fields', () => {
 			const fieldChain = processor.field(model, 'age')
 
 			expect(fieldChain.isSortable()).toBe(true)
 		})
 
-		test('should detect non-sortable fields', () => {
+		it('should detect non-sortable fields', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.isSortable()).toBe(false)
 		})
 
-		test('should detect filterable fields', () => {
+		it('should detect filterable fields', () => {
 			const fieldChain = processor.field(model, 'bio')
 
 			expect(fieldChain.isFilterable()).toBe(true)
 		})
 
-		test('should detect non-filterable fields', () => {
+		it('should detect non-filterable fields', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.isFilterable()).toBe(false)
 		})
 
-		test('should detect fields with multiple attributes', () => {
+		it('should detect fields with multiple attributes', () => {
 			const fieldChain = processor.field(model, 'score')
 
 			expect(fieldChain.isSortable()).toBe(true)
 			expect(fieldChain.isFilterable()).toBe(true)
 		})
 
-		test('should check field existence', () => {
+		it('should check field existence', () => {
 			const existingField = processor.field(model, 'id')
 			const nonExistingField = processor.field(model, 'nonexistent')
 
@@ -175,14 +175,14 @@ describe('Schema Processor', () => {
 			expect(nonExistingField.exists()).toBe(false)
 		})
 
-		test('should format field names correctly', () => {
+		it('should format field names correctly', () => {
 			const fieldChain = processor.field(model, 'name')
 			const formattedName = fieldChain.getFormattedFieldName(typeFormatter)
 
 			expect(formattedName).toBe('fullName')
 		})
 
-		test('should format original field name when no attribute', () => {
+		it('should format original field name when no attribute', () => {
 			const fieldChain = processor.field(model, 'user_id')
 			const formattedName = fieldChain.getFormattedFieldName(typeFormatter)
 
@@ -191,7 +191,7 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Field Type Analysis', () => {
-		test('should identify sortable field types', () => {
+		it('should identify sortable field types', () => {
 			const testCases = [
 				{ name: 'stringField', type: 'String', expected: true },
 				{ name: 'intField', type: 'Int', expected: true },
@@ -211,7 +211,7 @@ describe('Schema Processor', () => {
 			}
 		})
 
-		test('should identify range filterable field types', () => {
+		it('should identify range filterable field types', () => {
 			const testCases = [
 				{ name: 'stringField', type: 'String', expected: false },
 				{ name: 'intField', type: 'Int', expected: true },
@@ -229,7 +229,7 @@ describe('Schema Processor', () => {
 			}
 		})
 
-		test('should identify string searchable field types', () => {
+		it('should identify string searchable field types', () => {
 			const testCases = [
 				{ name: 'stringField', type: 'String', expected: true },
 				{ name: 'intField', type: 'Int', expected: false },
@@ -244,7 +244,7 @@ describe('Schema Processor', () => {
 			}
 		})
 
-		test('should handle missing field type gracefully', () => {
+		it('should handle missing field type gracefully', () => {
 			const fieldChain = processor.field(model, 'nonexistent')
 
 			expect(fieldChain.isSortableType()).toBe(false)
@@ -254,19 +254,19 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Field Inclusion Logic', () => {
-		test('should include regular fields', () => {
+		it('should include regular fields', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.shouldInclude(false)).toBe(true)
 		})
 
-		test('should exclude ignored fields', () => {
+		it('should exclude ignored fields', () => {
 			const fieldChain = processor.field(model, 'email')
 
 			expect(fieldChain.shouldInclude(false)).toBe(false)
 		})
 
-		test('should include relations when requested', () => {
+		it('should include relations when requested', () => {
 			const modelWithRelation = TestFixtures.createDataModel('User', [TestFixtures.createRelationField('posts', 'Post', false, true)])
 
 			const fieldChain = processor.field(modelWithRelation, 'posts')
@@ -274,7 +274,7 @@ describe('Schema Processor', () => {
 			expect(fieldChain.shouldInclude(true)).toBe(true)
 		})
 
-		test('should exclude relations when not requested', () => {
+		it('should exclude relations when not requested', () => {
 			const modelWithRelation = TestFixtures.createDataModel('User', [TestFixtures.createRelationField('posts', 'Post', false, true)])
 
 			const fieldChain = processor.field(modelWithRelation, 'posts')
@@ -282,7 +282,7 @@ describe('Schema Processor', () => {
 			expect(fieldChain.shouldInclude(false)).toBe(false)
 		})
 
-		test('should handle non-existent fields', () => {
+		it('should handle non-existent fields', () => {
 			const fieldChain = processor.field(model, 'nonexistent')
 
 			expect(fieldChain.shouldInclude(true)).toBe(false)
@@ -291,26 +291,26 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Attribute Handling', () => {
-		test('should find attributes by exact name', () => {
+		it('should find attributes by exact name', () => {
 			const fieldChain = processor.field(model, 'name')
 
 			expect(fieldChain.attr('@graphql.name')).toBe(true)
 			expect(fieldChain.attr('@graphql.ignore')).toBe(false)
 		})
 
-		test('should extract string values from attributes', () => {
+		it('should extract string values from attributes', () => {
 			const fieldChain = processor.field(model, 'name')
 
 			expect(fieldChain.getString('name')).toBe('fullName')
 		})
 
-		test('should return undefined for missing string attributes', () => {
+		it('should return undefined for missing string attributes', () => {
 			const fieldChain = processor.field(model, 'id')
 
 			expect(fieldChain.getString('name')).toBeUndefined()
 		})
 
-		test('should handle complex attribute structures', () => {
+		it('should handle complex attribute structures', () => {
 			const complexModel = TestFixtures.createDataModel('Complex', [
 				{
 					...TestFixtures.createField('priority', 'Int'),
@@ -331,7 +331,7 @@ describe('Schema Processor', () => {
 	})
 
 	describe('Edge Cases', () => {
-		test('should handle empty model', () => {
+		it('should handle empty model', () => {
 			const emptyModel = TestFixtures.createDataModel('Empty')
 			const modelChain = processor.model(emptyModel)
 
@@ -340,7 +340,7 @@ describe('Schema Processor', () => {
 			expect(modelChain.isIgnored()).toBe(false)
 		})
 
-		test('should handle model with no fields', () => {
+		it('should handle model with no fields', () => {
 			const emptyModel = TestFixtures.createDataModel('Empty')
 			const fieldChain = processor.field(emptyModel, 'nonexistent')
 
@@ -348,7 +348,7 @@ describe('Schema Processor', () => {
 			expect(fieldChain.name()).toBe('nonexistent')
 		})
 
-		test('should handle attributes with no arguments', () => {
+		it('should handle attributes with no arguments', () => {
 			const simpleModel = TestFixtures.createDataModel('Simple', [
 				{
 					...TestFixtures.createField('active', 'Boolean'),
@@ -360,7 +360,7 @@ describe('Schema Processor', () => {
 			expect(fieldChain.isSortable()).toBe(true)
 		})
 
-		test('should handle malformed attributes gracefully', () => {
+		it('should handle malformed attributes gracefully', () => {
 			const malformedModel = TestFixtures.createDataModel('Malformed', [
 				{
 					...TestFixtures.createField('broken', 'String'),

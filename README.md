@@ -1,8 +1,19 @@
 # ZenStack GraphQL Plugin
 
-This plugin generates a complete GraphQL schema with relations, filtering, sorting, and pagination. Saving you hours of boilerplate code to match your database models with you graphql server.
+<div align="center">
 
+[![CI/CD Pipeline](https://github.com/ViniciosLugli/zenstack-graphql/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ViniciosLugli/zenstack-graphql/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+[![npm version](https://badge.fury.io/js/%40hakutakuai%2Fzenstack-graphql.svg)](https://www.npmjs.com/package/@hakutakuai/zenstack-graphql)
+[![npm downloads](https://img.shields.io/npm/dm/@hakutakuai/zenstack-graphql.svg)](https://www.npmjs.com/package/@hakutakuai/zenstack-graphql)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=flat&logo=bun&logoColor=white)](https://bun.sh)
+
+</div>
+
+---
+
+This plugin generates a complete GraphQL schema with relations, filtering, sorting, and pagination. Saving you hours of boilerplate code to match your database models with you graphql server.
 
 ## Features
 

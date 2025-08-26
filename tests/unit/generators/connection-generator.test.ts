@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedConnectionGenerator } from '@generators/unified/unified-connection-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -31,11 +31,11 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 
-		test('should call createPaginationTypes during initialization', () => {
+		it('should call createPaginationTypes during initialization', () => {
 			generator.generate()
 
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('PageInfo')
@@ -44,7 +44,7 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Connection Generation', () => {
-		test('should generate connection types when enabled', () => {
+		it('should generate connection types when enabled', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -52,7 +52,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should not generate connections when disabled', () => {
+		it('should not generate connections when disabled', () => {
 			const disabledContext = TestFixtures.createContext({
 				connectionTypes: false,
 				models: [TestFixtures.createDataModel('User', [TestFixtures.createField('name', 'String')])],
@@ -67,7 +67,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should generate correct number of connection types', () => {
+		it('should generate correct number of connection types', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -75,7 +75,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result).toContain('PostConnection')
 		})
 
-		test('should create connection types for each model', () => {
+		it('should create connection types for each model', () => {
 			generator.generate()
 
 			const connectionCalls = spyStrategy.getCallsForMethod('createConnectionType')
@@ -88,14 +88,14 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format connection type names correctly', () => {
+		it('should format connection type names correctly', () => {
 			const result = generator.generate()
 
 			expect(result).toContain('UserConnection')
 			expect(result).toContain('PostConnection')
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				connectionTypes: true,
 				typeNaming: 'camelCase',
@@ -113,7 +113,7 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					connectionTypes: true,
@@ -127,7 +127,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should handle models with no fields gracefully', () => {
+		it('should handle models with no fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					connectionTypes: true,
@@ -144,7 +144,7 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return only connection type names', () => {
+		it('should return only connection type names', () => {
 			const result = generator.generate()
 
 			result.forEach((typeName) => {
@@ -154,7 +154,7 @@ describe('UnifiedConnectionGenerator', () => {
 			})
 		})
 
-		test('should filter results by Connection suffix', () => {
+		it('should filter results by Connection suffix', () => {
 			generator.generate()
 
 			const allTypes = spyStrategy.getGeneratedTypeNames()
@@ -163,7 +163,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(connectionTypes.length).toBe(2)
 		})
 
-		test('should validate actual connection structure', () => {
+		it('should validate actual connection structure', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -182,7 +182,7 @@ describe('UnifiedConnectionGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with relations', () => {
+		it('should handle models with relations', () => {
 			const relationContext = TestFixtures.createContext({
 				connectionTypes: true,
 				models: [
@@ -205,7 +205,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result).toContain('PostConnection')
 		})
 
-		test('should handle single model correctly', () => {
+		it('should handle single model correctly', () => {
 			const singleContext = TestFixtures.createContext({
 				connectionTypes: true,
 				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],
@@ -219,10 +219,54 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(result.length).toBe(1)
 			expect(result).toContain('SingleConnection')
 		})
+
+		it('should handle models with special characters in names', () => {
+			const specialContext = TestFixtures.createContext({
+				connectionTypes: true,
+				models: [
+					TestFixtures.createDataModel('User_Model_123', [TestFixtures.createField('id', 'String')]),
+					TestFixtures.createDataModel('PostModel$Test', [TestFixtures.createField('id', 'String')])
+				]
+			})
+
+			const specialUnifiedContext = TestMockFactory.createUnifiedContext(specialContext)
+			const specialGenerator = new UnifiedConnectionGenerator(specialUnifiedContext)
+
+			expect(() => {
+				const result = specialGenerator.generate()
+				expect(result).toBeDefined()
+				expect(result.length).toBe(2)
+			}).not.toThrow()
+		})
+
+		it('should handle models with circular references', () => {
+			const circularContext = TestFixtures.createContext({
+				connectionTypes: true,
+				models: [
+					TestFixtures.createDataModel('UserA', [
+						TestFixtures.createField('id', 'String'),
+						TestFixtures.createRelationField('relatedB', 'UserB')
+					]),
+					TestFixtures.createDataModel('UserB', [
+						TestFixtures.createField('id', 'String'),
+						TestFixtures.createRelationField('relatedA', 'UserA')
+					])
+				]
+			})
+
+			const circularUnifiedContext = TestMockFactory.createUnifiedContext(circularContext)
+			const circularGenerator = new UnifiedConnectionGenerator(circularUnifiedContext)
+
+			const result = circularGenerator.generate()
+			expect(result).toBeDefined()
+			expect(result.length).toBe(2)
+			expect(result).toContain('UserAConnection')
+			expect(result).toContain('UserBConnection')
+		})
 	})
 
 	describe('Pagination Integration', () => {
-		test('should create pagination types before generating connections', () => {
+		it('should create pagination types before generating connections', () => {
 			generator.generate()
 
 			const paginationCalls = spyStrategy.getCallsForMethod('createPaginationTypes')
@@ -232,7 +276,7 @@ describe('UnifiedConnectionGenerator', () => {
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('PaginationInput')
 		})
 
-		test('should generate PageInfo and PaginationInput types', () => {
+		it('should generate PageInfo and PaginationInput types', () => {
 			const result = generator.generate()
 
 			const allTypes = spyStrategy.getGeneratedTypeNames()

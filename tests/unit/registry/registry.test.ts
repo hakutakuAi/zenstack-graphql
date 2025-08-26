@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { SchemaComposer } from 'graphql-compose'
 import { GraphQLRegistry, TypeScriptRegistry } from '@utils/registry'
 import { TypeKind } from '@utils/registry/base-registry'
@@ -14,7 +14,7 @@ describe('Registry Components', () => {
 			typescriptRegistry = new TypeScriptRegistry()
 		})
 
-		test('GraphQL Registry - should register and retrieve types', () => {
+		it('GraphQL Registry - should register and retrieve types', () => {
 			const objectTC = new SchemaComposer().createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -26,18 +26,18 @@ describe('Registry Components', () => {
 			expect(graphqlRegistry.isTypeOfKind('User', TypeKind.OBJECT)).toBe(true)
 		})
 
-		test('TypeScript Registry - should register and retrieve types', () => {
+		it('TypeScript Registry - should register and retrieve types', () => {
 			typescriptRegistry.registerType('User', TypeKind.OBJECT, 'interface User { name: string }')
 
 			expect(typescriptRegistry.hasType('User')).toBe(true)
 			expect(typescriptRegistry.isTypeOfKind('User', TypeKind.OBJECT)).toBe(true)
 		})
 
-		test('GraphQL Registry - should manage edge types', () => {
+		it('GraphQL Registry - should manage edge types', () => {
 			expect(true).toBe(true)
 		})
 
-		test('GraphQL Registry - should track processed relations', () => {
+		it('GraphQL Registry - should track processed relations', () => {
 			const relationKey = 'User_posts_Post'
 
 			expect(graphqlRegistry.hasProcessedRelation(relationKey)).toBe(false)
@@ -47,7 +47,7 @@ describe('Registry Components', () => {
 			expect(graphqlRegistry.hasProcessedRelation(relationKey)).toBe(true)
 		})
 
-		test('TypeScript Registry - should generate code', () => {
+		it('TypeScript Registry - should generate code', () => {
 			typescriptRegistry.registerType('User', TypeKind.OBJECT, 'interface User { name: string }')
 
 			const code = typescriptRegistry.generateCode()
@@ -56,7 +56,7 @@ describe('Registry Components', () => {
 			expect(code).toContain('import { ObjectType')
 		})
 
-		test('TypeScript Registry - should handle dependencies', () => {
+		it('TypeScript Registry - should handle dependencies', () => {
 			typescriptRegistry.registerTypeWithDeps('User', TypeKind.OBJECT, 'interface User {}', ['Post'])
 
 			const allTypes = typescriptRegistry.getAllTypes()
@@ -65,7 +65,7 @@ describe('Registry Components', () => {
 			expect(userType?.dependencies).toContain('Post')
 		})
 
-		test('TypeScript Registry - should validate schema', () => {
+		it('TypeScript Registry - should validate schema', () => {
 			typescriptRegistry.registerType('User', TypeKind.OBJECT, 'interface User {}')
 			typescriptRegistry.registerTypeWithDeps('Post', TypeKind.OBJECT, 'interface Post {}', ['User'])
 
@@ -74,7 +74,7 @@ describe('Registry Components', () => {
 			expect(warnings).toHaveLength(0)
 		})
 
-		test('Both registries - should handle generated types', () => {
+		it('Both registries - should handle generated types', () => {
 			const objectTC = new SchemaComposer().createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },

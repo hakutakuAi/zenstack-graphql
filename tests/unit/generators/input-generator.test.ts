@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedInputGenerator } from '@generators/unified/unified-input-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -35,13 +35,13 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 	})
 
 	describe('Input Generation', () => {
-		test('should generate input types for models', () => {
+		it('should generate input types for models', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -49,7 +49,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should generate both create and update inputs', () => {
+		it('should generate both create and update inputs', () => {
 			generator.generate()
 
 			const inputCalls = spyStrategy.getCallsForMethod('createInputType')
@@ -62,7 +62,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(updateInputs.length).toBe(2)
 		})
 
-		test('should generate correct input type names', () => {
+		it('should generate correct input type names', () => {
 			generator.generate()
 
 			const inputCalls = spyStrategy.getCallsForMethod('createInputType')
@@ -74,7 +74,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(typeNames).toContain('PostUpdateInput')
 		})
 
-		test('should include descriptions for input types', () => {
+		it('should include descriptions for input types', () => {
 			generator.generate()
 
 			const inputCalls = spyStrategy.getCallsForMethod('createInputType')
@@ -89,7 +89,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Create Input Generation', () => {
-		test('should generate create input with correct parameters', () => {
+		it('should generate create input with correct parameters', () => {
 			generator.generate()
 
 			const createCalls = spyStrategy.getCallsForMethod('createInputType').filter((call) => call.args[2] === 'create')
@@ -102,7 +102,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(userCreateCall!.args[3]).toContain('Create input for User')
 		})
 
-		test('should handle models with optional fields for create input', () => {
+		it('should handle models with optional fields for create input', () => {
 			const optionalFieldContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('Product', [
@@ -129,7 +129,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Update Input Generation', () => {
-		test('should generate update input with correct parameters', () => {
+		it('should generate update input with correct parameters', () => {
 			generator.generate()
 
 			const updateCalls = spyStrategy.getCallsForMethod('createInputType').filter((call) => call.args[2] === 'update')
@@ -142,7 +142,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(userUpdateCall!.args[3]).toContain('Update input for User')
 		})
 
-		test('should handle models with different field types for update input', () => {
+		it('should handle models with different field types for update input', () => {
 			generator.generate()
 
 			const updateCalls = spyStrategy.getCallsForMethod('createInputType').filter((call) => call.args[2] === 'update')
@@ -154,7 +154,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [],
@@ -167,7 +167,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should handle models with no fields gracefully', () => {
+		it('should handle models with no fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [TestFixtures.createDataModel('Empty', [])],
@@ -181,7 +181,7 @@ describe('UnifiedInputGenerator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle generation errors gracefully', () => {
+		it('should handle generation errors gracefully', () => {
 			const malformedModel = {
 				$type: 'DataModel',
 				name: null,
@@ -209,7 +209,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format input type names correctly', () => {
+		it('should format input type names correctly', () => {
 			generator.generate()
 
 			const inputCalls = spyStrategy.getCallsForMethod('createInputType')
@@ -220,7 +220,7 @@ describe('UnifiedInputGenerator', () => {
 			})
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				typeNaming: 'camelCase',
 				fieldNaming: 'snake_case',
@@ -242,7 +242,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return consistent result structure', () => {
+		it('should return consistent result structure', () => {
 			const result = generator.generate()
 
 			expect(Array.isArray(result)).toBe(true)
@@ -252,7 +252,7 @@ describe('UnifiedInputGenerator', () => {
 			})
 		})
 
-		test('should validate actual input structure', () => {
+		it('should validate actual input structure', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -269,7 +269,7 @@ describe('UnifiedInputGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with relations', () => {
+		it('should handle models with relations', () => {
 			const relationContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -298,7 +298,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(inputCalls.length).toBe(4)
 		})
 
-		test('should handle single model correctly', () => {
+		it('should handle single model correctly', () => {
 			const singleContext = TestFixtures.createContext({
 				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],
 			})
@@ -311,7 +311,7 @@ describe('UnifiedInputGenerator', () => {
 			expect(result.length).toBe(1)
 		})
 
-		test('should handle models with mixed field types', () => {
+		it('should handle models with mixed field types', () => {
 			const mixedContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('ComplexModel', [

@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedEnumGenerator } from '@generators/unified/unified-enum-generator'
 import { OutputFormat } from '@utils/constants'
 import { TestFixtures, TestMockFactory } from '../../helpers'
@@ -22,19 +22,19 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with GraphQL format', () => {
+		it('should initialize with GraphQL format', () => {
 			const graphqlGenerator = new UnifiedEnumGenerator(context, OutputFormat.GRAPHQL)
 			expect(graphqlGenerator).toBeDefined()
 		})
 
-		test('should initialize with TypeScript format', () => {
+		it('should initialize with TypeScript format', () => {
 			const typescriptGenerator = new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL)
 			expect(typescriptGenerator).toBeDefined()
 		})
 	})
 
 	describe('Enum Generation', () => {
-		test('should generate enums when enabled', () => {
+		it('should generate enums when enabled', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -42,7 +42,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should not generate enums when disabled', () => {
+		it('should not generate enums when disabled', () => {
 			const disabledContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: false,
@@ -56,7 +56,7 @@ describe('Unified Enum Generator', () => {
 			expect(result).toEqual([])
 		})
 
-		test('should generate correct number of enums', () => {
+		it('should generate correct number of enums', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(3)
@@ -64,7 +64,7 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('GraphQL Enum Generation', () => {
-		test('should generate GraphQL enum definitions', () => {
+		it('should generate GraphQL enum definitions', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -73,7 +73,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBe(3)
 		})
 
-		test('should handle enum with values', () => {
+		it('should handle enum with values', () => {
 			const singleEnumContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -88,7 +88,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBe(1)
 		})
 
-		test('should handle enum without values', () => {
+		it('should handle enum without values', () => {
 			const emptyEnumContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -105,7 +105,7 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('TypeScript Enum Generation', () => {
-		test('should generate TypeScript enum definitions', () => {
+		it('should generate TypeScript enum definitions', () => {
 			const typescriptGenerator = new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL)
 
 			const result = typescriptGenerator.generate()
@@ -114,7 +114,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should handle different enum naming', () => {
+		it('should handle different enum naming', () => {
 			const customContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -132,7 +132,7 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle missing enums gracefully', () => {
+		it('should handle missing enums gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -148,7 +148,7 @@ describe('Unified Enum Generator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle malformed enum gracefully', () => {
+		it('should handle malformed enum gracefully', () => {
 			const malformedEnum = TestFixtures.createEnum('', [])
 			const malformedContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
@@ -166,7 +166,7 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('Enum Processing', () => {
-		test('should process all enums', () => {
+		it('should process all enums', () => {
 			const multiEnumContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -184,7 +184,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBe(3)
 		})
 
-		test('should handle enums with many values', () => {
+		it('should handle enums with many values', () => {
 			const manyValuesEnum = TestFixtures.createEnum('Alphabet', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''))
 			const manyValuesContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
@@ -200,7 +200,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBe(1)
 		})
 
-		test('should handle enums with special characters in names', () => {
+		it('should handle enums with special characters in names', () => {
 			const specialEnum = TestFixtures.createEnum('Special_Enum_123', ['VALUE_1', 'VALUE_2'])
 			const specialContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
@@ -218,14 +218,14 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('Generation Results', () => {
-		test('should return consistent result structure', () => {
+		it('should return consistent result structure', () => {
 			const result = generator.generate()
 
 			expect(Array.isArray(result)).toBe(true)
 			expect(result.every((item) => typeof item === 'string')).toBe(true)
 		})
 
-		test('should generate different results for different formats', () => {
+		it('should generate different results for different formats', () => {
 			const graphqlResult = generator.generate()
 			const typescriptGenerator = new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL)
 			const typescriptResult = typescriptGenerator.generate()
@@ -234,7 +234,7 @@ describe('Unified Enum Generator', () => {
 			expect(Array.isArray(typescriptResult)).toBe(true)
 		})
 
-		test('should validate actual output structure for GraphQL', () => {
+		it('should validate actual output structure for GraphQL', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(3)
@@ -249,7 +249,7 @@ describe('Unified Enum Generator', () => {
 			expect(result).toContain('OrderStatus')
 		})
 
-		test('should validate actual output structure for TypeScript', () => {
+		it('should validate actual output structure for TypeScript', () => {
 			const typescriptGenerator = new UnifiedEnumGenerator(context, OutputFormat.TYPE_GRAPHQL)
 			const result = typescriptGenerator.generate()
 
@@ -259,7 +259,7 @@ describe('Unified Enum Generator', () => {
 			expect(result).toContain('OrderStatus')
 		})
 
-		test('should respect generateEnums flag', () => {
+		it('should respect generateEnums flag', () => {
 			const enabledContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -285,7 +285,7 @@ describe('Unified Enum Generator', () => {
 	})
 
 	describe('Edge Cases', () => {
-		test('should handle single enum', () => {
+		it('should handle single enum', () => {
 			const singleContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateEnums: true,
@@ -299,7 +299,7 @@ describe('Unified Enum Generator', () => {
 			expect(result.length).toBe(1)
 		})
 
-		test('should handle enum with duplicate values', () => {
+		it('should handle enum with duplicate values', () => {
 			const duplicateEnum = TestFixtures.createEnum('Duplicate', ['A', 'B', 'A', 'C'])
 			const duplicateContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
@@ -315,7 +315,7 @@ describe('Unified Enum Generator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle enum with very long names', () => {
+		it('should handle enum with very long names', () => {
 			const longName = 'A'.repeat(100)
 			const longEnum = TestFixtures.createEnum(longName, ['VALUE'])
 			const longContext = TestMockFactory.createUnifiedContext(

@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { GeneratorOrchestrator } from '@orchestrator/generator-orchestrator'
 import { OutputFormat } from '@utils/constants'
 import { TestFixtures, TestMockFactory } from '../../helpers'
@@ -33,12 +33,12 @@ describe('GeneratorOrchestrator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with GraphQL output format', () => {
+		it('should initialize with GraphQL output format', () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			expect(orchestrator).toBeDefined()
 		})
 
-		test('should initialize with TypeGraphQL output format', () => {
+		it('should initialize with TypeGraphQL output format', () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
 			expect(orchestrator).toBeDefined()
 		})
@@ -49,7 +49,7 @@ describe('GeneratorOrchestrator', () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 		})
 
-		test('should generate GraphQL schema with SDL output', async () => {
+		it('should generate GraphQL schema with SDL output', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result).toBeDefined()
@@ -59,7 +59,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.code).toBeUndefined()
 		})
 
-		test('should generate all enabled components', async () => {
+		it('should generate all enabled components', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result.results).toBeDefined()
@@ -67,7 +67,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.results.length).toBeGreaterThan(0)
 		})
 
-		test('should collect generation stats', async () => {
+		it('should collect generation stats', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result.stats).toBeDefined()
@@ -76,7 +76,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(typeof result.stats.scalarTypes).toBe('number')
 		})
 
-		test('should respect generateEnums flag', async () => {
+		it('should respect generateEnums flag', async () => {
 			const contextWithoutEnums = TestFixtures.createContext({
 				generateEnums: false,
 				enums: [TestFixtures.createEnum('Test', ['A', 'B'])],
@@ -88,7 +88,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.enumTypes).toBe(0)
 		})
 
-		test('should respect generateScalars flag', async () => {
+		it('should respect generateScalars flag', async () => {
 			const contextWithoutScalars = TestFixtures.createContext({
 				generateScalars: false,
 			})
@@ -99,7 +99,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.scalarTypes).toBe(0)
 		})
 
-		test('should respect generateFilters flag', async () => {
+		it('should respect generateFilters flag', async () => {
 			const contextWithoutFilters = TestFixtures.createContext({
 				generateFilters: false,
 				models: [TestFixtures.createDataModel('User')],
@@ -111,7 +111,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.filterInputTypes).toBe(0)
 		})
 
-		test('should respect generateSorts flag', async () => {
+		it('should respect generateSorts flag', async () => {
 			const contextWithoutSorts = TestFixtures.createContext({
 				generateSorts: false,
 				models: [TestFixtures.createDataModel('User')],
@@ -123,7 +123,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.sortInputTypes).toBe(0)
 		})
 
-		test('should respect connectionTypes flag', async () => {
+		it('should respect connectionTypes flag', async () => {
 			const contextWithoutConnections = TestFixtures.createContext({
 				connectionTypes: false,
 				models: [TestFixtures.createDataModel('User')],
@@ -135,7 +135,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.connectionTypes).toBe(0)
 		})
 
-		test('should respect includeRelations flag', async () => {
+		it('should respect includeRelations flag', async () => {
 			const contextWithoutRelations = TestFixtures.createContext({
 				includeRelations: false,
 				models: [TestFixtures.createDataModel('User'), TestFixtures.createDataModel('Post', [TestFixtures.createRelationField('author', 'User')])],
@@ -153,7 +153,7 @@ describe('GeneratorOrchestrator', () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
 		})
 
-		test('should generate TypeGraphQL code', async () => {
+		it('should generate TypeGraphQL code', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result).toBeDefined()
@@ -163,7 +163,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.sdl).toBeUndefined()
 		})
 
-		test('should generate all enabled components for TypeScript', async () => {
+		it('should generate all enabled components for TypeScript', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result.results).toBeDefined()
@@ -171,7 +171,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.results.length).toBeGreaterThan(0)
 		})
 
-		test('should use TypeScript output strategy', async () => {
+		it('should use TypeScript output strategy', async () => {
 			const result = await orchestrator.generate()
 
 			expect(result.code).toBeDefined()
@@ -180,7 +180,7 @@ describe('GeneratorOrchestrator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty context gracefully', async () => {
+		it('should handle empty context gracefully', async () => {
 			const emptyContext = TestFixtures.createContext({
 				models: [],
 				enums: [],
@@ -194,7 +194,7 @@ describe('GeneratorOrchestrator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle malformed models gracefully', async () => {
+		it('should handle malformed models gracefully', async () => {
 			const malformedContext = TestFixtures.createContext({
 				models: [],
 			})
@@ -206,7 +206,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.objectTypes).toBeGreaterThanOrEqual(0)
 		})
 
-		test('should handle invalid output format gracefully', async () => {
+		it('should handle invalid output format gracefully', async () => {
 			expect(() => {
 				const invalidOrchestrator = new GeneratorOrchestrator(baseContext, 'invalid' as OutputFormat)
 				expect(invalidOrchestrator).toBeDefined()
@@ -215,7 +215,7 @@ describe('GeneratorOrchestrator', () => {
 	})
 
 	describe('Generation Order', () => {
-		test('should generate components in correct order', async () => {
+		it('should generate components in correct order', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			const result = await orchestrator.generate()
 
@@ -239,7 +239,7 @@ describe('GeneratorOrchestrator', () => {
 	})
 
 	describe('Result Structure', () => {
-		test('should return consistent result structure', async () => {
+		it('should return consistent result structure', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			const result = await orchestrator.generate()
 
@@ -258,7 +258,7 @@ describe('GeneratorOrchestrator', () => {
 			})
 		})
 
-		test('should have valid generation results', async () => {
+		it('should have valid generation results', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			const result = await orchestrator.generate()
 
@@ -272,7 +272,7 @@ describe('GeneratorOrchestrator', () => {
 			})
 		})
 
-		test('should validate complete GraphQL generation flow', async () => {
+		it('should validate complete GraphQL generation flow', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			const result = await orchestrator.generate()
 
@@ -299,7 +299,7 @@ describe('GeneratorOrchestrator', () => {
 			})
 		})
 
-		test('should validate complete TypeScript generation flow', async () => {
+		it('should validate complete TypeScript generation flow', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
 			const result = await orchestrator.generate()
 
@@ -316,7 +316,7 @@ describe('GeneratorOrchestrator', () => {
 	})
 
 	describe('Configuration Validation', () => {
-		test('should handle all flags disabled', async () => {
+		it('should handle all flags disabled', async () => {
 			const minimalContext = TestFixtures.createContext({
 				generateScalars: false,
 				generateEnums: false,
@@ -333,7 +333,7 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.stats.objectTypes).toBeGreaterThanOrEqual(0)
 		})
 
-		test('should handle complex model relationships', async () => {
+		it('should handle complex model relationships', async () => {
 			const complexContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('User', [

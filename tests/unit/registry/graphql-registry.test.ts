@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { SchemaComposer } from 'graphql-compose'
 import { GraphQLRegistry } from '@utils/registry/graphql-registry'
 import { TypeKind } from '@utils/registry/base-registry'
@@ -13,17 +13,17 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with schema composer', () => {
+		it('should initialize with schema composer', () => {
 			expect(registry).toBeDefined()
 			expect(registry).toBeInstanceOf(GraphQLRegistry)
 		})
 
-		test('should create Node interface on initialization', () => {
+		it('should create Node interface on initialization', () => {
 			expect(registry.hasType('Node')).toBe(true)
 			expect(registry.isTypeOfKind('Node', TypeKind.INTERFACE)).toBe(true)
 		})
 
-		test('should sync existing types from schema composer', () => {
+		it('should sync existing types from schema composer', () => {
 			const composerWithTypes = new SchemaComposer()
 			composerWithTypes.createObjectTC('ExistingType')
 
@@ -35,7 +35,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Type Registration', () => {
-		test('should register GraphQL object type', () => {
+		it('should register GraphQL object type', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -47,7 +47,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('User', TypeKind.OBJECT)).toBe(true)
 		})
 
-		test('should register GraphQL input type', () => {
+		it('should register GraphQL input type', () => {
 			const inputTC = schemaComposer.createInputTC({
 				name: 'UserInput',
 				fields: { name: 'String' },
@@ -59,7 +59,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('UserInput', TypeKind.INPUT)).toBe(true)
 		})
 
-		test('should register GraphQL enum type', () => {
+		it('should register GraphQL enum type', () => {
 			const enumTC = schemaComposer.createEnumTC({
 				name: 'UserRole',
 				values: { ADMIN: { value: 'ADMIN' }, USER: { value: 'USER' } },
@@ -71,7 +71,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('UserRole', TypeKind.ENUM)).toBe(true)
 		})
 
-		test('should register GraphQL scalar type', () => {
+		it('should register GraphQL scalar type', () => {
 			const scalarTC = schemaComposer.createScalarTC({
 				name: 'DateTime',
 				serialize: (value: any) => value,
@@ -83,7 +83,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('DateTime', TypeKind.SCALAR)).toBe(true)
 		})
 
-		test('should store composer reference in type info', () => {
+		it('should store composer reference in type info', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -97,7 +97,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Edge Type Management', () => {
-		test('should register edge type', () => {
+		it('should register edge type', () => {
 			const userEdgeTC = schemaComposer.createObjectTC({ name: 'UserEdge', fields: { cursor: 'String!' } })
 			registry.registerEdgeType('UserEdge', userEdgeTC)
 
@@ -105,7 +105,7 @@ describe('GraphQL Registry', () => {
 			expect(edgeTypes).toContain('UserEdge')
 		})
 
-		test('should not duplicate edge types', () => {
+		it('should not duplicate edge types', () => {
 			const userEdgeTC = schemaComposer.createObjectTC({ name: 'UserEdge', fields: { cursor: 'String!' } })
 			registry.registerEdgeType('UserEdge', userEdgeTC)
 			registry.registerEdgeType('UserEdge', userEdgeTC)
@@ -114,7 +114,7 @@ describe('GraphQL Registry', () => {
 			expect(edgeTypes.filter((e) => e === 'UserEdge')).toHaveLength(1)
 		})
 
-		test('should register multiple edge types', () => {
+		it('should register multiple edge types', () => {
 			const userEdgeTC = schemaComposer.createObjectTC({ name: 'UserEdge', fields: { cursor: 'String!' } })
 			const postEdgeTC = schemaComposer.createObjectTC({ name: 'PostEdge', fields: { cursor: 'String!' } })
 			registry.registerEdgeType('UserEdge', userEdgeTC)
@@ -126,7 +126,7 @@ describe('GraphQL Registry', () => {
 			expect(edgeTypes).toHaveLength(2)
 		})
 
-		test('should get all edge types', () => {
+		it('should get all edge types', () => {
 			const userEdgeTC = schemaComposer.createObjectTC({ name: 'UserEdge', fields: { cursor: 'String!' } })
 			const postEdgeTC = schemaComposer.createObjectTC({ name: 'PostEdge', fields: { cursor: 'String!' } })
 			const commentEdgeTC = schemaComposer.createObjectTC({ name: 'CommentEdge', fields: { cursor: 'String!' } })
@@ -140,7 +140,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Relation Processing', () => {
-		test('should track processed relations', () => {
+		it('should track processed relations', () => {
 			const relationKey = 'User_posts_Post'
 
 			expect(registry.hasProcessedRelation(relationKey)).toBe(false)
@@ -150,7 +150,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.hasProcessedRelation(relationKey)).toBe(true)
 		})
 
-		test('should not duplicate processed relations', () => {
+		it('should not duplicate processed relations', () => {
 			const relationKey = 'User_posts_Post'
 
 			registry.addProcessedRelation(relationKey)
@@ -160,7 +160,7 @@ describe('GraphQL Registry', () => {
 			expect(processedRelations.filter((r) => r === relationKey)).toHaveLength(1)
 		})
 
-		test('should get all processed relations', () => {
+		it('should get all processed relations', () => {
 			const relation1 = 'User_posts_Post'
 			const relation2 = 'Post_author_User'
 
@@ -171,7 +171,7 @@ describe('GraphQL Registry', () => {
 			expect(processedRelations.sort()).toEqual([relation1, relation2].sort())
 		})
 
-		test('should handle empty relation keys', () => {
+		it('should handle empty relation keys', () => {
 			registry.addProcessedRelation('')
 
 			expect(registry.hasProcessedRelation('')).toBe(true)
@@ -180,7 +180,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Built-in Scalar Detection', () => {
-		test('should detect GraphQL built-in scalars', () => {
+		it('should detect GraphQL built-in scalars', () => {
 			expect(registry.isBuiltInScalar('String')).toBe(true)
 			expect(registry.isBuiltInScalar('Int')).toBe(true)
 			expect(registry.isBuiltInScalar('Float')).toBe(true)
@@ -188,26 +188,26 @@ describe('GraphQL Registry', () => {
 			expect(registry.isBuiltInScalar('ID')).toBe(true)
 		})
 
-		test('should not detect custom scalars as built-in', () => {
+		it('should not detect custom scalars as built-in', () => {
 			expect(registry.isBuiltInScalar('DateTime')).toBe(false)
 			expect(registry.isBuiltInScalar('JSON')).toBe(false)
 			expect(registry.isBuiltInScalar('UUID')).toBe(false)
 		})
 
-		test('should handle case sensitivity', () => {
+		it('should handle case sensitivity', () => {
 			expect(registry.isBuiltInScalar('string')).toBe(false)
 			expect(registry.isBuiltInScalar('STRING')).toBe(false)
 			expect(registry.isBuiltInScalar('int')).toBe(false)
 		})
 
-		test('should handle null and undefined inputs', () => {
+		it('should handle null and undefined inputs', () => {
 			expect(registry.isBuiltInScalar(null as any)).toBe(false)
 			expect(registry.isBuiltInScalar(undefined as any)).toBe(false)
 		})
 	})
 
 	describe('Schema Generation', () => {
-		test('should generate GraphQL SDL schema', () => {
+		it('should generate GraphQL SDL schema', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String', age: 'Int' },
@@ -221,14 +221,14 @@ describe('GraphQL Registry', () => {
 			expect(schema).toContain('age: Int')
 		})
 
-		test('should include Node interface in schema', () => {
+		it('should include Node interface in schema', () => {
 			const schema = registry.generateSDL()
 
 			expect(schema).toContain('interface Node')
 			expect(schema).toContain('id: ID!')
 		})
 
-		test('should handle empty schema', () => {
+		it('should handle empty schema', () => {
 			const emptyComposer = new SchemaComposer()
 
 			const schema = registry.generateSDL()
@@ -239,7 +239,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Type Validation', () => {
-		test('should validate registered types exist in schema composer', () => {
+		it('should validate registered types exist in schema composer', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -249,7 +249,7 @@ describe('GraphQL Registry', () => {
 			expect(schemaComposer.has('User')).toBe(true)
 		})
 
-		test('should handle missing types gracefully', () => {
+		it('should handle missing types gracefully', () => {
 			const fakeTC = { getTypeName: () => 'FakeType' } as any
 			registry.registerType('FakeType', TypeKind.OBJECT, fakeTC)
 
@@ -259,7 +259,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Type Description Extraction', () => {
-		test('should extract description from object type composer', () => {
+		it('should extract description from object type composer', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				description: 'User object type',
@@ -271,7 +271,7 @@ describe('GraphQL Registry', () => {
 			expect(typeInfo?.description).toBe('User object type')
 		})
 
-		test('should extract description from enum type composer', () => {
+		it('should extract description from enum type composer', () => {
 			const enumTC = schemaComposer.createEnumTC({
 				name: 'UserRole',
 				description: 'User role enumeration',
@@ -283,7 +283,7 @@ describe('GraphQL Registry', () => {
 			expect(typeInfo?.description).toBe('User role enumeration')
 		})
 
-		test('should handle types without description', () => {
+		it('should handle types without description', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -296,7 +296,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Integration with Base Registry', () => {
-		test('should inherit all base registry functionality', () => {
+		it('should inherit all base registry functionality', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String' },
@@ -309,7 +309,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('User', TypeKind.OBJECT)).toBe(true)
 		})
 
-		test('should support generated type filtering', () => {
+		it('should support generated type filtering', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'GeneratedUser',
 				fields: { name: 'String' },
@@ -322,7 +322,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle invalid composer objects', () => {
+		it('should handle invalid composer objects', () => {
 			const invalidTC = null as any
 
 			expect(() => {
@@ -332,7 +332,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.hasType('InvalidType')).toBe(true)
 		})
 
-		test('should handle type registration with empty names', () => {
+		it('should handle type registration with empty names', () => {
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'EmptyName',
 				fields: { name: 'String' },
@@ -347,7 +347,7 @@ describe('GraphQL Registry', () => {
 	})
 
 	describe('Performance Considerations', () => {
-		test('should handle large numbers of type registrations efficiently', () => {
+		it('should handle large numbers of type registrations efficiently', () => {
 			const startTime = Date.now()
 
 			for (let i = 0; i < 1000; i++) {
@@ -365,7 +365,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.getAllTypes()).toHaveLength(1001)
 		})
 
-		test('should handle many edge type registrations efficiently', () => {
+		it('should handle many edge type registrations efficiently', () => {
 			for (let i = 0; i < 100; i++) {
 				const edgeTC = schemaComposer.createObjectTC({ name: `Edge${i}`, fields: { cursor: 'String!' } })
 				registry.registerEdgeType(`Edge${i}`, edgeTC)
@@ -374,7 +374,7 @@ describe('GraphQL Registry', () => {
 			expect(registry.getEdgeTypes()).toHaveLength(100)
 		})
 
-		test('should handle many relation processing operations efficiently', () => {
+		it('should handle many relation processing operations efficiently', () => {
 			for (let i = 0; i < 100; i++) {
 				registry.addProcessedRelation(`Relation${i}`)
 			}

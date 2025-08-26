@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedScalarGenerator } from '@generators/unified/unified-scalar-generator'
 import { OutputFormat } from '@utils/constants'
 import { TestFixtures, TestMockFactory } from '../../helpers'
@@ -25,19 +25,19 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with GraphQL format', () => {
+		it('should initialize with GraphQL format', () => {
 			const graphqlGenerator = new UnifiedScalarGenerator(context, OutputFormat.GRAPHQL)
 			expect(graphqlGenerator).toBeDefined()
 		})
 
-		test('should initialize with TypeScript format', () => {
+		it('should initialize with TypeScript format', () => {
 			const typescriptGenerator = new UnifiedScalarGenerator(context, OutputFormat.TYPE_GRAPHQL)
 			expect(typescriptGenerator).toBeDefined()
 		})
 	})
 
 	describe('Scalar Generation', () => {
-		test('should generate default scalars when enabled', () => {
+		it('should generate default scalars when enabled', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -45,7 +45,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.graphqlTypes!.length).toBeGreaterThan(0)
 		})
 
-		test('should not generate scalars when disabled', () => {
+		it('should not generate scalars when disabled', () => {
 			const disabledContext = TestFixtures.createContext({
 				generateScalars: false,
 			})
@@ -56,7 +56,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.graphqlTypes).toEqual([])
 		})
 
-		test('should use custom scalar mappings', () => {
+		it('should use custom scalar mappings', () => {
 			const customContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
@@ -74,21 +74,21 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('GraphQL Scalar Generation', () => {
-		test('should generate GraphQL scalar definitions', () => {
+		it('should generate GraphQL scalar definitions', () => {
 			const result = generator.generate()
 
 			expect(result.graphqlTypes).toBeDefined()
 			expect(result.graphqlTypes!.length).toBeGreaterThan(0)
 		})
 
-		test('should include standard scalars', () => {
+		it('should include standard scalars', () => {
 			const result = generator.generate()
 
 			expect(result.graphqlTypes).toBeDefined()
 			expect(result.graphqlTypes!.length).toBeGreaterThanOrEqual(3)
 		})
 
-		test('should respect scalar type configuration', () => {
+		it('should respect scalar type configuration', () => {
 			const customScalarContext = TestMockFactory.createGraphQLContext(
 				TestFixtures.createContext({
 					generateScalars: true,
@@ -110,7 +110,7 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('TypeScript Scalar Generation', () => {
-		test('should generate TypeScript scalar imports', () => {
+		it('should generate TypeScript scalar imports', () => {
 			const typescriptGenerator = new UnifiedScalarGenerator(context, OutputFormat.TYPE_GRAPHQL)
 
 			const result = typescriptGenerator.generate()
@@ -119,7 +119,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.typescriptTypes!.length).toBeGreaterThan(0)
 		})
 
-		test('should handle GraphQL scalars library imports', () => {
+		it('should handle GraphQL scalars library imports', () => {
 			const typescriptGenerator = new UnifiedScalarGenerator(context, OutputFormat.TYPE_GRAPHQL)
 
 			const result = typescriptGenerator.generate()
@@ -129,7 +129,7 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle invalid scalar configurations gracefully', () => {
+		it('should handle invalid scalar configurations gracefully', () => {
 			const invalidContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {},
@@ -142,7 +142,7 @@ describe('Unified Scalar Generator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle missing scalar types gracefully', () => {
+		it('should handle missing scalar types gracefully', () => {
 			const minimalContext = TestFixtures.createContext({
 				generateScalars: true,
 			})
@@ -156,7 +156,7 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('Generation Results', () => {
-		test('should return consistent result structure', () => {
+		it('should return consistent result structure', () => {
 			const result = generator.generate()
 
 			expect(result).toHaveProperty('graphqlTypes')
@@ -165,7 +165,7 @@ describe('Unified Scalar Generator', () => {
 			expect(Array.isArray(result.typescriptTypes)).toBe(true)
 		})
 
-		test('should generate different results for different formats', () => {
+		it('should generate different results for different formats', () => {
 			const graphqlResult = generator.generate()
 			const typescriptGenerator = new UnifiedScalarGenerator(context, OutputFormat.TYPE_GRAPHQL)
 			const typescriptResult = typescriptGenerator.generate()
@@ -173,7 +173,7 @@ describe('Unified Scalar Generator', () => {
 			expect(graphqlResult).not.toEqual(typescriptResult)
 		})
 
-		test('should respect generateScalars flag', () => {
+		it('should respect generateScalars flag', () => {
 			const enabledContext = TestMockFactory.createGraphQLContext(
 				TestFixtures.createContext({
 					generateScalars: true,
@@ -197,7 +197,7 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('Scalar Type Mappings', () => {
-		test('should handle DateTime scalar mapping', () => {
+		it('should handle DateTime scalar mapping', () => {
 			const dateTimeContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
@@ -210,7 +210,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.graphqlTypes).toBeDefined()
 		})
 
-		test('should handle JSON scalar mapping', () => {
+		it('should handle JSON scalar mapping', () => {
 			const jsonContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
@@ -223,7 +223,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.graphqlTypes).toBeDefined()
 		})
 
-		test('should handle Decimal scalar mapping', () => {
+		it('should handle Decimal scalar mapping', () => {
 			const decimalContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
@@ -236,7 +236,7 @@ describe('Unified Scalar Generator', () => {
 			expect(result.graphqlTypes).toBeDefined()
 		})
 
-		test('should handle Bytes scalar mapping', () => {
+		it('should handle Bytes scalar mapping', () => {
 			const bytesContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {
@@ -251,7 +251,7 @@ describe('Unified Scalar Generator', () => {
 	})
 
 	describe('Edge Cases', () => {
-		test('should handle empty scalar configuration', () => {
+		it('should handle empty scalar configuration', () => {
 			const emptyContext = TestFixtures.createContext({
 				generateScalars: true,
 				scalarTypes: {},
@@ -266,7 +266,7 @@ describe('Unified Scalar Generator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle null scalar types gracefully', () => {
+		it('should handle null scalar types gracefully', () => {
 			const nullContext = TestFixtures.createContext({
 				generateScalars: true,
 			})
@@ -281,7 +281,7 @@ describe('Unified Scalar Generator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle mixed valid scalar mappings', () => {
+		it('should handle mixed valid scalar mappings', () => {
 			const mixedContext = TestMockFactory.createGraphQLContext(
 				TestFixtures.createContext({
 					generateScalars: true,

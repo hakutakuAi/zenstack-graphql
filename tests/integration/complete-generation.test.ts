@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import run from '@/index'
 import { SchemaBuilder } from '../helpers'
 import { OutputFormat } from '@utils/constants'
@@ -6,7 +6,7 @@ import { getTestOutputPath } from '../test-setup'
 
 describe('Complete Generation Integration', () => {
 	describe('GraphQL Schema Generation', () => {
-		test('should generate complete GraphQL schema from simple model', async () => {
+		it('should generate complete GraphQL schema from simple model', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = {
 				output: getTestOutputPath('test-output.graphql'),
@@ -22,7 +22,7 @@ describe('Complete Generation Integration', () => {
 			expect(result.metadata).toHaveProperty('stats')
 		})
 
-		test('should generate complete GraphQL schema from simple model without DateTime', async () => {
+		it('should generate complete GraphQL schema from simple model without DateTime', async () => {
 			const schema = SchemaBuilder.create()
 				.addModel('User')
 				.addField('id', 'String')
@@ -52,7 +52,7 @@ describe('Complete Generation Integration', () => {
 	})
 
 	describe('TypeScript Generation', () => {
-		test('should generate TypeScript types from simple model', async () => {
+		it('should generate TypeScript types from simple model', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = {
 				output: getTestOutputPath('types.ts'),
@@ -69,7 +69,7 @@ describe('Complete Generation Integration', () => {
 	})
 
 	describe('Feature Flags', () => {
-		test('should respect generateScalars flag', async () => {
+		it('should respect generateScalars flag', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = {
 				output: getTestOutputPath('test.graphql'),
@@ -85,7 +85,7 @@ describe('Complete Generation Integration', () => {
 			expect(result.metadata.stats).toBeDefined()
 		})
 
-		test('should respect generateEnums flag', async () => {
+		it('should respect generateEnums flag', async () => {
 			const schema = SchemaBuilder.createBlogSchema().build()
 			const options = {
 				output: getTestOutputPath('test-enum.graphql'),
@@ -103,7 +103,7 @@ describe('Complete Generation Integration', () => {
 	})
 
 	describe('Error Scenarios', () => {
-		test('should handle invalid output path gracefully', async () => {
+		it('should handle invalid output path gracefully', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = {
 				output: '/invalid/path/schema.graphql',
@@ -115,7 +115,7 @@ describe('Complete Generation Integration', () => {
 			expect(run(schema, options)).rejects.toThrow()
 		})
 
-		test('should handle malformed schema gracefully', async () => {
+		it('should handle malformed schema gracefully', async () => {
 			const schema = null as any
 			const options = {
 				output: getTestOutputPath('test-malformed.graphql'),

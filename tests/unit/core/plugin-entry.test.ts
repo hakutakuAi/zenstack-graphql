@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import run, { name, description } from '@/index'
 import { PluginError, ErrorCategory } from '@utils/error'
 import { TestFixtures, SchemaBuilder } from '../../helpers'
@@ -7,29 +7,29 @@ import { getTestOutputPath } from '../../test-setup'
 
 describe('Plugin Entry Point', () => {
 	describe('Metadata', () => {
-		test('should export correct plugin name', () => {
+		it('should export correct plugin name', () => {
 			expect(name).toBe('ZenStack GraphQL')
 		})
 
-		test('should export correct plugin description', () => {
+		it('should export correct plugin description', () => {
 			expect(description).toBe('Generates GraphQL schemas')
 		})
 	})
 
 	describe('Model Validation', () => {
-		test('should throw PluginError when model is null', async () => {
+		it('should throw PluginError when model is null', async () => {
 			const options = TestFixtures.createSdkOptions()
 
 			expect(run(null as any, options)).rejects.toThrow(PluginError)
 		})
 
-		test('should throw PluginError when model is undefined', async () => {
+		it('should throw PluginError when model is undefined', async () => {
 			const options = TestFixtures.createSdkOptions()
 
 			expect(run(undefined as any, options)).rejects.toThrow(PluginError)
 		})
 
-		test('should throw validation error with correct category', async () => {
+		it('should throw validation error with correct category', async () => {
 			const options = TestFixtures.createSdkOptions()
 
 			try {
@@ -43,7 +43,7 @@ describe('Plugin Entry Point', () => {
 	})
 
 	describe('Options Validation', () => {
-		test('should validate and normalize options', async () => {
+		it('should validate and normalize options', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				output: getTestOutputPath('test-output.graphql'),
@@ -57,7 +57,7 @@ describe('Plugin Entry Point', () => {
 			expect(result.metadata).toHaveProperty('stats')
 		})
 
-		test('should handle invalid options gracefully', async () => {
+		it('should handle invalid options gracefully', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				outputFormat: 'invalid-format' as any,
@@ -66,7 +66,7 @@ describe('Plugin Entry Point', () => {
 			expect(run(schema, options)).rejects.toThrow(PluginError)
 		})
 
-		test('should use default options when none provided', async () => {
+		it('should use default options when none provided', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 
 			const result = await run(
@@ -82,7 +82,7 @@ describe('Plugin Entry Point', () => {
 	})
 
 	describe('Context Creation', () => {
-		test('should create context with filtered models', async () => {
+		it('should create context with filtered models', async () => {
 			const testSchema = SchemaBuilder.createBlogSchema().build()
 
 			const result = await run(
@@ -95,7 +95,7 @@ describe('Plugin Entry Point', () => {
 			expect(result.metadata.stats.objectTypes).toBeGreaterThan(0)
 		})
 
-		test('should include enums in context', async () => {
+		it('should include enums in context', async () => {
 			const schema = SchemaBuilder.create()
 				.addEnum('UserRole', ['ADMIN', 'USER'])
 				.addModel('User')
@@ -116,7 +116,7 @@ describe('Plugin Entry Point', () => {
 	})
 
 	describe('Generation Flow', () => {
-		test('should generate GraphQL SDL format', async () => {
+		it('should generate GraphQL SDL format', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				outputFormat: OutputFormat.GRAPHQL,
@@ -128,7 +128,7 @@ describe('Plugin Entry Point', () => {
 			expect(result.metadata.stats).toBeDefined()
 		})
 
-		test('should generate TypeScript format', async () => {
+		it('should generate TypeScript format', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				outputFormat: OutputFormat.TYPE_GRAPHQL,
@@ -142,7 +142,7 @@ describe('Plugin Entry Point', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle generation errors gracefully', async () => {
+		it('should handle generation errors gracefully', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				output: '/invalid/path/that/does/not/exist/schema.graphql',
@@ -151,7 +151,7 @@ describe('Plugin Entry Point', () => {
 			expect(run(schema, options)).rejects.toThrow(PluginError)
 		})
 
-		test('should wrap unknown errors as PluginError', async () => {
+		it('should wrap unknown errors as PluginError', async () => {
 			const schema = SchemaBuilder.createSimpleUser().build()
 			const options = TestFixtures.createSdkOptions({
 				output: '/invalid/path/schema.graphql',
@@ -166,7 +166,7 @@ describe('Plugin Entry Point', () => {
 			}
 		})
 
-		test('should provide helpful suggestions in error messages', async () => {
+		it('should provide helpful suggestions in error messages', async () => {
 			try {
 				await run(
 					null as any,
@@ -190,7 +190,7 @@ describe('Plugin Entry Point', () => {
 			schema = SchemaBuilder.createBlogSchema().build()
 		})
 
-		test('should return correct metadata structure', async () => {
+		it('should return correct metadata structure', async () => {
 			const result = await run(
 				schema,
 				TestFixtures.createSdkOptions({
@@ -203,7 +203,7 @@ describe('Plugin Entry Point', () => {
 			expect(result.metadata).toHaveProperty('outputPath')
 		})
 
-		test('should include generation statistics', async () => {
+		it('should include generation statistics', async () => {
 			const result = await run(
 				schema,
 				TestFixtures.createSdkOptions({
@@ -218,7 +218,7 @@ describe('Plugin Entry Point', () => {
 			expect(result.metadata.stats.enumTypes).toBeGreaterThan(0)
 		})
 
-		test('should track output path correctly', async () => {
+		it('should track output path correctly', async () => {
 			const customOutput = getTestOutputPath('custom-schema.graphql')
 			const result = await run(schema, TestFixtures.createSdkOptions({ output: customOutput }))
 

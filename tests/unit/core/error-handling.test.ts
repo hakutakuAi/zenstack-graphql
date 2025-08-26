@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import {
 	PluginError,
 	ErrorCategory,
@@ -13,7 +13,7 @@ import {
 
 describe('Error Handling System', () => {
 	describe('PluginError', () => {
-		test('should create error with message and category', () => {
+		it('should create error with message and category', () => {
 			const error = new PluginError('Test error', ErrorCategory.VALIDATION)
 
 			expect(error.name).toBe('PluginError')
@@ -21,7 +21,7 @@ describe('Error Handling System', () => {
 			expect(error.message).toContain('Test error')
 		})
 
-		test('should include context in error message', () => {
+		it('should include context in error message', () => {
 			const context = { modelName: 'User', fieldName: 'email' }
 			const error = new PluginError('Test error', ErrorCategory.SCHEMA, context)
 
@@ -30,7 +30,7 @@ describe('Error Handling System', () => {
 			expect(error.message).toContain('fieldName: email')
 		})
 
-		test('should include suggestions in error message', () => {
+		it('should include suggestions in error message', () => {
 			const suggestions = ['Check your schema', 'Verify field types']
 			const error = new PluginError('Test error', ErrorCategory.VALIDATION, {}, suggestions)
 
@@ -39,7 +39,7 @@ describe('Error Handling System', () => {
 			expect(error.message).toContain('Verify field types')
 		})
 
-		test('should format complex context objects', () => {
+		it('should format complex context objects', () => {
 			const context = {
 				model: { name: 'User', fields: ['id', 'name'] },
 				config: { generateScalars: true },
@@ -52,7 +52,7 @@ describe('Error Handling System', () => {
 	})
 
 	describe('ErrorCategory', () => {
-		test('should have correct error categories', () => {
+		it('should have correct error categories', () => {
 			expect(ErrorCategory.VALIDATION).toBe(ErrorCategory.VALIDATION)
 			expect(ErrorCategory.SCHEMA).toBe(ErrorCategory.SCHEMA)
 			expect(ErrorCategory.FILE).toBe(ErrorCategory.FILE)
@@ -62,7 +62,7 @@ describe('Error Handling System', () => {
 	})
 
 	describe('Warning Function', () => {
-		test('should call console.warn with formatted message', () => {
+		it('should call console.warn with formatted message', () => {
 			const originalWarn = console.warn
 			const warnings: string[] = []
 			console.warn = (message: string) => warnings.push(message)
@@ -78,28 +78,28 @@ describe('Error Handling System', () => {
 	})
 
 	describe('Error Utilities', () => {
-		test('getErrorMessage should extract message from Error', () => {
+		it('getErrorMessage should extract message from Error', () => {
 			const error = new Error('Test message')
 			expect(getErrorMessage(error)).toBe('Test message')
 		})
 
-		test('getErrorMessage should convert non-Error to string', () => {
+		it('getErrorMessage should convert non-Error to string', () => {
 			expect(getErrorMessage('string error')).toBe('string error')
 			expect(getErrorMessage(42)).toBe('42')
 			expect(getErrorMessage(null)).toBe('null')
 		})
 
-		test('getErrorCategory should return category from PluginError', () => {
+		it('getErrorCategory should return category from PluginError', () => {
 			const error = new PluginError('Test', ErrorCategory.VALIDATION)
 			expect(getErrorCategory(error)).toBe(ErrorCategory.VALIDATION)
 		})
 
-		test('getErrorCategory should default to GENERATION for other errors', () => {
+		it('getErrorCategory should default to GENERATION for other errors', () => {
 			const error = new Error('Test')
 			expect(getErrorCategory(error)).toBe(ErrorCategory.GENERATION)
 		})
 
-		test('handleError should call warning with formatted message', () => {
+		it('handleError should call warning with formatted message', () => {
 			const originalWarn = console.warn
 			const warnings: string[] = []
 			console.warn = (message: string) => warnings.push(message)
@@ -117,7 +117,7 @@ describe('Error Handling System', () => {
 	})
 
 	describe('Safe Operation Execution', () => {
-		test('executeSafely should return success for successful operation', () => {
+		it('executeSafely should return success for successful operation', () => {
 			const operation = () => 'success result'
 			const context = createGenerationContext('TestModel', 'object', 'generate')
 
@@ -128,7 +128,7 @@ describe('Error Handling System', () => {
 			expect(result.error).toBeUndefined()
 		})
 
-		test('executeSafely should return error for failed operation', () => {
+		it('executeSafely should return error for failed operation', () => {
 			const originalWarn = console.warn
 			console.warn = () => {}
 
@@ -147,7 +147,7 @@ describe('Error Handling System', () => {
 			console.warn = originalWarn
 		})
 
-		test('executeSafely should handle non-Error exceptions', () => {
+		it('executeSafely should handle non-Error exceptions', () => {
 			const originalWarn = console.warn
 			console.warn = () => {}
 
@@ -167,7 +167,7 @@ describe('Error Handling System', () => {
 	})
 
 	describe('Array Processing', () => {
-		test('processArraySafely should process all successful items', () => {
+		it('processArraySafely should process all successful items', () => {
 			const items = [1, 2, 3, 4]
 			const processor = (item: number) => ({
 				success: true as const,
@@ -179,7 +179,7 @@ describe('Error Handling System', () => {
 			expect(results).toEqual([2, 4, 6, 8])
 		})
 
-		test('processArraySafely should skip failed items', () => {
+		it('processArraySafely should skip failed items', () => {
 			const items = [1, 2, 3, 4]
 			const processor = (item: number) => ({
 				success: item % 2 === 0,
@@ -191,7 +191,7 @@ describe('Error Handling System', () => {
 			expect(results).toEqual([4, 8])
 		})
 
-		test('processArraySafely should apply filter before processing', () => {
+		it('processArraySafely should apply filter before processing', () => {
 			const items = [1, 2, 3, 4, 5]
 			const filter = (item: number) => item > 2
 			const processor = (item: number) => ({
@@ -204,14 +204,14 @@ describe('Error Handling System', () => {
 			expect(results).toEqual([6, 8, 10])
 		})
 
-		test('processArraySafely should handle empty arrays', () => {
+		it('processArraySafely should handle empty arrays', () => {
 			const results = processArraySafely([], () => ({ success: true, result: 'test' }))
 			expect(results).toEqual([])
 		})
 	})
 
 	describe('Generation Context', () => {
-		test('should create context with required fields', () => {
+		it('should create context with required fields', () => {
 			const context = createGenerationContext('User', 'model', 'generate')
 
 			expect(context.itemName).toBe('User')
@@ -220,7 +220,7 @@ describe('Error Handling System', () => {
 			expect(context.additionalContext).toBeUndefined()
 		})
 
-		test('should include additional context when provided', () => {
+		it('should include additional context when provided', () => {
 			const additionalContext = { fieldCount: 5, hasRelations: true }
 			const context = createGenerationContext('User', 'model', 'generate', additionalContext)
 
@@ -229,7 +229,7 @@ describe('Error Handling System', () => {
 	})
 
 	describe('Error Message Formatting', () => {
-		test('should format error with all components', () => {
+		it('should format error with all components', () => {
 			const error = new PluginError(
 				'Generation failed',
 				ErrorCategory.GENERATION,
@@ -252,7 +252,7 @@ describe('Error Handling System', () => {
 			expect(error.message).toContain('Review plugin configuration')
 		})
 
-		test('should handle empty context and suggestions', () => {
+		it('should handle empty context and suggestions', () => {
 			const error = new PluginError('Simple error', ErrorCategory.VALIDATION)
 
 			expect(error.message).toBe('[VALIDATION] Simple error')

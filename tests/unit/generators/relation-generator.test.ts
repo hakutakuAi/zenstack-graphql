@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedRelationGenerator } from '@generators/unified/unified-relation-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -45,13 +45,13 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 	})
 
 	describe('Relation Processing', () => {
-		test('should return empty array as expected', () => {
+		it('should return empty array as expected', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -59,7 +59,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should process relations between models', () => {
+		it('should process relations between models', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -69,7 +69,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(processedRelations.length).toBeGreaterThan(0)
 		})
 
-		test('should extract relations from models correctly', () => {
+		it('should extract relations from models correctly', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -84,7 +84,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relationNames).toContain('Tag.posts')
 		})
 
-		test('should populate relation field properties correctly', () => {
+		it('should populate relation field properties correctly', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -99,7 +99,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relation.isRequired).toBe(true)
 		})
 
-		test('should handle one-to-one relations correctly', () => {
+		it('should handle one-to-one relations correctly', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -114,7 +114,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relation.isRequired).toBe(true)
 		})
 
-		test('should handle many-to-many relations correctly', () => {
+		it('should handle many-to-many relations correctly', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -135,7 +135,7 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle models with no relations gracefully', () => {
+		it('should handle models with no relations gracefully', () => {
 			const noRelationContext = TestFixtures.createContext({
 				models: [TestFixtures.createDataModel('Standalone', [TestFixtures.createField('id', 'String'), TestFixtures.createField('name', 'String')])],
 			})
@@ -152,7 +152,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relationCalls.length).toBe(0)
 		})
 
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [],
@@ -165,7 +165,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should skip abstract models', () => {
+		it('should skip abstract models', () => {
 			const abstractContext = TestFixtures.createContext({
 				models: [
 					{
@@ -185,7 +185,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relationCalls.length).toBe(0)
 		})
 
-		test('should handle missing target models gracefully', () => {
+		it('should handle missing target models gracefully', () => {
 			const missingTargetContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('User', [
@@ -210,7 +210,7 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Field Filtering', () => {
-		test('should process relations regardless of global includeRelations setting', () => {
+		it('should process relations regardless of global includeRelations setting', () => {
 			const noRelationsContext = TestFixtures.createContext({
 				includeRelations: false,
 				models: [
@@ -231,7 +231,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(relationCalls.length).toBe(2)
 		})
 
-		test('should only process valid relation fields', () => {
+		it('should only process valid relation fields', () => {
 			const mixedContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -260,7 +260,7 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Relation Discovery', () => {
-		test('should find related fields correctly', () => {
+		it('should find related fields correctly', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -277,7 +277,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(userPosts.targetModelName).toBe('Post')
 		})
 
-		test('should handle bidirectional relations', () => {
+		it('should handle bidirectional relations', () => {
 			generator.generate()
 
 			const relationCalls = spyStrategy.getCallsForMethod('processRelation')
@@ -296,7 +296,7 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle self-referencing relations', () => {
+		it('should handle self-referencing relations', () => {
 			const selfRefContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -332,7 +332,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(children.isList).toBe(true)
 		})
 
-		test('should handle multiple models with complex relations', () => {
+		it('should handle multiple models with complex relations', () => {
 			const complexContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -373,7 +373,7 @@ describe('UnifiedRelationGenerator', () => {
 	})
 
 	describe('Relation Processing State', () => {
-		test('should track processed relations', () => {
+		it('should track processed relations', () => {
 			generator.generate()
 
 			const processedRelations = spyStrategy.getProcessedRelations()
@@ -385,7 +385,7 @@ describe('UnifiedRelationGenerator', () => {
 			expect(processedRelations).toContain('Profile-User-user')
 		})
 
-		test('should be able to check if relations were processed', () => {
+		it('should be able to check if relations were processed', () => {
 			generator.generate()
 
 			expect(spyStrategy.hasProcessedRelation('User-Post-posts')).toBe(true)

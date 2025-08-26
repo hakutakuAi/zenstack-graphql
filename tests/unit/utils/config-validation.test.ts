@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { validateOptions, DEFAULT_OPTIONS, PluginOptions } from '@utils/config'
 import { PluginError, ErrorCategory } from '@utils/error'
 import { OutputFormat } from '@utils/constants'
@@ -6,7 +6,7 @@ import { getTestOutputPath } from '../../test-setup'
 
 describe('Config Validation', () => {
 	describe('Default Options', () => {
-		test('should have correct default values', () => {
+		it('should have correct default values', () => {
 			expect(DEFAULT_OPTIONS.output).toBe('./schema.graphql')
 			expect(DEFAULT_OPTIONS.outputFormat).toBe(OutputFormat.GRAPHQL)
 			expect(DEFAULT_OPTIONS.generateScalars).toBe(true)
@@ -19,7 +19,7 @@ describe('Config Validation', () => {
 			expect(DEFAULT_OPTIONS.typeNaming).toBe('PascalCase')
 		})
 
-		test('should have correct scalar type defaults', () => {
+		it('should have correct scalar type defaults', () => {
 			expect(DEFAULT_OPTIONS.scalarTypes.DateTime).toBe('DateTime')
 			expect(DEFAULT_OPTIONS.scalarTypes.Json).toBe('JSON')
 			expect(DEFAULT_OPTIONS.scalarTypes.Decimal).toBe('Decimal')
@@ -28,7 +28,7 @@ describe('Config Validation', () => {
 	})
 
 	describe('Valid Options', () => {
-		test('should validate minimal valid options', () => {
+		it('should validate minimal valid options', () => {
 			const options: PluginOptions = {}
 			const normalized = validateOptions(options)
 
@@ -37,7 +37,7 @@ describe('Config Validation', () => {
 			expect(normalized.outputFormat).toBe(DEFAULT_OPTIONS.outputFormat)
 		})
 
-		test('should validate custom output path', () => {
+		it('should validate custom output path', () => {
 			const options: PluginOptions = {
 				output: getTestOutputPath('custom/schema.graphql'),
 			}
@@ -46,7 +46,7 @@ describe('Config Validation', () => {
 			expect(normalized.output).toBe(getTestOutputPath('custom/schema.graphql'))
 		})
 
-		test('should validate GraphQL output format', () => {
+		it('should validate GraphQL output format', () => {
 			const options: PluginOptions = {
 				outputFormat: OutputFormat.GRAPHQL,
 			}
@@ -55,7 +55,7 @@ describe('Config Validation', () => {
 			expect(normalized.outputFormat).toBe(OutputFormat.GRAPHQL)
 		})
 
-		test('should validate TypeScript output format', () => {
+		it('should validate TypeScript output format', () => {
 			const options: PluginOptions = {
 				outputFormat: OutputFormat.TYPE_GRAPHQL,
 			}
@@ -64,7 +64,7 @@ describe('Config Validation', () => {
 			expect(normalized.outputFormat).toBe(OutputFormat.TYPE_GRAPHQL)
 		})
 
-		test('should validate boolean feature flags', () => {
+		it('should validate boolean feature flags', () => {
 			const options: PluginOptions = {
 				generateScalars: false,
 				generateEnums: false,
@@ -83,7 +83,7 @@ describe('Config Validation', () => {
 			expect(normalized.includeRelations).toBe(false)
 		})
 
-		test('should validate field naming options', () => {
+		it('should validate field naming options', () => {
 			const testCases = ['camelCase', 'snake_case', 'preserve'] as const
 
 			for (const naming of testCases) {
@@ -93,7 +93,7 @@ describe('Config Validation', () => {
 			}
 		})
 
-		test('should validate type naming options', () => {
+		it('should validate type naming options', () => {
 			const testCases = ['PascalCase', 'camelCase', 'preserve'] as const
 
 			for (const naming of testCases) {
@@ -103,7 +103,7 @@ describe('Config Validation', () => {
 			}
 		})
 
-		test('should validate custom scalar types', () => {
+		it('should validate custom scalar types', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					DateTime: 'CustomDateTime',
@@ -118,7 +118,7 @@ describe('Config Validation', () => {
 			expect(normalized.scalarTypes.CustomType).toBe('String')
 		})
 
-		test('should merge scalar types with defaults', () => {
+		it('should merge scalar types with defaults', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					DateTime: 'CustomDateTime',
@@ -133,7 +133,7 @@ describe('Config Validation', () => {
 	})
 
 	describe('Invalid Options', () => {
-		test('should throw PluginError for empty output path', () => {
+		it('should throw PluginError for empty output path', () => {
 			const options: PluginOptions = {
 				output: '',
 			}
@@ -141,7 +141,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).toThrow(PluginError)
 		})
 
-		test('should throw PluginError for invalid output format', () => {
+		it('should throw PluginError for invalid output format', () => {
 			const options: PluginOptions = {
 				outputFormat: 'invalid' as any,
 			}
@@ -149,7 +149,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).toThrow(PluginError)
 		})
 
-		test('should throw PluginError for invalid field naming', () => {
+		it('should throw PluginError for invalid field naming', () => {
 			const options: PluginOptions = {
 				fieldNaming: 'invalid' as any,
 			}
@@ -157,7 +157,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).toThrow(PluginError)
 		})
 
-		test('should throw PluginError for invalid type naming', () => {
+		it('should throw PluginError for invalid type naming', () => {
 			const options: PluginOptions = {
 				typeNaming: 'invalid' as any,
 			}
@@ -165,7 +165,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).toThrow(PluginError)
 		})
 
-		test('should throw PluginError for invalid boolean values', () => {
+		it('should throw PluginError for invalid boolean values', () => {
 			const options: PluginOptions = {
 				generateScalars: 'yes' as any,
 			}
@@ -173,7 +173,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).toThrow(PluginError)
 		})
 
-		test('should throw PluginError for invalid scalar type name', () => {
+		it('should throw PluginError for invalid scalar type name', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					DateTime: 'invalid-name-with-hyphens',
@@ -185,7 +185,7 @@ describe('Config Validation', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should provide detailed error information', () => {
+		it('should provide detailed error information', () => {
 			const options: PluginOptions = {
 				output: '',
 				outputFormat: 'invalid' as any,
@@ -203,7 +203,7 @@ describe('Config Validation', () => {
 			}
 		})
 
-		test('should include original options in error context', () => {
+		it('should include original options in error context', () => {
 			const options: PluginOptions = {
 				output: '',
 			}
@@ -217,7 +217,7 @@ describe('Config Validation', () => {
 			}
 		})
 
-		test('should provide helpful suggestions for common errors', () => {
+		it('should provide helpful suggestions for common errors', () => {
 			const options: PluginOptions = {
 				fieldNaming: 'kebab-case' as any,
 			}
@@ -232,7 +232,7 @@ describe('Config Validation', () => {
 			}
 		})
 
-		test('should handle scalar type validation errors', () => {
+		it('should handle scalar type validation errors', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					DateTime: '123Invalid',
@@ -250,23 +250,23 @@ describe('Config Validation', () => {
 	})
 
 	describe('Edge Cases', () => {
-		test('should handle null options gracefully', () => {
+		it('should handle null options gracefully', () => {
 			expect(() => validateOptions(null as any)).toThrow(PluginError)
 		})
 
-		test('should handle undefined options', () => {
+		it('should handle undefined options', () => {
 			const normalized = validateOptions(undefined)
 			expect(normalized).toBeDefined()
 			expect(normalized.output).toBe(DEFAULT_OPTIONS.output)
 		})
 
-		test('should handle empty object', () => {
+		it('should handle empty object', () => {
 			const normalized = validateOptions({})
 			expect(normalized).toBeDefined()
 			expect(normalized.output).toBe(DEFAULT_OPTIONS.output)
 		})
 
-		test('should handle partial scalar type overrides', () => {
+		it('should handle partial scalar type overrides', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					DateTime: 'Timestamp',
@@ -280,7 +280,7 @@ describe('Config Validation', () => {
 			expect(normalized.scalarTypes.Bytes).toBe('String')
 		})
 
-		test('should validate standard GraphQL scalars', () => {
+		it('should validate standard GraphQL scalars', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					CustomField: 'String',
@@ -294,7 +294,7 @@ describe('Config Validation', () => {
 			expect(() => validateOptions(options)).not.toThrow()
 		})
 
-		test('should validate custom GraphQL scalar names', () => {
+		it('should validate custom GraphQL scalar names', () => {
 			const options: PluginOptions = {
 				scalarTypes: {
 					CustomField: 'MyCustomScalar',
