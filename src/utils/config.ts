@@ -90,7 +90,7 @@ const optionDefinitions = {
 		default: undefined,
 	},
 	outputFormat: {
-		schema: z.nativeEnum(OutputFormat),
+		schema: z.enum(OutputFormat),
 		default: OutputFormat.GRAPHQL,
 	},
 }
@@ -150,8 +150,12 @@ export function validateOptions(options: PluginOptions = {}): NormalizedOptions 
 				if (issue.code === 'invalid_type') {
 					return `Ensure ${path} is of type ${issue.expected}`
 				}
-				if (issue.code === 'invalid_enum_value' && 'options' in issue) {
-					return `${path} must be one of: ${issue.options.join(', ')}`
+				if (issue.code === 'invalid_value' && 'values' in issue) {
+					const values = (issue as any).values
+					if (Array.isArray(values)) {
+						return `${path} must be one of: ${values.join(', ')}`
+					}
+					return `Check the ${path} option value`
 				}
 				if (issue.code === 'custom' && path.includes('scalarTypes')) {
 					return `Use valid GraphQL scalar types: Standard types are ${VALID_SCALAR_VALUES.join(', ')}. Custom types must start with an uppercase letter or underscore and contain only letters, numbers, and underscores.`
