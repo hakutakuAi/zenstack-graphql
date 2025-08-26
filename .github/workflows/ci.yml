@@ -11,6 +11,7 @@ on:
             - 'bun.lock'
             - 'tsconfig.json'
             - '*.ts'
+            - '.github/**'
     pull_request:
         branches: [main, development]
         paths:
@@ -127,19 +128,22 @@ jobs:
                       examples/*/node_modules
                   key: ${{ needs.setup.outputs.cache-key }}
 
-            - name: 🧪 Run unit tests
-              run: bun run test --verbose --timeout 30000
+            - name: 🧪 Run unit tests with coverage
+              run: bun run test:coverage
 
-            - name: 📊 Generate coverage report
-              run: bun run test:coverage --reporter=lcov
+            - name: 📊 Generate coverage summary
+              run: |
+                  echo "## 🧪 Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  bun run test:coverage | grep -A 20 "File.*% Funcs.*% Lines" || echo "Coverage report format changed"
+                  echo '```' >> $GITHUB_STEP_SUMMARY
 
-            - name: 📈 Upload coverage to codecov
+            - name: 📈 Upload coverage (if available)
               uses: codecov/codecov-action@v4
               with:
-                  file: ./coverage/lcov.info
-                  flags: unittests
-                  name: unit-tests
                   fail_ci_if_error: false
+              continue-on-error: true
 
             - name: 💾 Archive test results
               if: always()
@@ -149,7 +153,9 @@ jobs:
                   path: |
                       coverage/
                       test-results.xml
+                      .coverage
                   retention-days: 7
+              continue-on-error: true
 
     e2e-tests:
         name: 🚀 End-to-End Tests
@@ -227,7 +233,7 @@ jobs:
                   key: ${{ needs.setup.outputs.cache-key }}
 
             - name: ⚡ Run performance tests
-              run: bun test tests/performance/ --verbose
+              run: bun test tests/performance/
 
     security-scan:
         name: 🔒 Security Scan
