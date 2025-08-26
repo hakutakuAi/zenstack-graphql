@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedObjectTypeGenerator } from '@generators/unified/unified-object-type-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -38,13 +38,13 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 	})
 
 	describe('Object Type Generation', () => {
-		test('should generate object types for models', () => {
+		it('should generate object types for models', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -52,7 +52,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should generate correct number of object types', () => {
+		it('should generate correct number of object types', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -60,7 +60,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(result).toContain('Post')
 		})
 
-		test('should create object types with fields', () => {
+		it('should create object types with fields', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -76,7 +76,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(userFields).toHaveProperty('email')
 		})
 
-		test('should handle type existence checks', () => {
+		it('should handle type existence checks', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -86,7 +86,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Field Processing', () => {
-		test('should handle scalar fields correctly', () => {
+		it('should handle scalar fields correctly', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -103,7 +103,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(fields.isActive.type).toBe('Boolean!')
 		})
 
-		test('should handle optional fields correctly', () => {
+		it('should handle optional fields correctly', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -114,7 +114,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(fields.content.type).toBe('String')
 		})
 
-		test('should include relation fields when enabled', () => {
+		it('should include relation fields when enabled', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -124,7 +124,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(fields.posts).toBeDefined()
 		})
 
-		test('should exclude relation fields when disabled', () => {
+		it('should exclude relation fields when disabled', () => {
 			const noRelationContext = TestFixtures.createContext({
 				includeRelations: false,
 				models: [
@@ -150,7 +150,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(fields.name).toBeDefined()
 		})
 
-		test('should create field descriptions', () => {
+		it('should create field descriptions', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -165,14 +165,14 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format object type names correctly', () => {
+		it('should format object type names correctly', () => {
 			const result = generator.generate()
 
 			expect(result).toContain('User')
 			expect(result).toContain('Post')
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				typeNaming: 'camelCase',
 				fieldNaming: 'snake_case',
@@ -190,7 +190,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [],
@@ -203,7 +203,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should handle models with no fields gracefully', () => {
+		it('should handle models with no fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [TestFixtures.createDataModel('Empty', [])],
@@ -217,7 +217,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle field type mapping errors gracefully', () => {
+		it('should handle field type mapping errors gracefully', () => {
 			const malformedContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('Test', [
@@ -247,7 +247,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return only object type names', () => {
+		it('should return only object type names', () => {
 			const result = generator.generate()
 
 			result.forEach((typeName) => {
@@ -256,7 +256,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			})
 		})
 
-		test('should validate actual object structure', () => {
+		it('should validate actual object structure', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -273,7 +273,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with mixed field types', () => {
+		it('should handle models with mixed field types', () => {
 			const mixedContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -306,7 +306,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(Object.keys(fields).length).toBeGreaterThan(0)
 		})
 
-		test('should handle single model correctly', () => {
+		it('should handle single model correctly', () => {
 			const singleContext = TestFixtures.createContext({
 				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],
 			})
@@ -320,7 +320,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(result).toContain('Single')
 		})
 
-		test('should handle deeply nested type scenarios', () => {
+		it('should handle deeply nested type scenarios', () => {
 			const nestedContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -357,7 +357,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 	})
 
 	describe('Field Type Mapping', () => {
-		test('should correctly map scalar field types', () => {
+		it('should correctly map scalar field types', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')
@@ -369,7 +369,7 @@ describe('UnifiedObjectTypeGenerator', () => {
 			expect(fields.isActive.type).toBe('Boolean!')
 		})
 
-		test('should correctly map relation field types', () => {
+		it('should correctly map relation field types', () => {
 			generator.generate()
 
 			const objectCalls = spyStrategy.getCallsForMethod('createObjectType')

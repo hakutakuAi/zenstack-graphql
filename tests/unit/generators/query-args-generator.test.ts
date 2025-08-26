@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedQueryArgsGenerator } from '@generators/unified/unified-query-args-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -35,13 +35,13 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 	})
 
 	describe('Query Args Generation', () => {
-		test('should generate query args types for models', () => {
+		it('should generate query args types for models', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -49,7 +49,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should generate correct number of query args types', () => {
+		it('should generate correct number of query args types', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -57,7 +57,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(result).toContain('PostQueryArgs')
 		})
 
-		test('should create query args with correct parameters', () => {
+		it('should create query args with correct parameters', () => {
 			generator.generate()
 
 			const queryArgsCalls = spyStrategy.getCallsForMethod('createQueryArgsInputType')
@@ -74,7 +74,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(postQueryArgsCall!.args[2]).toContain('Query arguments for Post')
 		})
 
-		test('should include descriptions for query args types', () => {
+		it('should include descriptions for query args types', () => {
 			generator.generate()
 
 			const queryArgsCalls = spyStrategy.getCallsForMethod('createQueryArgsInputType')
@@ -90,7 +90,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format query args type names correctly', () => {
+		it('should format query args type names correctly', () => {
 			const result = generator.generate()
 
 			expect(result).toContain('UserQueryArgs')
@@ -101,7 +101,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			})
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				typeNaming: 'camelCase',
 				fieldNaming: 'snake_case',
@@ -120,7 +120,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [],
@@ -133,7 +133,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should handle models with no fields gracefully', () => {
+		it('should handle models with no fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					models: [TestFixtures.createDataModel('Empty', [])],
@@ -147,7 +147,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle generation errors gracefully', () => {
+		it('should handle generation errors gracefully', () => {
 			const malformedModel = {
 				$type: 'DataModel',
 				name: null,
@@ -175,7 +175,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return consistent result structure', () => {
+		it('should return consistent result structure', () => {
 			const result = generator.generate()
 
 			expect(Array.isArray(result)).toBe(true)
@@ -185,7 +185,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			})
 		})
 
-		test('should validate actual query args structure', () => {
+		it('should validate actual query args structure', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBe(2)
@@ -203,7 +203,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with relations', () => {
+		it('should handle models with relations', () => {
 			const relationContext = TestFixtures.createContext({
 				includeRelations: true,
 				models: [
@@ -234,7 +234,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(queryArgsCalls.length).toBe(2)
 		})
 
-		test('should handle single model correctly', () => {
+		it('should handle single model correctly', () => {
 			const singleContext = TestFixtures.createContext({
 				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],
 			})
@@ -248,7 +248,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(result).toContain('SingleQueryArgs')
 		})
 
-		test('should handle models with mixed field types', () => {
+		it('should handle models with mixed field types', () => {
 			const mixedContext = TestFixtures.createContext({
 				models: [
 					TestFixtures.createDataModel('ComplexModel', [
@@ -279,7 +279,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 			expect(complexQueryArgsCall.args[1].fields.length).toBe(6)
 		})
 
-		test('should handle models with different configurations', () => {
+		it('should handle models with different configurations', () => {
 			const multiContext = TestFixtures.createContext({
 				generateFilters: true,
 				generateSorts: true,
@@ -312,7 +312,7 @@ describe('UnifiedQueryArgsGenerator', () => {
 	})
 
 	describe('Integration with Filter and Sort', () => {
-		test('should generate query args that support filtering and sorting', () => {
+		it('should generate query args that support filtering and sorting', () => {
 			const fullContext = TestFixtures.createContext({
 				generateFilters: true,
 				generateSorts: true,

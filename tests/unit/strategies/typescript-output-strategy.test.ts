@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { TypeScriptOutputStrategy } from '@generators/strategies/typescript-output-strategy'
 import { TypeScriptASTFactory } from '@utils/typescript/ast-factory'
 import { TestFixtures } from '../../helpers'
@@ -34,18 +34,18 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with AST factory', () => {
+		it('should initialize with AST factory', () => {
 			expect(strategy).toBeDefined()
 			expect(strategy).toBeInstanceOf(TypeScriptOutputStrategy)
 		})
 
-		test('should handle null AST factory gracefully', () => {
+		it('should handle null AST factory gracefully', () => {
 			expect(() => new TypeScriptOutputStrategy(null as any)).not.toThrow()
 		})
 	})
 
 	describe('Common Types Creation', () => {
-		test('should create enum types from common type definitions', () => {
+		it('should create enum types from common type definitions', () => {
 			const mockEnumDeclaration = { name: 'MockEnum', kind: 'Enum' } as any
 			const createEnumTypeSpy = () => {
 				mockASTFactory.createEnumType = (enumDef: any) => {
@@ -67,7 +67,7 @@ describe('TypeScript Output Strategy', () => {
 			strategy.createCommonTypes([enumDefinition])
 		})
 
-		test('should skip input types in common types creation', () => {
+		it('should skip input types in common types creation', () => {
 			let createEnumCalled = false
 			const mockEnumDeclaration = { name: 'MockEnum', kind: 'Enum' } as any
 			mockASTFactory.createEnumType = () => {
@@ -89,7 +89,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createEnumCalled).toBe(false)
 		})
 
-		test('should handle multiple type definitions', () => {
+		it('should handle multiple type definitions', () => {
 			let enumCreateCount = 0
 			const mockEnumDeclaration = { name: 'MockEnum', kind: 'Enum' } as any
 			mockASTFactory.createEnumType = () => {
@@ -120,7 +120,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(enumCreateCount).toBe(2)
 		})
 
-		test('should handle empty definitions array', () => {
+		it('should handle empty definitions array', () => {
 			expect(() => {
 				strategy.createCommonTypes([])
 			}).not.toThrow()
@@ -128,7 +128,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Enum Type Creation', () => {
-		test('should create enum type and return name', () => {
+		it('should create enum type and return name', () => {
 			let createdEnumType: any = null
 			mockASTFactory.createEnumType = (enumType: any) => {
 				createdEnumType = enumType
@@ -143,7 +143,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdEnumType).toBe(enumMock)
 		})
 
-		test('should handle enum with no fields', () => {
+		it('should handle enum with no fields', () => {
 			let createdEnumType: any = null
 			mockASTFactory.createEnumType = (enumType: any) => {
 				createdEnumType = enumType
@@ -158,7 +158,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdEnumType).toBe(enumMock)
 		})
 
-		test('should handle null enum name', () => {
+		it('should handle null enum name', () => {
 			const enumMock = { ...TestFixtures.createEnum('', ['VALUE']), name: null }
 
 			const result = strategy.createEnumType(enumMock)
@@ -168,7 +168,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Sort Input Type Creation', () => {
-		test('should create sort input type with fields', () => {
+		it('should create sort input type with fields', () => {
 			let createdTypeName: string = ''
 			let createdFields: any[] = []
 			mockASTFactory.createSortInputType = (typeName: string, fields: any[]) => {
@@ -189,7 +189,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdFields).toEqual(fields)
 		})
 
-		test('should handle empty fields with placeholder', () => {
+		it('should handle empty fields with placeholder', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createSortInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -207,7 +207,7 @@ describe('TypeScript Output Strategy', () => {
 			])
 		})
 
-		test('should handle fields without description', () => {
+		it('should handle fields without description', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createSortInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -222,7 +222,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdFields).toEqual(fields)
 		})
 
-		test('should handle special characters in type name', () => {
+		it('should handle special characters in type name', () => {
 			let createdTypeName: string = ''
 			mockASTFactory.createSortInputType = (typeName: string) => {
 				createdTypeName = typeName
@@ -237,7 +237,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Filter Input Type Creation', () => {
-		test('should create filter input type with fields', () => {
+		it('should create filter input type with fields', () => {
 			let createdTypeName: string = ''
 			let createdFields: any[] = []
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
@@ -263,7 +263,7 @@ describe('TypeScript Output Strategy', () => {
 			])
 		})
 
-		test('should add AND/OR logical operators', () => {
+		it('should add AND/OR logical operators', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -280,7 +280,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(logicalFields[1]).toEqual({ name: 'OR', type: '[UserFilterInput!]', nullable: true })
 		})
 
-		test('should handle nullable field defaults', () => {
+		it('should handle nullable field defaults', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -298,7 +298,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdFields[1]).toEqual({ name: 'active', type: 'boolean', nullable: false })
 		})
 
-		test('should handle empty fields array', () => {
+		it('should handle empty fields array', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -314,7 +314,7 @@ describe('TypeScript Output Strategy', () => {
 			])
 		})
 
-		test('should handle complex type names', () => {
+		it('should handle complex type names', () => {
 			let createdTypeName: string = ''
 			mockASTFactory.createFilterInputType = (typeName: string) => {
 				createdTypeName = typeName
@@ -329,7 +329,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Connection Type Creation', () => {
-		test('should create connection type', () => {
+		it('should create connection type', () => {
 			let createdTypeName: string = ''
 			mockASTFactory.createConnectionType = (typeName: string) => {
 				createdTypeName = typeName
@@ -342,7 +342,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdTypeName).toBe('User')
 		})
 
-		test('should handle special characters in type name', () => {
+		it('should handle special characters in type name', () => {
 			let createdTypeName: string = ''
 			mockASTFactory.createConnectionType = (typeName: string) => {
 				createdTypeName = typeName
@@ -355,7 +355,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdTypeName).toBe('User_Profile')
 		})
 
-		test('should handle empty type name', () => {
+		it('should handle empty type name', () => {
 			let createdTypeName: string = ''
 			mockASTFactory.createConnectionType = (typeName: string) => {
 				createdTypeName = typeName
@@ -370,7 +370,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Pagination Types Creation', () => {
-		test('should create pagination input types', () => {
+		it('should create pagination input types', () => {
 			let paginationTypesCalled = false
 			mockASTFactory.createPaginationInputTypes = () => {
 				paginationTypesCalled = true
@@ -382,7 +382,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(paginationTypesCalled).toBe(true)
 		})
 
-		test('should not throw on factory error', () => {
+		it('should not throw on factory error', () => {
 			mockASTFactory.createPaginationInputTypes = () => {
 				throw new Error('Factory error')
 			}
@@ -394,7 +394,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Common Filter Types Creation', () => {
-		test('should create common filter types', () => {
+		it('should create common filter types', () => {
 			let createdFilterTypes: string[] = []
 			mockASTFactory.createFilterInputType = (typeName: string) => {
 				createdFilterTypes.push(typeName)
@@ -406,7 +406,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdFilterTypes.length).toBeGreaterThan(0)
 		})
 
-		test('should handle AST factory errors gracefully', () => {
+		it('should handle AST factory errors gracefully', () => {
 			mockASTFactory.createFilterInputType = () => {
 				throw new Error('Filter creation error')
 			}
@@ -418,7 +418,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Sort Direction Enum Creation', () => {
-		test('should create sort direction enum', () => {
+		it('should create sort direction enum', () => {
 			let sortDirectionEnumCalled = false
 			mockASTFactory.createSortDirectionEnum = () => {
 				sortDirectionEnumCalled = true
@@ -430,7 +430,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(sortDirectionEnumCalled).toBe(true)
 		})
 
-		test('should handle factory error', () => {
+		it('should handle factory error', () => {
 			mockASTFactory.createSortDirectionEnum = () => {
 				throw new Error('Sort direction error')
 			}
@@ -442,7 +442,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Object Type Creation', () => {
-		test('should create object type with fields and description', () => {
+		it('should create object type with fields and description', () => {
 			let createdArgs: any = null
 			mockASTFactory.createObjectTypeFromFields = (typeName: string, fields: any, description?: string) => {
 				createdArgs = { typeName, fields, description }
@@ -464,7 +464,7 @@ describe('TypeScript Output Strategy', () => {
 			})
 		})
 
-		test('should handle creation without description', () => {
+		it('should handle creation without description', () => {
 			let createdArgs: any = null
 			mockASTFactory.createObjectTypeFromFields = (typeName: string, fields: any, description?: string) => {
 				createdArgs = { typeName, fields, description }
@@ -479,7 +479,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(createdArgs.description).toBeUndefined()
 		})
 
-		test('should handle empty fields object', () => {
+		it('should handle empty fields object', () => {
 			let createdArgs: any = null
 			mockASTFactory.createObjectTypeFromFields = (typeName: string, fields: any) => {
 				createdArgs = { typeName, fields }
@@ -494,7 +494,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Input Type Creation', () => {
-		test('should create input type for create operation', () => {
+		it('should create input type for create operation', () => {
 			let createdArgs: any = null
 			mockASTFactory.createInputType = (typeName: string, model: any, inputType: string, description?: string) => {
 				createdArgs = { typeName, model, inputType, description }
@@ -514,7 +514,7 @@ describe('TypeScript Output Strategy', () => {
 			})
 		})
 
-		test('should create input type for update operation', () => {
+		it('should create input type for update operation', () => {
 			let createdArgs: any = null
 			mockASTFactory.createInputType = (typeName: string, model: any, inputType: string, description?: string) => {
 				createdArgs = { typeName, model, inputType, description }
@@ -532,7 +532,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Query Args Input Type Creation', () => {
-		test('should create query args without filterable/sortable fields', () => {
+		it('should create query args without filterable/sortable fields', () => {
 			let createdArgs: any = null
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdArgs = { typeName, fields }
@@ -553,7 +553,7 @@ describe('TypeScript Output Strategy', () => {
 			])
 		})
 
-		test('should include filter and sort fields when attributes present', () => {
+		it('should include filter and sort fields when attributes present', () => {
 			let createdArgs: any = null
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdArgs = { typeName, fields }
@@ -581,7 +581,7 @@ describe('TypeScript Output Strategy', () => {
 			])
 		})
 
-		test('should handle model with only filterable fields', () => {
+		it('should handle model with only filterable fields', () => {
 			let createdArgs: any = null
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdArgs = { typeName, fields }
@@ -604,7 +604,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(hasSortField).toBe(false)
 		})
 
-		test('should handle model with only sortable fields', () => {
+		it('should handle model with only sortable fields', () => {
 			let createdArgs: any = null
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdArgs = { typeName, fields }
@@ -627,7 +627,7 @@ describe('TypeScript Output Strategy', () => {
 			expect(hasSortField).toBe(true)
 		})
 
-		test('should handle description parameter', () => {
+		it('should handle description parameter', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model, 'Custom query args description')
@@ -637,12 +637,12 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Type Checking', () => {
-		test('should check if type exists via AST factory', () => {
+		it('should check if type exists via AST factory', () => {
 			expect(strategy.hasType('ExistingType')).toBe(true)
 			expect(strategy.hasType('NonExistentType')).toBe(false)
 		})
 
-		test('should handle AST factory hasType errors', () => {
+		it('should handle AST factory hasType errors', () => {
 			mockASTFactory.hasType = () => {
 				throw new Error('HasType error')
 			}
@@ -654,7 +654,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Relation Processing', () => {
-		test('should handle relation processing as no-op', () => {
+		it('should handle relation processing as no-op', () => {
 			const mockRelation = { fromModel: 'User', toModel: 'Post', fieldName: 'posts' } as any
 
 			expect(() => {
@@ -664,25 +664,25 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Generated Type Names', () => {
-		test('should get all generated type names', () => {
+		it('should get all generated type names', () => {
 			const typeNames = strategy.getGeneratedTypeNames()
 
 			expect(typeNames).toEqual(['UserFilterInput', 'PostSortInput', 'CommentConnection'])
 		})
 
-		test('should filter generated type names', () => {
+		it('should filter generated type names', () => {
 			const filteredTypes = strategy.getGeneratedTypeNames((name) => name.includes('User'))
 
 			expect(filteredTypes).toEqual(['UserFilterInput'])
 		})
 
-		test('should handle empty filter result', () => {
+		it('should handle empty filter result', () => {
 			const filteredTypes = strategy.getGeneratedTypeNames((name) => name.includes('NonExistent'))
 
 			expect(filteredTypes).toEqual([])
 		})
 
-		test('should handle AST factory error', () => {
+		it('should handle AST factory error', () => {
 			mockASTFactory.getGeneratedTypeNames = () => {
 				throw new Error('Generated types error')
 			}
@@ -694,13 +694,13 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Generated Code', () => {
-		test('should get generated code from AST factory', () => {
+		it('should get generated code from AST factory', () => {
 			const code = strategy.getGeneratedCode()
 
 			expect(code).toBe('export interface User { name: string; }')
 		})
 
-		test('should handle AST factory error', () => {
+		it('should handle AST factory error', () => {
 			mockASTFactory.getGeneratedCode = () => {
 				throw new Error('Generated code error')
 			}
@@ -710,7 +710,7 @@ describe('TypeScript Output Strategy', () => {
 			}).toThrow('Generated code error')
 		})
 
-		test('should handle empty generated code', () => {
+		it('should handle empty generated code', () => {
 			mockASTFactory.getGeneratedCode = () => ''
 
 			const code = strategy.getGeneratedCode()
@@ -720,7 +720,7 @@ describe('TypeScript Output Strategy', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle null fields in filter creation', () => {
+		it('should handle null fields in filter creation', () => {
 			let createdFields: any[] = []
 			mockASTFactory.createFilterInputType = (typeName: string, fields: any[]) => {
 				createdFields = fields
@@ -734,7 +734,7 @@ describe('TypeScript Output Strategy', () => {
 			}).toThrow()
 		})
 
-		test('should handle undefined AST factory methods', () => {
+		it('should handle undefined AST factory methods', () => {
 			const incompleteFactory = {} as any
 			const incompleteStrategy = new TypeScriptOutputStrategy(incompleteFactory)
 

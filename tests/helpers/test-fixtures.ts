@@ -176,6 +176,72 @@ export class TestFixtures {
 		})
 	}
 
+	static createECommerceContext(): BaseGeneratorContext {
+		return TestFixtures.createContext({
+			models: [
+				TestFixtures.createDataModel('User', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('email', 'String'),
+					TestFixtures.createField('name', 'String'),
+				]),
+				TestFixtures.createDataModel('Product', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createField('price', 'Decimal'),
+					TestFixtures.createField('active', 'Boolean'),
+				]),
+				TestFixtures.createDataModel('Order', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('total', 'Decimal'),
+					TestFixtures.createField('createdAt', 'DateTime'),
+					TestFixtures.createRelationField('user', 'User'),
+				]),
+			],
+			enums: [TestFixtures.createEnum('OrderStatus', ['PENDING', 'CONFIRMED', 'SHIPPED'])],
+		})
+	}
+
+	static createComplexRelationContext(): BaseGeneratorContext {
+		return TestFixtures.createContext({
+			includeRelations: true,
+			models: [
+				TestFixtures.createDataModel('Organization', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+				]),
+				TestFixtures.createDataModel('Department', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createRelationField('organization', 'Organization'),
+				]),
+				TestFixtures.createDataModel('Employee', [
+					TestFixtures.createField('id', 'String'),
+					TestFixtures.createField('name', 'String'),
+					TestFixtures.createField('email', 'String'),
+					TestFixtures.createRelationField('department', 'Department'),
+				]),
+			],
+		})
+	}
+
+	static createAllFieldTypesModel(): DataModel {
+		return TestFixtures.createDataModel('AllTypes', [
+			TestFixtures.createField('id', 'String'),
+			TestFixtures.createField('stringField', 'String'),
+			TestFixtures.createField('intField', 'Int'),
+			TestFixtures.createField('bigIntField', 'BigInt'),
+			TestFixtures.createField('floatField', 'Float'),
+			TestFixtures.createField('decimalField', 'Decimal'),
+			TestFixtures.createField('booleanField', 'Boolean'),
+			TestFixtures.createField('dateTimeField', 'DateTime'),
+			TestFixtures.createField('jsonField', 'Json'),
+			TestFixtures.createField('bytesField', 'Bytes'),
+			TestFixtures.createField('optionalString', 'String', true),
+			TestFixtures.createField('arrayField', 'String', false, true),
+			TestFixtures.createField('optionalArray', 'Int', true, true),
+		])
+	}
+
 	static createMinimalContext(): BaseGeneratorContext {
 		return TestFixtures.createContext({
 			generateScalars: false,

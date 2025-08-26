@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedSortInputGenerator } from '@generators/unified/unified-sort-input-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -38,11 +38,11 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 
-		test('should call createSortDirectionEnum during initialization', () => {
+		it('should call createSortDirectionEnum during initialization', () => {
 			generator.generate()
 
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('SortDirection')
@@ -50,7 +50,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Sort Generation', () => {
-		test('should generate sort inputs when enabled', () => {
+		it('should generate sort inputs when enabled', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -58,7 +58,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should not generate sorts when disabled', () => {
+		it('should not generate sorts when disabled', () => {
 			const disabledContext = TestFixtures.createContext({
 				generateSorts: false,
 				models: [TestFixtures.createDataModel('User', [TestFixtures.createField('name', 'String')])],
@@ -73,7 +73,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should generate correct number of sort inputs', () => {
+		it('should generate correct number of sort inputs', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBeGreaterThanOrEqual(2)
@@ -84,7 +84,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(result).toContain('SortDirection')
 		})
 
-		test('should respect field visibility rules', () => {
+		it('should respect field visibility rules', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
@@ -93,7 +93,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Field Processing', () => {
-		test('should handle sortable fields correctly', () => {
+		it('should handle sortable fields correctly', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
@@ -108,7 +108,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(nameField.description).toContain('Sort by')
 		})
 
-		test('should exclude relation fields from sorts', () => {
+		it('should exclude relation fields from sorts', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
@@ -119,7 +119,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(postsField).toBeUndefined()
 		})
 
-		test('should handle models with no sortable fields', () => {
+		it('should handle models with no sortable fields', () => {
 			const noSortableContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [TestFixtures.createDataModel('EmptyModel', [TestFixtures.createRelationField('relation', 'OtherModel')])],
@@ -141,7 +141,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateSorts: true,
@@ -156,7 +156,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(result.length).toBeGreaterThanOrEqual(0)
 		})
 
-		test('should handle models with no fields gracefully', () => {
+		it('should handle models with no fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateSorts: true,
@@ -171,7 +171,7 @@ describe('UnifiedSortInputGenerator', () => {
 			}).not.toThrow()
 		})
 
-		test('should handle malformed field types gracefully', () => {
+		it('should handle malformed field types gracefully', () => {
 			const malformedContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [
@@ -202,7 +202,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format sort type names correctly', () => {
+		it('should format sort type names correctly', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
@@ -213,7 +213,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(typeNames).toContain('Post')
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				generateSorts: true,
 				typeNaming: 'camelCase',
@@ -235,7 +235,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Sort Field Definitions', () => {
-		test('should create proper field definitions with descriptions', () => {
+		it('should create proper field definitions with descriptions', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
@@ -249,7 +249,7 @@ describe('UnifiedSortInputGenerator', () => {
 			})
 		})
 
-		test('should handle different field types for sorting', () => {
+		it('should handle different field types for sorting', () => {
 			const mixedContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [
@@ -302,7 +302,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return only sort input types', () => {
+		it('should return only sort input types', () => {
 			const result = generator.generate()
 
 			result.forEach((typeName) => {
@@ -311,7 +311,7 @@ describe('UnifiedSortInputGenerator', () => {
 			})
 		})
 
-		test('should filter results by SortInput suffix or SortDirection', () => {
+		it('should filter results by SortInput suffix or SortDirection', () => {
 			generator.generate()
 
 			const allTypes = spyStrategy.getGeneratedTypeNames()
@@ -322,7 +322,7 @@ describe('UnifiedSortInputGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with mixed field types', () => {
+		it('should handle models with mixed field types', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -333,7 +333,7 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(result).toContain('SortDirection')
 		})
 
-		test('should handle single model correctly', () => {
+		it('should handle single model correctly', () => {
 			const singleContext = TestFixtures.createContext({
 				generateSorts: true,
 				models: [TestFixtures.createDataModel('Single', [TestFixtures.createField('name', 'String')])],

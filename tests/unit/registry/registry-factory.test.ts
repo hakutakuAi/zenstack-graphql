@@ -1,25 +1,25 @@
-import { describe, test, expect } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { RegistryFactory, RegistryFormat } from '@utils/registry/registry-factory'
 import { GraphQLRegistry, TypeScriptRegistry } from '@utils/registry'
 import { SchemaComposer } from 'graphql-compose'
 
 describe('Registry Factory', () => {
 	describe('Static Methods', () => {
-		test('should have static createRegistry method', () => {
+		it('should have static createRegistry method', () => {
 			expect(typeof RegistryFactory.createRegistry).toBe('function')
 		})
 
-		test('should have static createGraphQLRegistry method', () => {
+		it('should have static createGraphQLRegistry method', () => {
 			expect(typeof RegistryFactory.createGraphQLRegistry).toBe('function')
 		})
 
-		test('should have static createTypeScriptRegistry method', () => {
+		it('should have static createTypeScriptRegistry method', () => {
 			expect(typeof RegistryFactory.createTypeScriptRegistry).toBe('function')
 		})
 	})
 
 	describe('GraphQL Registry Creation', () => {
-		test('should create GraphQL registry for graphql format', () => {
+		it('should create GraphQL registry for graphql format', () => {
 			const schemaComposer = new SchemaComposer()
 			const registry = RegistryFactory.createRegistry({
 				format: 'graphql',
@@ -29,14 +29,14 @@ describe('Registry Factory', () => {
 			expect(registry).toBeInstanceOf(GraphQLRegistry)
 		})
 
-		test('should create GraphQL registry with createGraphQLRegistry', () => {
+		it('should create GraphQL registry with createGraphQLRegistry', () => {
 			const schemaComposer = new SchemaComposer()
 			const registry = RegistryFactory.createGraphQLRegistry(schemaComposer)
 
 			expect(registry).toBeInstanceOf(GraphQLRegistry)
 		})
 
-		test('should throw error when creating GraphQL registry without schema composer', () => {
+		it('should throw error when creating GraphQL registry without schema composer', () => {
 			expect(() => {
 				RegistryFactory.createRegistry({
 					format: 'graphql',
@@ -46,7 +46,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('TypeScript Registry Creation', () => {
-		test('should create TypeScript registry for type-graphql format', () => {
+		it('should create TypeScript registry for type-graphql format', () => {
 			const registry = RegistryFactory.createRegistry({
 				format: 'type-graphql',
 			})
@@ -54,13 +54,13 @@ describe('Registry Factory', () => {
 			expect(registry).toBeInstanceOf(TypeScriptRegistry)
 		})
 
-		test('should create TypeScript registry with createTypeScriptRegistry', () => {
+		it('should create TypeScript registry with createTypeScriptRegistry', () => {
 			const registry = RegistryFactory.createTypeScriptRegistry()
 
 			expect(registry).toBeInstanceOf(TypeScriptRegistry)
 		})
 
-		test('should create TypeScript registry consistently', () => {
+		it('should create TypeScript registry consistently', () => {
 			const registry1 = RegistryFactory.createRegistry({
 				format: 'type-graphql',
 			})
@@ -75,7 +75,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('Format Support', () => {
-		test('should get supported formats', () => {
+		it('should get supported formats', () => {
 			const formats = RegistryFactory.getSupportedFormats()
 
 			expect(formats).toContain('graphql')
@@ -83,7 +83,7 @@ describe('Registry Factory', () => {
 			expect(formats).toHaveLength(2)
 		})
 
-		test('should check if format is supported', () => {
+		it('should check if format is supported', () => {
 			expect(RegistryFactory.isFormatSupported('graphql')).toBe(true)
 			expect(RegistryFactory.isFormatSupported('type-graphql')).toBe(true)
 			expect(RegistryFactory.isFormatSupported('unknown')).toBe(false)
@@ -92,7 +92,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should throw error for unsupported format', () => {
+		it('should throw error for unsupported format', () => {
 			expect(() => {
 				RegistryFactory.createRegistry({
 					format: 'unknown' as RegistryFormat,
@@ -100,19 +100,19 @@ describe('Registry Factory', () => {
 			}).toThrow('Unsupported registry format: unknown')
 		})
 
-		test('should handle null options', () => {
+		it('should handle null options', () => {
 			expect(() => {
 				RegistryFactory.createRegistry(null as any)
 			}).toThrow()
 		})
 
-		test('should handle undefined options', () => {
+		it('should handle undefined options', () => {
 			expect(() => {
 				RegistryFactory.createRegistry(undefined as any)
 			}).toThrow()
 		})
 
-		test('should provide meaningful error for invalid context', () => {
+		it('should provide meaningful error for invalid context', () => {
 			try {
 				RegistryFactory.createRegistry({
 					format: 'invalid' as RegistryFormat,
@@ -128,7 +128,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('Registry Features', () => {
-		test('should create functional GraphQL registry', () => {
+		it('should create functional GraphQL registry', () => {
 			const schemaComposer = new SchemaComposer()
 			const registry = RegistryFactory.createRegistry({
 				format: 'graphql',
@@ -140,7 +140,7 @@ describe('Registry Factory', () => {
 			expect(registry.getAllTypes).toBeDefined()
 		})
 
-		test('should create functional TypeScript registry', () => {
+		it('should create functional TypeScript registry', () => {
 			const registry = RegistryFactory.createRegistry({
 				format: 'type-graphql',
 			}) as TypeScriptRegistry
@@ -153,7 +153,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('Memory Management', () => {
-		test('should not leak memory with multiple registry creations', () => {
+		it('should not leak memory with multiple registry creations', () => {
 			const registries: any[] = []
 
 			for (let i = 0; i < 100; i++) {
@@ -171,7 +171,7 @@ describe('Registry Factory', () => {
 			expect(registries).toHaveLength(100)
 		})
 
-		test('should handle rapid registry creation and destruction', () => {
+		it('should handle rapid registry creation and destruction', () => {
 			for (let i = 0; i < 50; i++) {
 				const registry = RegistryFactory.createRegistry({
 					format: 'type-graphql',
@@ -182,7 +182,7 @@ describe('Registry Factory', () => {
 	})
 
 	describe('Factory State', () => {
-		test('should be stateless across registry creations', () => {
+		it('should be stateless across registry creations', () => {
 			const schemaComposer = new SchemaComposer()
 
 			const graphqlRegistry = RegistryFactory.createRegistry({
@@ -202,7 +202,7 @@ describe('Registry Factory', () => {
 			expect(anotherGraphqlRegistry).toBeInstanceOf(GraphQLRegistry)
 		})
 
-		test('should not affect subsequent creations', () => {
+		it('should not affect subsequent creations', () => {
 			const schemaComposer = new SchemaComposer()
 
 			RegistryFactory.createRegistry({

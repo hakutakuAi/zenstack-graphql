@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { UnifiedFilterInputGenerator } from '@generators/unified/unified-filter-input-generator'
 import { TestFixtures, TestMockFactory, SpyOutputStrategy } from '../../helpers'
 
@@ -38,11 +38,11 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize successfully', () => {
+		it('should initialize successfully', () => {
 			expect(generator).toBeDefined()
 		})
 
-		test('should call createCommonFilterTypes during initialization', () => {
+		it('should call createCommonFilterTypes during initialization', () => {
 			generator.generate()
 
 			expect(spyStrategy.getGeneratedTypeNames()).toContain('StringFilterInput')
@@ -52,7 +52,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Filter Generation', () => {
-		test('should generate filter inputs when enabled', () => {
+		it('should generate filter inputs when enabled', () => {
 			const result = generator.generate()
 
 			expect(result).toBeDefined()
@@ -60,7 +60,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result.length).toBeGreaterThan(0)
 		})
 
-		test('should not generate filters when disabled', () => {
+		it('should not generate filters when disabled', () => {
 			const disabledContext = TestFixtures.createContext({
 				generateFilters: false,
 				models: [TestFixtures.createDataModel('UserFilterInput', [TestFixtures.createField('name', 'String')])],
@@ -75,7 +75,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result.length).toBe(0)
 		})
 
-		test('should generate correct number of filter inputs', () => {
+		it('should generate correct number of filter inputs', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBeGreaterThanOrEqual(2)
@@ -89,7 +89,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result).toContain('DateTimeFilterInput')
 		})
 
-		test('should respect field visibility rules', () => {
+		it('should respect field visibility rules', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -98,7 +98,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Field Processing', () => {
-		test('should handle string fields correctly', () => {
+		it('should handle string fields correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -111,7 +111,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(nameField.type).toBe('StringFilterInput')
 		})
 
-		test('should handle integer fields correctly', () => {
+		it('should handle integer fields correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -123,7 +123,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(ageField.type).toBe('NumericFilterInput')
 		})
 
-		test('should handle boolean fields correctly', () => {
+		it('should handle boolean fields correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -135,7 +135,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(isActiveField.type).toBe('BooleanFilterInput')
 		})
 
-		test('should handle DateTime fields correctly', () => {
+		it('should handle DateTime fields correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -147,7 +147,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(createdAtField.type).toBe('DateTimeFilterInput')
 		})
 
-		test('should exclude relation fields from filters', () => {
+		it('should exclude relation fields from filters', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -158,7 +158,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(postsField).toBeUndefined()
 		})
 
-		test('should handle optional fields correctly', () => {
+		it('should handle optional fields correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -172,7 +172,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle empty models gracefully', () => {
+		it('should handle empty models gracefully', () => {
 			const emptyContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateFilters: true,
@@ -187,7 +187,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(result.length).toBeGreaterThanOrEqual(0)
 		})
 
-		test('should handle models with no filterable fields gracefully', () => {
+		it('should handle models with no filterable fields gracefully', () => {
 			const noFieldsContext = TestMockFactory.createUnifiedContext(
 				TestFixtures.createContext({
 					generateFilters: true,
@@ -202,7 +202,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			}).not.toThrow()
 		})
 
-		test('should create empty filter input for models with no filterable fields', () => {
+		it('should create empty filter input for models with no filterable fields', () => {
 			const noFilterFieldsContext = TestMockFactory.createSpyUnifiedContext(
 				TestFixtures.createContext({
 					generateFilters: true,
@@ -226,7 +226,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(emptyCalls[0]?.args[0]).toBe('NoFilters')
 		})
 
-		test('should handle malformed field types gracefully', () => {
+		it('should handle malformed field types gracefully', () => {
 			const malformedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [
@@ -257,7 +257,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Type Naming', () => {
-		test('should format filter type names correctly', () => {
+		it('should format filter type names correctly', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -268,7 +268,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(typeNames).toContain('Post')
 		})
 
-		test('should handle custom naming conventions', () => {
+		it('should handle custom naming conventions', () => {
 			const customContext = TestFixtures.createContext({
 				generateFilters: true,
 				typeNaming: 'camelCase',
@@ -290,7 +290,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Filter Field Definitions', () => {
-		test('should create proper field definitions with descriptions', () => {
+		it('should create proper field definitions with descriptions', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -306,7 +306,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			})
 		})
 
-		test('should set all filter fields as nullable', () => {
+		it('should set all filter fields as nullable', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
@@ -321,7 +321,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Result Processing', () => {
-		test('should return only filter input types', () => {
+		it('should return only filter input types', () => {
 			const result = generator.generate()
 
 			result.forEach((typeName) => {
@@ -330,7 +330,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			})
 		})
 
-		test('should filter results by FilterInput suffix', () => {
+		it('should filter results by FilterInput suffix', () => {
 			generator.generate()
 
 			const allTypes = spyStrategy.getGeneratedTypeNames()
@@ -339,7 +339,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(filterTypes.length).toBeGreaterThan(0)
 		})
 
-		test('should validate actual filter structure and field mapping', () => {
+		it('should validate actual filter structure and field mapping', () => {
 			const result = generator.generate()
 
 			expect(result.length).toBeGreaterThanOrEqual(4)
@@ -371,7 +371,7 @@ describe('UnifiedFilterInputGenerator', () => {
 	})
 
 	describe('Complex Scenarios', () => {
-		test('should handle models with mixed field types', () => {
+		it('should handle models with mixed field types', () => {
 			const mixedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [
@@ -402,7 +402,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(relationField).toBeUndefined()
 		})
 
-		test('should handle deeply nested type definitions', () => {
+		it('should handle deeply nested type definitions', () => {
 			const nestedContext = TestFixtures.createContext({
 				generateFilters: true,
 				models: [

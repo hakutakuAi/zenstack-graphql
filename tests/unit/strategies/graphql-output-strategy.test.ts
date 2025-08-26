@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, it, expect, beforeEach } from 'bun:test'
 import { SchemaComposer } from 'graphql-compose'
 import { GraphQLOutputStrategy } from '@generators/strategies/graphql-output-strategy'
 import { GraphQLRegistry } from '@utils/registry'
@@ -33,12 +33,12 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Initialization', () => {
-		test('should initialize with required dependencies', () => {
+		it('should initialize with required dependencies', () => {
 			expect(strategy).toBeDefined()
 			expect(strategy).toBeInstanceOf(GraphQLOutputStrategy)
 		})
 
-		test('should handle empty options', () => {
+		it('should handle empty options', () => {
 			const minimalOptions = {}
 			const minimalStrategy = new GraphQLOutputStrategy(registry, schemaComposer, typeFactories, minimalOptions)
 			expect(minimalStrategy).toBeDefined()
@@ -46,7 +46,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Common Types Creation', () => {
-		test('should create enum types from common type definitions', () => {
+		it('should create enum types from common type definitions', () => {
 			const enumDefinition: CommonTypeDefinition = {
 				name: 'UserRole',
 				type: 'enum',
@@ -61,7 +61,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(strategy.hasType('UserRole')).toBe(true)
 		})
 
-		test('should create input types from common type definitions', () => {
+		it('should create input types from common type definitions', () => {
 			const inputDefinition: CommonTypeDefinition = {
 				name: 'UserInput',
 				type: 'input',
@@ -76,7 +76,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(strategy.hasType('UserInput')).toBe(true)
 		})
 
-		test('should skip already existing types', () => {
+		it('should skip already existing types', () => {
 			const enumDefinition: CommonTypeDefinition = {
 				name: 'UserRole',
 				type: 'enum',
@@ -95,7 +95,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(typesCountAfterFirst).toBe(typesCountAfterSecond)
 		})
 
-		test('should handle multiple type definitions', () => {
+		it('should handle multiple type definitions', () => {
 			const definitions: CommonTypeDefinition[] = [
 				{
 					name: 'UserRole',
@@ -123,7 +123,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Enum Type Creation', () => {
-		test('should create enum type with fields', () => {
+		it('should create enum type with fields', () => {
 			const enumMock = TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
 
 			const result = strategy.createEnumType(enumMock)
@@ -132,7 +132,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(strategy.hasType('Priority')).toBe(true)
 		})
 
-		test('should return existing enum name if already created', () => {
+		it('should return existing enum name if already created', () => {
 			const enumMock = TestFixtures.createEnum('Priority', ['HIGH', 'MEDIUM', 'LOW'])
 
 			const firstResult = strategy.createEnumType(enumMock)
@@ -142,7 +142,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('Priority')
 		})
 
-		test('should handle enum with no fields', () => {
+		it('should handle enum with no fields', () => {
 			const enumMock = TestFixtures.createEnum('EmptyEnum', [])
 
 			const result = strategy.createEnumType(enumMock)
@@ -151,7 +151,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(strategy.hasType('EmptyEnum')).toBe(true)
 		})
 
-		test('should handle enum with comments', () => {
+		it('should handle enum with comments', () => {
 			const enumMock = {
 				...TestFixtures.createEnum('Priority', ['HIGH', 'LOW']),
 				comments: ['Priority level for tasks'],
@@ -165,7 +165,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Sort Input Type Creation', () => {
-		test('should create sort input type with fields', () => {
+		it('should create sort input type with fields', () => {
 			const fields: SortFieldDefinition[] = [
 				{ name: 'name', description: 'Sort by name' },
 				{ name: 'createdAt', description: 'Sort by creation date' },
@@ -177,7 +177,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(registry.hasType('UserSortInput')).toBe(true)
 		})
 
-		test('should return existing sort input if already created', () => {
+		it('should return existing sort input if already created', () => {
 			const fields: SortFieldDefinition[] = [{ name: 'name' }]
 
 			const firstResult = strategy.createSortInputType('User', fields)
@@ -187,14 +187,14 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('UserSortInput')
 		})
 
-		test('should handle empty fields array', () => {
+		it('should handle empty fields array', () => {
 			const result = strategy.createSortInputType('User', [])
 
 			expect(result).toBe('UserSortInput')
 			expect(registry.hasType('UserSortInput')).toBe(true)
 		})
 
-		test('should handle fields without description', () => {
+		it('should handle fields without description', () => {
 			const fields: SortFieldDefinition[] = [{ name: 'name' }, { name: 'email' }]
 
 			const result = strategy.createSortInputType('User', fields)
@@ -203,7 +203,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(registry.hasType('UserSortInput')).toBe(true)
 		})
 
-		test('should throw PluginError on type factory failure', () => {
+		it('should throw PluginError on type factory failure', () => {
 			const mockTypeFactories = {
 				createSortInputType: () => {
 					throw new Error('Type factory error')
@@ -219,7 +219,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Filter Input Type Creation', () => {
-		test('should create filter input type with fields', () => {
+		it('should create filter input type with fields', () => {
 			const fields: FilterFieldDefinition[] = [
 				{ name: 'name', type: 'String', description: 'Filter by name' },
 				{ name: 'age', type: 'Int', nullable: false },
@@ -231,7 +231,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(schemaComposer.has('UserFilterInput')).toBe(true)
 		})
 
-		test('should add AND/OR logical operators', () => {
+		it('should add AND/OR logical operators', () => {
 			const fields: FilterFieldDefinition[] = [{ name: 'name', type: 'String' }]
 
 			strategy.createFilterInputType('User', fields)
@@ -242,7 +242,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(filterInput.hasField('OR')).toBe(true)
 		})
 
-		test('should return existing filter input if already created', () => {
+		it('should return existing filter input if already created', () => {
 			const fields: FilterFieldDefinition[] = [{ name: 'name', type: 'String' }]
 
 			const firstResult = strategy.createFilterInputType('User', fields)
@@ -252,14 +252,14 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('UserFilterInput')
 		})
 
-		test('should handle empty fields array', () => {
+		it('should handle empty fields array', () => {
 			const result = strategy.createFilterInputType('User', [])
 
 			expect(result).toBe('UserFilterInput')
 			expect(schemaComposer.has('UserFilterInput')).toBe(false)
 		})
 
-		test('should handle fields without description', () => {
+		it('should handle fields without description', () => {
 			const fields: FilterFieldDefinition[] = [
 				{ name: 'name', type: 'String' },
 				{ name: 'active', type: 'Boolean' },
@@ -273,14 +273,14 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Connection Type Creation', () => {
-		test('should create connection type', () => {
+		it('should create connection type', () => {
 			const result = strategy.createConnectionType('User')
 
 			expect(result).toBe('UserConnection')
 			expect(registry.hasType('UserConnection')).toBe(true)
 		})
 
-		test('should return existing connection if already created', () => {
+		it('should return existing connection if already created', () => {
 			const firstResult = strategy.createConnectionType('User')
 			const secondResult = strategy.createConnectionType('User')
 
@@ -288,7 +288,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('UserConnection')
 		})
 
-		test('should throw PluginError on type factory failure', () => {
+		it('should throw PluginError on type factory failure', () => {
 			const mockTypeFactories = {
 				createConnectionType: () => {
 					throw new Error('Connection error')
@@ -304,7 +304,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Object Type Creation', () => {
-		test('should create object type with fields', () => {
+		it('should create object type with fields', () => {
 			const fields = {
 				name: { type: 'String' },
 				age: { type: 'Int' },
@@ -316,7 +316,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(schemaComposer.has('User')).toBe(true)
 		})
 
-		test('should return existing object type if already created', () => {
+		it('should return existing object type if already created', () => {
 			const fields = { name: { type: 'String' } }
 
 			const firstResult = strategy.createObjectType('User', fields)
@@ -326,7 +326,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('User')
 		})
 
-		test('should handle creation without description', () => {
+		it('should handle creation without description', () => {
 			const fields = { id: { type: 'ID' } }
 
 			const result = strategy.createObjectType('User', fields)
@@ -335,7 +335,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(schemaComposer.has('User')).toBe(true)
 		})
 
-		test('should throw PluginError on object creation failure', () => {
+		it('should throw PluginError on object creation failure', () => {
 			const mockComposer = {
 				has: () => false,
 				createObjectTC: () => {
@@ -352,13 +352,13 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Pagination Types Creation', () => {
-		test('should create PageInfo type when not exists', () => {
+		it('should create PageInfo type when not exists', () => {
 			strategy.createPaginationTypes()
 
 			expect(registry.hasType('PageInfo')).toBe(true)
 		})
 
-		test('should not recreate PageInfo if already exists', () => {
+		it('should not recreate PageInfo if already exists', () => {
 			strategy.createPaginationTypes()
 			const typesCountAfterFirst = registry.getTypeNamesByKind(TypeKind.OBJECT).length
 
@@ -368,7 +368,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(typesCountAfterFirst).toBe(typesCountAfterSecond)
 		})
 
-		test('should create pagination input types', () => {
+		it('should create pagination input types', () => {
 			strategy.createPaginationTypes()
 
 			const inputTypes = registry.getTypeNamesByKind(TypeKind.INPUT)
@@ -377,14 +377,14 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Common Filter Types Creation', () => {
-		test('should create common filter types', () => {
+		it('should create common filter types', () => {
 			strategy.createCommonFilterTypes()
 
 			const filterTypes = registry.getTypeNamesByKind(TypeKind.INPUT)
 			expect(filterTypes.length).toBeGreaterThan(0)
 		})
 
-		test('should handle DateTime scalar type configuration', () => {
+		it('should handle DateTime scalar type configuration', () => {
 			const customOptions = {
 				...options,
 				scalarTypes: { DateTime: 'CustomDateTime' },
@@ -396,7 +396,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(schemaComposer.has('CustomDateTimeFilterInput')).toBe(true)
 		})
 
-		test('should not recreate existing filter types', () => {
+		it('should not recreate existing filter types', () => {
 			strategy.createCommonFilterTypes()
 			const typesCountAfterFirst = registry.getTypeNamesByKind(TypeKind.INPUT).length
 
@@ -408,20 +408,20 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Sort Direction Enum Creation', () => {
-		test('should create SortDirection enum', () => {
+		it('should create SortDirection enum', () => {
 			strategy.createSortDirectionEnum()
 
 			expect(registry.isTypeOfKind('SortDirection', TypeKind.ENUM)).toBe(true)
 		})
 
-		test('should not recreate if already exists', () => {
+		it('should not recreate if already exists', () => {
 			strategy.createSortDirectionEnum()
 			strategy.createSortDirectionEnum()
 
 			expect(registry.isTypeOfKind('SortDirection', TypeKind.ENUM)).toBe(true)
 		})
 
-		test('should throw PluginError on creation failure', () => {
+		it('should throw PluginError on creation failure', () => {
 			const freshSchemaComposer = new SchemaComposer()
 			const freshRegistry = new GraphQLRegistry(freshSchemaComposer)
 
@@ -440,7 +440,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Query Args Input Type Creation', () => {
-		test('should create query args input type', () => {
+		it('should create query args input type', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createQueryArgsInputType('UserQueryArgs', model)
@@ -449,7 +449,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(schemaComposer.has('UserQueryArgs')).toBe(true)
 		})
 
-		test('should include pagination fields', () => {
+		it('should include pagination fields', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			strategy.createQueryArgsInputType('UserQueryArgs', model)
@@ -462,7 +462,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(queryArgs.hasField('connection')).toBe(true)
 		})
 
-		test('should include filter and sort if they exist', () => {
+		it('should include filter and sort if they exist', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			strategy.createFilterInputType('User', [{ name: 'name', type: 'String' }])
@@ -475,7 +475,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(queryArgs.hasField('sort')).toBe(true)
 		})
 
-		test('should return existing if already created', () => {
+		it('should return existing if already created', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			const firstResult = strategy.createQueryArgsInputType('UserQueryArgs', model)
@@ -485,7 +485,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(firstResult).toBe('UserQueryArgs')
 		})
 
-		test('should throw PluginError on creation failure', () => {
+		it('should throw PluginError on creation failure', () => {
 			const model = TestFixtures.createDataModel('User')
 			const mockComposer = {
 				has: () => false,
@@ -503,14 +503,14 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Type Checking', () => {
-		test('should check if type exists in composer or registry', () => {
+		it('should check if type exists in composer or registry', () => {
 			schemaComposer.createObjectTC({ name: 'ExistingType', fields: {} })
 
 			expect(strategy.hasType('ExistingType')).toBe(true)
 			expect(strategy.hasType('NonExistentType')).toBe(false)
 		})
 
-		test('should check type existence in registry', () => {
+		it('should check type existence in registry', () => {
 			registry.registerType('RegistryType', TypeKind.OBJECT, schemaComposer.createObjectTC({ name: 'RegistryType', fields: {} }), true)
 
 			expect(strategy.hasType('RegistryType')).toBe(true)
@@ -518,7 +518,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Relation Processing', () => {
-		test('should check processed relations', () => {
+		it('should check processed relations', () => {
 			const relationKey = 'User_posts_Post'
 
 			expect(strategy.hasProcessedRelation(relationKey)).toBe(false)
@@ -528,7 +528,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(strategy.hasProcessedRelation(relationKey)).toBe(true)
 		})
 
-		test('should get processed relations', () => {
+		it('should get processed relations', () => {
 			const relationKey = 'User_posts_Post'
 			registry.addProcessedRelation(relationKey)
 
@@ -539,7 +539,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Generated Type Names', () => {
-		test('should get all generated input type names', () => {
+		it('should get all generated input type names', () => {
 			strategy.createFilterInputType('User', [{ name: 'name', type: 'String' }])
 			strategy.createSortInputType('User', [{ name: 'name' }])
 
@@ -549,7 +549,7 @@ describe('GraphQL Output Strategy', () => {
 			expect(typeNames).toContain('UserSortInput')
 		})
 
-		test('should filter generated type names', () => {
+		it('should filter generated type names', () => {
 			strategy.createFilterInputType('User', [{ name: 'name', type: 'String' }])
 			strategy.createSortInputType('Post', [{ name: 'title' }])
 
@@ -561,7 +561,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Error Handling', () => {
-		test('should handle errors gracefully in enum creation', () => {
+		it('should handle errors gracefully in enum creation', () => {
 			const invalidEnum = { name: '', fields: [] }
 
 			expect(() => {
@@ -569,7 +569,7 @@ describe('GraphQL Output Strategy', () => {
 			}).toThrow()
 		})
 
-		test('should validate PluginError instances', () => {
+		it('should validate PluginError instances', () => {
 			const mockTypeFactories = {
 				createConnectionType: () => {
 					throw new Error('Test error')
@@ -588,7 +588,7 @@ describe('GraphQL Output Strategy', () => {
 	})
 
 	describe('Input Type Creation', () => {
-		test('should return empty string for createInputType', () => {
+		it('should return empty string for createInputType', () => {
 			const model = TestFixtures.createDataModel('User')
 
 			const result = strategy.createInputType('UserInput', model, 'create')
