@@ -1,6 +1,6 @@
 {
 	"name": "@hakutakuai/zenstack-graphql",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "ZenStack plugin for generating GraphQL schemas",
 	"main": "dist/index.js",
 	"module": "index.ts",
@@ -52,12 +52,12 @@
 		"release": "bun run test:all && bun run publish"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.2.20",
+		"@types/bun": "^1.2.21",
 		"@types/node": "^24.3.0",
-		"@typescript-eslint/eslint-plugin": "^8.40.0",
-		"@typescript-eslint/parser": "^8.40.0",
+		"@typescript-eslint/eslint-plugin": "^8.41.0",
+		"@typescript-eslint/parser": "^8.41.0",
 		"concurrently": "^9.2.1",
-		"eslint": "^9.33.0",
+		"eslint": "^9.34.0",
 		"prettier": "^3.6.2",
 		"prisma": "^6.14.0",
 		"tsc-alias": "^1.8.16",
@@ -80,6 +80,6 @@
 		"ts-morph": "^26.0.0",
 		"ts-pattern": "^5.8.0",
 		"type-graphql": "^2.0.0-rc.2",
-		"zod": "3.25.76"
+		"zod": "4.1.3"
 	}
 }
