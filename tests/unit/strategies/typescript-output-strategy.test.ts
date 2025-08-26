@@ -185,7 +185,7 @@ describe('TypeScript Output Strategy', () => {
 			const result = strategy.createSortInputType('User', fields)
 
 			expect(result).toBe('UserSortInput')
-			expect(createdTypeName).toBe('User')
+			expect(createdTypeName).toBe('UserSortInput')
 			expect(createdFields).toEqual(fields)
 		})
 
@@ -232,7 +232,7 @@ describe('TypeScript Output Strategy', () => {
 			const result = strategy.createSortInputType('User_Profile_123', [{ name: 'field' }])
 
 			expect(result).toBe('User_Profile_123SortInput')
-			expect(createdTypeName).toBe('User_Profile_123')
+			expect(createdTypeName).toBe('User_Profile_123SortInput')
 		})
 	})
 

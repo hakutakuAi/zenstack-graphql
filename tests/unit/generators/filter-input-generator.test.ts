@@ -102,7 +102,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 			expect(userFilterCall).toBeDefined()
 
 			const fields = userFilterCall!.args[1]
@@ -115,7 +115,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userFilterCall!.args[1]
 			const ageField = fields.find((f: any) => f.name === 'age')
@@ -127,7 +127,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userFilterCall!.args[1]
 			const isActiveField = fields.find((f: any) => f.name === 'isActive')
@@ -139,7 +139,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userFilterCall!.args[1]
 			const createdAtField = fields.find((f: any) => f.name === 'createdAt')
@@ -151,7 +151,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userFilterCall!.args[1]
 			const postsField = fields.find((f: any) => f.name === 'posts')
@@ -162,7 +162,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const postFilterCall = filterCalls.find((call) => call.args[0] === 'PostFilterInput')
+			const postFilterCall = filterCalls.find((call) => call.args[0] === 'Post')
 
 			const fields = postFilterCall!.args[1]
 			const contentField = fields.find((f: any) => f.name === 'content')
@@ -223,7 +223,7 @@ describe('UnifiedFilterInputGenerator', () => {
 
 			const emptyCalls = noFilterFieldsContext.spy.getCallsForMethod('createEmptyFilterInputType')
 			expect(emptyCalls.length).toBe(1)
-			expect(emptyCalls[0].args[0]).toBe('NoFiltersFilterInput')
+			expect(emptyCalls[0].args[0]).toBe('NoFilters')
 		})
 
 		test('should handle malformed field types gracefully', () => {
@@ -264,8 +264,8 @@ describe('UnifiedFilterInputGenerator', () => {
 			expect(filterCalls.length).toBe(2)
 
 			const typeNames = filterCalls.map((call) => call.args[0])
-			expect(typeNames).toContain('UserFilterInput')
-			expect(typeNames).toContain('PostFilterInput')
+			expect(typeNames).toContain('User')
+			expect(typeNames).toContain('Post')
 		})
 
 		test('should handle custom naming conventions', () => {
@@ -294,7 +294,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			generator.generate()
 
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userFilterCall!.args[1]
 			fields.forEach((field: any) => {
@@ -355,7 +355,7 @@ describe('UnifiedFilterInputGenerator', () => {
 			const filterCalls = spyStrategy.getCallsForMethod('createFilterInputType')
 			expect(filterCalls.length).toBe(2)
 
-			const userFilterCall = filterCalls.find((call) => call.args[0] === 'UserFilterInput')
+			const userFilterCall = filterCalls.find((call) => call.args[0] === 'User')
 			expect(userFilterCall).toBeDefined()
 			const userFields = userFilterCall!.args[1]
 			expect(userFields.length).toBeGreaterThan(0)

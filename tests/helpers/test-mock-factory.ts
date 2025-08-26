@@ -205,18 +205,21 @@ export class MockOutputStrategy implements OutputStrategy {
 	private processedRelations: string[] = []
 
 	createSortInputType(typeName: string, _fields: SortFieldDefinition[]): string {
-		this.generatedTypes.push(typeName)
-		return typeName
+		const sortInputName = typeName.endsWith('SortInput') ? typeName : `${typeName}SortInput`
+		this.generatedTypes.push(sortInputName)
+		return sortInputName
 	}
 
 	createFilterInputType(typeName: string, _fields: FilterFieldDefinition[]): string {
-		this.generatedTypes.push(typeName)
-		return typeName
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
+		this.generatedTypes.push(filterInputName)
+		return filterInputName
 	}
 
 	createEmptyFilterInputType(typeName: string): string {
-		this.generatedTypes.push(typeName)
-		return typeName
+		const filterInputName = typeName.endsWith('FilterInput') ? typeName : `${typeName}FilterInput`
+		this.generatedTypes.push(filterInputName)
+		return filterInputName
 	}
 
 	createEnumFilterInputType(enumName: string): string {

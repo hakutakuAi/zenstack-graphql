@@ -97,7 +97,7 @@ describe('UnifiedSortInputGenerator', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
-			const userSortCall = sortCalls.find((call) => call.args[0] === 'UserSortInput')
+			const userSortCall = sortCalls.find((call) => call.args[0] === 'User')
 			expect(userSortCall).toBeDefined()
 
 			const fields = userSortCall!.args[1]
@@ -112,7 +112,7 @@ describe('UnifiedSortInputGenerator', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
-			const userSortCall = sortCalls.find((call) => call.args[0] === 'UserSortInput')
+			const userSortCall = sortCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userSortCall!.args[1]
 			const postsField = fields.find((f: any) => f.name === 'posts')
@@ -209,8 +209,8 @@ describe('UnifiedSortInputGenerator', () => {
 			expect(sortCalls.length).toBe(2)
 
 			const typeNames = sortCalls.map((call) => call.args[0])
-			expect(typeNames).toContain('UserSortInput')
-			expect(typeNames).toContain('PostSortInput')
+			expect(typeNames).toContain('User')
+			expect(typeNames).toContain('Post')
 		})
 
 		test('should handle custom naming conventions', () => {
@@ -239,7 +239,7 @@ describe('UnifiedSortInputGenerator', () => {
 			generator.generate()
 
 			const sortCalls = spyStrategy.getCallsForMethod('createSortInputType')
-			const userSortCall = sortCalls.find((call) => call.args[0] === 'UserSortInput')
+			const userSortCall = sortCalls.find((call) => call.args[0] === 'User')
 
 			const fields = userSortCall!.args[1]
 			fields.forEach((field: any) => {

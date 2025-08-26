@@ -29,7 +29,6 @@ describe('Advanced GraphQL Features Tests', () => {
 	})
 
 	beforeEach(async () => {
-		// Clean up in correct order due to foreign key constraints
 		await prismaClient.productTag.deleteMany()
 		await prismaClient.review.deleteMany()
 		await prismaClient.product.deleteMany()
@@ -66,43 +65,35 @@ describe('Advanced GraphQL Features Tests', () => {
 			const types = result.data.__schema.types
 			const typeNames = types.map((t: any) => t.name)
 
-			// Main object types
 			expect(typeNames).toContain('Product')
 			expect(typeNames).toContain('Review')
 			expect(typeNames).toContain('Tag')
 			expect(typeNames).toContain('ProductTag')
 
-			// Connection types
 			expect(typeNames).toContain('ProductConnection')
 			expect(typeNames).toContain('ReviewConnection')
 			expect(typeNames).toContain('TagConnection')
 
-			// Edge types
 			expect(typeNames).toContain('ProductEdge')
 			expect(typeNames).toContain('ReviewEdge')
 			expect(typeNames).toContain('TagEdge')
 
-			// Filter types
 			expect(typeNames).toContain('ProductFilterInput')
 			expect(typeNames).toContain('ReviewFilterInput')
 			expect(typeNames).toContain('TagFilterInput')
 
-			// Sort types
 			expect(typeNames).toContain('ProductSortInput')
 			expect(typeNames).toContain('ReviewSortInput')
 			expect(typeNames).toContain('TagSortInput')
 
-			// Enums
 			expect(typeNames).toContain('ProductStatus')
 			expect(typeNames).toContain('ReviewRating')
 			expect(typeNames).toContain('SortDirection')
 
-			// Common filter types
 			expect(typeNames).toContain('NumericFilterInput')
 			expect(typeNames).toContain('StringFilterInput')
 			expect(typeNames).toContain('BooleanFilterInput')
 
-			// Pagination types
 			expect(typeNames).toContain('PageInfo')
 		})
 	})
@@ -149,7 +140,6 @@ describe('Advanced GraphQL Features Tests', () => {
 
 	describe('Relay Connections and Pagination', () => {
 		test('Products connection follows Relay specification', async () => {
-			// Create test products
 			const products = await Promise.all([
 				prismaClient.product.create({
 					data: { name: 'Product A', price: 10.0, status: 'PUBLISHED' },
@@ -196,14 +186,12 @@ describe('Advanced GraphQL Features Tests', () => {
 
 			const connection = result.data.products
 
-			// Verify Relay structure
 			expect(connection.edges).toHaveLength(2)
 			expect(connection.totalCount).toBe(3)
 			expect(connection.pageInfo.hasNextPage).toBe(true)
 			expect(connection.pageInfo.startCursor).toBeDefined()
 			expect(connection.pageInfo.endCursor).toBeDefined()
 
-			// Verify edges structure
 			connection.edges.forEach((edge: any) => {
 				expect(edge.node).toBeDefined()
 				expect(edge.cursor).toBeDefined()
@@ -212,14 +200,12 @@ describe('Advanced GraphQL Features Tests', () => {
 		})
 
 		test('Forward pagination with cursors works correctly', async () => {
-			// Create test products
 			await Promise.all([
 				prismaClient.product.create({ data: { name: 'Product 1', price: 10.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'Product 2', price: 20.0, status: 'PUBLISHED' } }),
 				prismaClient.product.create({ data: { name: 'Product 3', price: 30.0, status: 'PUBLISHED' } }),
 			])
 
-			// Get first page
 			const firstPageResponse = await fetch(GRAPHQL_ENDPOINT, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -247,7 +233,6 @@ describe('Advanced GraphQL Features Tests', () => {
 
 			const endCursor = firstPage.data.products.pageInfo.endCursor
 
-			// Get second page using cursor
 			const secondPageResponse = await fetch(GRAPHQL_ENDPOINT, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -356,7 +341,7 @@ describe('Advanced GraphQL Features Tests', () => {
 
 			const result = await response.json()
 			expect(result.errors).toBeUndefined()
-			expect(result.data.products.totalCount).toBe(2) // Product B (price >= 150) and Product C (published AND price <= 60)
+			expect(result.data.products.totalCount).toBe(2)
 		})
 	})
 
@@ -486,7 +471,6 @@ describe('Advanced GraphQL Features Tests', () => {
 				data: { name: 'test-tag', color: '#FF0000' },
 			})
 
-			// Assign tag to product
 			const assignResponse = await fetch(GRAPHQL_ENDPOINT, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -504,7 +488,6 @@ describe('Advanced GraphQL Features Tests', () => {
 			expect(assignResult.errors).toBeUndefined()
 			expect(assignResult.data.assignTagToProduct).toBe(true)
 
-			// Verify relation exists
 			const queryResponse = await fetch(GRAPHQL_ENDPOINT, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },

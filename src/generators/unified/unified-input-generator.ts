@@ -23,7 +23,6 @@ export class UnifiedInputGenerator extends UnifiedGeneratorBase {
 	private generateCreateInput(model: DataModel): string | null {
 		try {
 			const typeName = this.getFormattedTypeName(model)
-			// Get the custom name or use the model name, then format it properly
 			const customName = this.attributeProcessor.model(model).name()
 			const inputName = this.typeFormatter.formatCreateInputTypeName(customName)
 			const description = `Create input for ${typeName}`
@@ -45,7 +44,6 @@ export class UnifiedInputGenerator extends UnifiedGeneratorBase {
 	private generateUpdateInput(model: DataModel): string | null {
 		try {
 			const typeName = this.getFormattedTypeName(model)
-			// Get the custom name or use the model name, then format it properly
 			const customName = this.attributeProcessor.model(model).name()
 			const inputName = this.typeFormatter.formatUpdateInputTypeName(customName)
 			const description = `Update input for ${typeName}`

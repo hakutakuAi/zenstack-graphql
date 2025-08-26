@@ -335,7 +335,6 @@ export class GraphQLTypeFactories {
 
 			const fields: Record<string, any> = {}
 
-			// Add basic filter fields for each model field
 			for (const field of model.fields) {
 				const fieldName = this.typeFormatter.formatFieldName(field.name)
 				fields[fieldName] = {
@@ -388,7 +387,6 @@ export class GraphQLTypeFactories {
 
 			const fields: Record<string, any> = {}
 
-			// Add basic input fields for each model field
 			for (const field of model.fields) {
 				const fieldName = this.typeFormatter.formatFieldName(field.name)
 				fields[fieldName] = {
