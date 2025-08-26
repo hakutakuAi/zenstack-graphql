@@ -138,7 +138,6 @@ export class ProductResolver {
 			if (filter.createdAt.lte) where.createdAt.lte = filter.createdAt.lte
 		}
 
-		// Handle AND/OR operations
 		if (filter.AND) {
 			where.AND = filter.AND.map((f: any) => this.buildWhereCondition(f))
 		}

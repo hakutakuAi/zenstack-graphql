@@ -20,8 +20,6 @@ export class UnifiedSortInputGenerator extends UnifiedGeneratorBase {
 	protected override generateForModel(model: DataModel): string | null {
 		const sortFields = this.getSortableFields(model)
 
-		// Get the custom name (or model name) and pass raw name to output strategy
-		// Let the output strategy handle the formatting via TypeFactories
 		const customName = this.attributeProcessor.model(model).name()
 		const sortInputTypeName = this.outputStrategy.createSortInputType(customName, sortFields)
 

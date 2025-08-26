@@ -137,7 +137,6 @@ export class TagResolver {
 			where.name = { contains: filter.name.contains || filter.name.equals }
 		}
 
-		// Handle AND/OR operations
 		if (filter.AND) {
 			where.AND = filter.AND.map((f: any) => this.buildWhereCondition(f))
 		}

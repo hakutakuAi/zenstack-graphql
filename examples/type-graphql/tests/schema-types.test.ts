@@ -66,7 +66,6 @@ describe('TypeGraphQL Test Example', () => {
 		expect(openParens).toBe(closeParens)
 	})
 
-	// Filter Input Types Tests
 	describe('Filter Input Types', () => {
 		test('Contains base filter input types', () => {
 			expect(schemaContent).toContain('export class NumericFilterInput')
@@ -119,7 +118,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Sort Input Types Tests
 	describe('Sort Input Types', () => {
 		test('Contains SortDirection enum', () => {
 			expect(schemaContent).toContain('export enum SortDirection')
@@ -146,7 +144,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Pagination Input Types Tests
 	describe('Pagination Input Types', () => {
 		test('Contains pagination input types', () => {
 			expect(schemaContent).toContain('export class ForwardPaginationInput')
@@ -175,7 +172,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Connection Types Tests
 	describe('Connection Types', () => {
 		test('Contains PageInfo class', () => {
 			expect(schemaContent).toContain('export class PageInfo')
@@ -224,7 +220,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// TypeScript Types Validation
 	describe('TypeScript Types Validation', () => {
 		test('Uses proper TypeScript number types instead of GraphQL Float', () => {
 			const numberFieldMatches = schemaContent.match(/: number/g)
@@ -248,7 +243,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Relations and PostCategory Tests
 	describe('Relations and Custom Names', () => {
 		test('PostCategory uses correct name from @@graphql.name attribute', () => {
 			expect(schemaContent).toContain('export class PostCategory')
@@ -289,7 +283,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Comprehensive Validation Tests
 	describe('Comprehensive Schema Validation', () => {
 		test('All classes have proper ObjectType or InputType decorators', () => {
 			const classMatches = schemaContent.match(/export class \w+/g)
@@ -357,7 +350,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Advanced Filter Tests
 	describe('Advanced Filter Validation', () => {
 		test('All filter inputs have AND/OR logical operators', () => {
 			const modelFilterClasses = ['UserFilterInput', 'PostFilterInput', 'CategoryFilterInput', 'PostCategoryFilterInput', 'CommentFilterInput']
@@ -409,7 +401,6 @@ describe('TypeGraphQL Test Example', () => {
 		})
 	})
 
-	// Sort Input Validation
 	describe('Advanced Sort Validation', () => {
 		test('All sort inputs have proper SortDirection references', () => {
 			const sortInputClasses = ['UserSortInput', 'PostSortInput', 'CategorySortInput', 'PostCategorySortInput', 'CommentSortInput']

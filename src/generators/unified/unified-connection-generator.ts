@@ -17,8 +17,6 @@ export class UnifiedConnectionGenerator extends UnifiedGeneratorBase {
 	}
 
 	protected override generateForModel(model: DataModel): string | null {
-		// Get the custom name (or model name) and pass raw name to output strategy
-		// Let the output strategy handle the formatting via TypeFactories
 		const customName = this.attributeProcessor.model(model).name()
 		const connectionName = this.outputStrategy.createConnectionType(customName)
 

@@ -45,7 +45,6 @@ export class TypeFormatter {
 	}
 
 	formatConnectionTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('Connection')) {
 			return typeName
 		}
@@ -53,7 +52,6 @@ export class TypeFormatter {
 	}
 
 	formatEdgeTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('Edge')) {
 			return typeName
 		}
@@ -61,7 +59,6 @@ export class TypeFormatter {
 	}
 
 	formatSortInputTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('SortInput')) {
 			return typeName
 		}
@@ -69,7 +66,6 @@ export class TypeFormatter {
 	}
 
 	formatFilterInputTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('FilterInput')) {
 			return typeName
 		}
@@ -77,7 +73,6 @@ export class TypeFormatter {
 	}
 
 	formatCreateInputTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('CreateInput')) {
 			return typeName
 		}
@@ -85,7 +80,6 @@ export class TypeFormatter {
 	}
 
 	formatUpdateInputTypeName(typeName: string): string {
-		// Safety check: prevent double suffixes
 		if (typeName.endsWith('UpdateInput')) {
 			return typeName
 		}
