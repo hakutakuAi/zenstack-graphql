@@ -237,7 +237,7 @@ describe('TestUtilities', () => {
 		})
 
 		it('should throw when model not found', () => {
-			const generatorResult = []
+			const generatorResult: Array<{ args: [string, any[]] }> = []
 
 			expect(() => {
 				TestUtilities.assertFieldMapping(generatorResult, 'User', [])

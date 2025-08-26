@@ -20,8 +20,8 @@ describe('TestFixtures', () => {
 			expect(enumType.name).toBe('Status')
 			expect(enumType.$type).toBe('Enum')
 			expect(enumType.fields).toHaveLength(2)
-			expect(enumType.fields[0].name).toBe('ACTIVE')
-			expect(enumType.fields[1].name).toBe('INACTIVE')
+			expect(enumType.fields[0]?.name).toBe('ACTIVE')
+			expect(enumType.fields[1]?.name).toBe('INACTIVE')
 		})
 
 		it('should create a field with correct structure', () => {
@@ -208,7 +208,7 @@ describe('TestFixtures', () => {
 			expect(modelNames).toContain('Product')
 			expect(modelNames).toContain('Order')
 
-			expect(context.enums[0].name).toBe('OrderStatus')
+			expect(context.enums[0]?.name).toBe('OrderStatus')
 		})
 
 		it('should create complex relation context', () => {

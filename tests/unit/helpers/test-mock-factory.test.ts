@@ -52,8 +52,8 @@ describe('TestMockFactory', () => {
 
 			const calls = spyContext.spy.getCallsForMethod('createObjectType')
 			expect(calls).toHaveLength(1)
-			expect(calls[0].method).toBe('createObjectType')
-			expect(calls[0].args[0]).toBe('User')
+			expect(calls[0]?.method).toBe('createObjectType')
+			expect(calls[0]?.args[0]).toBe('User')
 		})
 
 		it('should track generated type names', () => {
@@ -96,7 +96,7 @@ describe('SpyOutputStrategy', () => {
 
 			const calls = spy.getCallsForMethod('createObjectType')
 			expect(calls).toHaveLength(1)
-			expect(calls[0].args[0]).toBe('User')
+			expect(calls[0]?.args[0]).toBe('User')
 		})
 
 		it('should track createConnectionType calls', () => {
@@ -104,7 +104,7 @@ describe('SpyOutputStrategy', () => {
 
 			const calls = spy.getCallsForMethod('createConnectionType')
 			expect(calls).toHaveLength(1)
-			expect(calls[0].args[0]).toBe('User')
+			expect(calls[0]?.args[0]).toBe('User')
 		})
 
 		it('should track createFilterInputType calls', () => {
@@ -112,7 +112,7 @@ describe('SpyOutputStrategy', () => {
 
 			const calls = spy.getCallsForMethod('createFilterInputType')
 			expect(calls).toHaveLength(1)
-			expect(calls[0].args[0]).toBe('User')
+			expect(calls[0]?.args[0]).toBe('User')
 		})
 
 		it('should track multiple method calls', () => {
@@ -167,7 +167,7 @@ describe('SpyOutputStrategy', () => {
 			})
 
 			const calls = spy.getCallsForMethod('createObjectType')
-			expect(calls[0].args[1]).toEqual({
+			expect(calls[0]?.args[1]).toEqual({
 				id: { type: 'String!', description: 'User ID' },
 				name: { type: 'String!', description: 'User name' },
 			})
@@ -182,7 +182,7 @@ describe('SpyOutputStrategy', () => {
 			spy.createFilterInputType('User', filterFields)
 
 			const calls = spy.getCallsForMethod('createFilterInputType')
-			expect(calls[0].args[1]).toEqual(filterFields)
+			expect(calls[0]?.args[1]).toEqual(filterFields)
 		})
 	})
 })

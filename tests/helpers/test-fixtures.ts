@@ -205,10 +205,7 @@ export class TestFixtures {
 		return TestFixtures.createContext({
 			includeRelations: true,
 			models: [
-				TestFixtures.createDataModel('Organization', [
-					TestFixtures.createField('id', 'String'),
-					TestFixtures.createField('name', 'String'),
-				]),
+				TestFixtures.createDataModel('Organization', [TestFixtures.createField('id', 'String'), TestFixtures.createField('name', 'String')]),
 				TestFixtures.createDataModel('Department', [
 					TestFixtures.createField('id', 'String'),
 					TestFixtures.createField('name', 'String'),

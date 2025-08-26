@@ -1,0 +1,352 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: [main, development]
+        paths:
+            - 'src/**'
+            - 'tests/**'
+            - 'examples/**'
+            - 'package.json'
+            - 'bun.lock'
+            - 'tsconfig.json'
+            - '*.ts'
+    pull_request:
+        branches: [main, development]
+        paths:
+            - 'src/**'
+            - 'tests/**'
+            - 'examples/**'
+            - 'package.json'
+            - 'bun.lock'
+            - 'tsconfig.json'
+            - '*.ts'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    BUN_VERSION: '1.2.21'
+
+jobs:
+    setup:
+        name: 🔧 Setup & Dependencies
+        runs-on: ubuntu-latest
+        outputs:
+            cache-key: ${{ steps.cache-key.outputs.key }}
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 🔑 Generate cache key
+              id: cache-key
+              run: echo "key=bun-${{ hashFiles('**/bun.lock', '**/package.json') }}" >> $GITHUB_OUTPUT
+
+            - name: 💾 Cache dependencies
+              uses: actions/cache@v4
+              id: cache-deps
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ steps.cache-key.outputs.key }}
+                  restore-keys: |
+                      bun-
+
+            - name: 📦 Install dependencies
+              if: steps.cache-deps.outputs.cache-hit != 'true'
+              run: bun install --frozen-lockfile
+
+            - name: 📦 Install example dependencies
+              if: steps.cache-deps.outputs.cache-hit != 'true'
+              run: |
+                  cd examples/graphql-server && bun install --frozen-lockfile
+                  cd ../type-graphql && bun install --frozen-lockfile
+                  cd ../advanced-graphql && bun install --frozen-lockfile
+
+    typecheck:
+        name: 🔍 Type Check & Lint
+        runs-on: ubuntu-latest
+        needs: setup
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: 🔍 Type check
+              run: bunx tsc --noEmit
+
+            - name: 🧹 Lint check
+              run: |
+                  if [ -f "eslint.config.js" ] || [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ]; then
+                    bunx eslint src/ tests/ --ext .ts --max-warnings 0
+                  else
+                    echo "No ESLint configuration found, skipping lint check"
+                  fi
+
+    unit-tests:
+        name: 🧪 Unit & Integration Tests
+        runs-on: ubuntu-latest
+        needs: setup
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: 🧪 Run unit tests
+              run: bun run test --verbose --timeout 30000
+
+            - name: 📊 Generate coverage report
+              run: bun run test:coverage --reporter=lcov
+
+            - name: 📈 Upload coverage to codecov
+              uses: codecov/codecov-action@v4
+              with:
+                  file: ./coverage/lcov.info
+                  flags: unittests
+                  name: unit-tests
+                  fail_ci_if_error: false
+
+            - name: 💾 Archive test results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: unit-test-results
+                  path: |
+                      coverage/
+                      test-results.xml
+                  retention-days: 7
+
+    e2e-tests:
+        name: 🚀 End-to-End Tests
+        runs-on: ubuntu-latest
+        needs: [setup, typecheck]
+        timeout-minutes: 15
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: 🏗️ Build project
+              run: bun run build
+
+            - name: 📊 Cache build artifacts
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      dist/
+                      examples/*/dist/
+                      examples/*/prisma/
+                  key: build-${{ github.sha }}
+
+            - name: ⚡ Generate examples
+              run: bun run generate:all
+
+            - name: 🧪 Run E2E tests
+              run: bun run e2e
+
+            - name: 💾 Archive E2E results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: e2e-test-results
+                  path: |
+                      examples/*/tests/
+                      examples/*/*.test.ts
+                      examples/*/schema.graphql
+                  retention-days: 7
+
+    test-examples:
+        name: 🎯 Example Tests
+        runs-on: ubuntu-latest
+        needs: [setup, e2e-tests]
+        strategy:
+            fail-fast: false
+            matrix:
+                example: [basic, full-features, custom-naming]
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: 💾 Restore build artifacts
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      dist/
+                      examples/*/dist/
+                      examples/*/prisma/
+                  key: build-${{ github.sha }}
+
+            - name: 🧪 Test ${{ matrix.example }} example
+              run: bun run test:${{ matrix.example }}
+
+    performance-tests:
+        name: ⚡ Performance Tests
+        runs-on: ubuntu-latest
+        needs: [setup, unit-tests]
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: ⚡ Run performance tests
+              run: bun test tests/performance/ --verbose
+
+    security-scan:
+        name: 🔒 Security Scan
+        runs-on: ubuntu-latest
+        needs: setup
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🔒 Run security audit
+              run: |
+                  bun audit --audit-level moderate || true
+
+    build-validation:
+        name: 📦 Build Validation
+        runs-on: ubuntu-latest
+        needs: [setup, typecheck]
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+
+            - name: 🐰 Setup Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: ${{ env.BUN_VERSION }}
+
+            - name: 💾 Restore dependencies
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.bun/install/cache
+                      node_modules
+                      examples/*/node_modules
+                  key: ${{ needs.setup.outputs.cache-key }}
+
+            - name: 🏗️ Test build process
+              run: |
+                  bun run build
+
+            - name: ✅ Verify build output
+              run: |
+                  [ -d "dist" ] || (echo "dist directory not found!" && exit 1)
+                  [ -f "dist/index.js" ] || (echo "Main entry file not found!" && exit 1)
+                  [ -f "dist/package.json" ] || (echo "Package.json not found in dist!" && exit 1)
+                  echo "✅ Build validation successful"
+
+            - name: 💾 Archive build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-artifacts
+                  path: dist/
+                  retention-days: 7
+
+    test-summary:
+        name: 📋 Test Summary
+        runs-on: ubuntu-latest
+        needs: [typecheck, unit-tests, e2e-tests, test-examples, build-validation]
+        if: always()
+        steps:
+            - name: 📋 Generate summary
+              run: |
+                  echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+                  echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+                  echo "| Type Check & Lint | ${{ needs.typecheck.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| E2E Tests | ${{ needs.e2e-tests.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Example Tests | ${{ needs.test-examples.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Build Validation | ${{ needs.build-validation.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 📊 Coverage & Artifacts" >> $GITHUB_STEP_SUMMARY
+                  echo "- Coverage reports available in artifacts" >> $GITHUB_STEP_SUMMARY
+                  echo "- Test results archived for 7 days" >> $GITHUB_STEP_SUMMARY
+
+            - name: ❌ Fail if critical jobs failed
+              if: |
+                  needs.typecheck.result == 'failure' ||
+                  needs.unit-tests.result == 'failure' ||
+                  needs.e2e-tests.result == 'failure' ||
+                  needs.build-validation.result == 'failure'
+              run: |
+                  echo "❌ Critical jobs failed. Please check the logs above."
+                  exit 1
