@@ -44,7 +44,7 @@ export class TestFixtures {
 		} as Enum
 	}
 
-	static createField(name: string, type: string, isOptional = false, attributes: any[] = []) {
+	static createField(name: string, type: string, isOptional = false, isArray = false, attributes: any[] = []) {
 		const defaultAttributes = [TestFixtures.createAttribute('@graphql.filterable'), TestFixtures.createAttribute('@graphql.sortable')]
 		return {
 			$type: 'DataModelField',
@@ -52,7 +52,7 @@ export class TestFixtures {
 			type: {
 				type,
 				optional: isOptional,
-				array: false,
+				array: isArray,
 				reference: null,
 			},
 			attributes: attributes.length > 0 ? attributes : defaultAttributes,

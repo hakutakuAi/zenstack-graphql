@@ -54,10 +54,13 @@ export interface UnifiedGenerationStats {
 	objectTypes: number
 	enumTypes: number
 	scalarTypes: number
+	inputTypes: number
 	relationFields: number
 	connectionTypes: number
 	sortInputTypes: number
 	filterInputTypes: number
+	totalTypes: number
+	generationTimeMs: number
 }
 
 export interface PluginMetadata {

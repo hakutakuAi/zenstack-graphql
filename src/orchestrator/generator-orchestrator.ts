@@ -54,14 +54,15 @@ export class GeneratorOrchestrator {
 	) {}
 
 	async generate(): Promise<UnifiedGenerationResult> {
+		const startTime = Date.now()
 		if (this.outputFormat === OutputFormat.TYPE_GRAPHQL) {
-			return this.generateTypeGraphQL()
+			return this.generateTypeGraphQL(startTime)
 		} else {
-			return this.generateGraphQL()
+			return this.generateGraphQL(startTime)
 		}
 	}
 
-	private async generateTypeGraphQL(): Promise<UnifiedGenerationResult> {
+	private async generateTypeGraphQL(startTime: number): Promise<UnifiedGenerationResult> {
 		const unifiedContext = UnifiedContextFactory.createTypeScriptContext(this.context)
 		const generators = this.createTypeScriptGeneratorsWithContext(unifiedContext)
 		const results = await this.executeGenerators(generators)
@@ -69,7 +70,7 @@ export class GeneratorOrchestrator {
 		return {
 			code: unifiedContext.outputStrategy.getGeneratedCode?.() || '',
 			results,
-			stats: StatsCollector.collect(results),
+			stats: StatsCollector.collect(results, startTime),
 			outputFormat: this.outputFormat,
 		}
 	}
@@ -88,7 +89,7 @@ export class GeneratorOrchestrator {
 		}
 	}
 
-	private async generateGraphQL(): Promise<UnifiedGenerationResult> {
+	private async generateGraphQL(startTime: number): Promise<UnifiedGenerationResult> {
 		const graphqlContext = this.createGraphQLContext()
 
 		graphqlContext.registry.addRelayRequirements()
@@ -106,7 +107,7 @@ export class GeneratorOrchestrator {
 		return {
 			sdl: graphqlContext.registry.generateSDL(),
 			results,
-			stats: StatsCollector.collect(results),
+			stats: StatsCollector.collect(results, startTime),
 			outputFormat: this.outputFormat,
 		}
 	}

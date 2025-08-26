@@ -208,8 +208,8 @@ describe('UnifiedFilterInputGenerator', () => {
 					generateFilters: true,
 					models: [
 						TestFixtures.createDataModel('NoFilters', [
-							TestFixtures.createField('id', 'String', false, [TestFixtures.createAttribute('@id')]),
-							TestFixtures.createField('name', 'String', false, [TestFixtures.createAttribute('@db.VarChar', [{ value: 255 }])]),
+							TestFixtures.createField('id', 'String', false, false, [TestFixtures.createAttribute('@id')]),
+							TestFixtures.createField('name', 'String', false, false, [TestFixtures.createAttribute('@db.VarChar', [{ value: 255 }])]),
 						]),
 					],
 				}),
@@ -223,7 +223,7 @@ describe('UnifiedFilterInputGenerator', () => {
 
 			const emptyCalls = noFilterFieldsContext.spy.getCallsForMethod('createEmptyFilterInputType')
 			expect(emptyCalls.length).toBe(1)
-			expect(emptyCalls[0].args[0]).toBe('NoFilters')
+			expect(emptyCalls[0]?.args[0]).toBe('NoFilters')
 		})
 
 		test('should handle malformed field types gracefully', () => {
