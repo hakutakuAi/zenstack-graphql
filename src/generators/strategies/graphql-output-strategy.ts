@@ -335,10 +335,6 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 			type: 'String',
 			description: 'Cursor for pagination before this item',
 		}
-		fields.connection = {
-			type: 'Boolean',
-			description: 'Return connection format with edges and pageInfo',
-		}
 
 		try {
 			const queryArgsInputTC = this.schemaComposer.createInputTC({

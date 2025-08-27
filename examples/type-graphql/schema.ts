@@ -522,8 +522,6 @@ export class UserQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -540,8 +538,6 @@ export class PostQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -558,8 +554,6 @@ export class CategoryQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -572,8 +566,6 @@ export class PostCategoryQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -590,6 +582,4 @@ export class CommentQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }

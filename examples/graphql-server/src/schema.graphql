@@ -433,9 +433,6 @@ input UserQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Post with optional filter, sort, and pagination"""
@@ -457,9 +454,6 @@ input PostQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -483,9 +477,6 @@ input CategoryQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -503,9 +494,6 @@ input PostCategoryQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
@@ -527,7 +515,4 @@ input CommentQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }

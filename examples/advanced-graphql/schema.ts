@@ -512,8 +512,6 @@ export class ProductQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -530,8 +528,6 @@ export class ReviewQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -548,8 +544,6 @@ export class TagQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -566,6 +560,4 @@ export class ProductTagQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }

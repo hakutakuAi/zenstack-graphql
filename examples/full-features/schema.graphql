@@ -621,9 +621,6 @@ input MemberQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -647,9 +644,6 @@ input UserProfileQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Post with optional filter, sort, and pagination"""
@@ -671,9 +665,6 @@ input PostQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
@@ -695,9 +686,6 @@ input CommentQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -715,9 +703,6 @@ input ReactionQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Follow with optional filter, sort, and pagination"""
@@ -739,9 +724,6 @@ input FollowQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Tag with optional filter, sort, and pagination"""
@@ -763,9 +745,6 @@ input TagQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -789,7 +768,4 @@ input TagsOnPostsQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }

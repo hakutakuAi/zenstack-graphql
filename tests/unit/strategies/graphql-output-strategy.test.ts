@@ -459,7 +459,6 @@ describe('GraphQL Output Strategy', () => {
 			expect(queryArgs.hasField('after')).toBe(true)
 			expect(queryArgs.hasField('last')).toBe(true)
 			expect(queryArgs.hasField('before')).toBe(true)
-			expect(queryArgs.hasField('connection')).toBe(true)
 		})
 
 		it('should include filter and sort if they exist', () => {

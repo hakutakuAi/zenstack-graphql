@@ -477,9 +477,6 @@ input CustomerQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Product with optional filter, sort, and pagination"""
@@ -495,9 +492,6 @@ input ProductQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Address with optional filter, sort, and pagination"""
@@ -519,9 +513,6 @@ input AddressQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Order with optional filter, sort, and pagination"""
@@ -543,9 +534,6 @@ input OrderQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -569,9 +557,6 @@ input OrderItemQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -595,7 +580,4 @@ input CategoryQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }

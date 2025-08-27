@@ -129,7 +129,6 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 			{ name: 'after', type: 'String', nullable: true },
 			{ name: 'last', type: 'Int', nullable: true },
 			{ name: 'before', type: 'String', nullable: true },
-			{ name: 'connection', type: 'Boolean', nullable: true },
 		)
 
 		this.astFactory.createFilterInputType(queryArgsInputName, fields)

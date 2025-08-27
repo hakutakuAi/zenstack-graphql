@@ -420,9 +420,6 @@ input AuthorQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Book with optional filter, sort, and pagination"""
@@ -444,9 +441,6 @@ input BookQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Review with optional filter, sort, and pagination"""
@@ -468,9 +462,6 @@ input ReviewQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Article with optional filter, sort, and pagination"""
@@ -492,9 +483,6 @@ input ArticleQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -518,7 +506,4 @@ input PublisherQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
