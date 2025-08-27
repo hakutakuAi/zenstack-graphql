@@ -11,6 +11,7 @@ import {
 	UnifiedEnumGenerator,
 	UnifiedScalarGenerator,
 	UnifiedContextFactory,
+	UnifiedHelperGenerator,
 } from '@generators/unified'
 
 export class UnifiedGeneratorFactory {
@@ -26,6 +27,7 @@ export class UnifiedGeneratorFactory {
 			enumGenerator: new UnifiedEnumGenerator(unifiedContext, OutputFormat.GRAPHQL),
 			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
+			helperGenerator: new UnifiedHelperGenerator(unifiedContext),
 		}
 	}
 
@@ -42,6 +44,7 @@ export class UnifiedGeneratorFactory {
 			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
+			helperGenerator: new UnifiedHelperGenerator(unifiedContext),
 		}
 	}
 

@@ -12,7 +12,7 @@ describe('TypeGraphQL Test Example', () => {
 	})
 
 	test('Generated TypeScript file contains imports', () => {
-		expect(schemaContent).toContain('import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType } from "type-graphql"')
+		expect(schemaContent).toContain('import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType, InterfaceType } from "type-graphql"')
 		expect(schemaContent).toContain('import { GraphQLJSON } from "graphql-scalars"')
 		expect(schemaContent).toContain('import "reflect-metadata"')
 	})
@@ -217,6 +217,20 @@ describe('TypeGraphQL Test Example', () => {
 			expect(userConnectionSection).toContain('@Field(() => PageInfo)')
 			expect(userConnectionSection).toContain('@Field(() => [UserEdge])')
 			expect(userConnectionSection).toContain('@Field(() => Int)')
+		})
+
+		test('Edge and Connection interfaces are generated with proper decorators', () => {
+			expect(schemaContent).toContain('@InterfaceType({ description: \'Base interface for all edge types in connections\', autoRegisterImplementations: false })')
+			expect(schemaContent).toContain('export abstract class Edge')
+			expect(schemaContent).toContain('@InterfaceType({ description: \'Base interface for all connection types\', autoRegisterImplementations: false })')
+			expect(schemaContent).toContain('export abstract class Connection')
+		})
+
+		test('Edge and Connection types implement their interfaces', () => {
+			expect(schemaContent).toContain('@ObjectType({ implements: Edge })')
+			expect(schemaContent).toContain('export class UserEdge implements Edge')
+			expect(schemaContent).toContain('@ObjectType({ implements: Connection })')
+			expect(schemaContent).toContain('export class UserConnection implements Connection')
 		})
 	})
 

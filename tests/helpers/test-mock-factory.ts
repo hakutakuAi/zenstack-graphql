@@ -44,7 +44,7 @@ export class TestMockFactory {
 	}
 
 	private static addEssentialTypes(registry: GraphQLRegistry, schemaComposer: SchemaComposer): void {
-		registry.addRelayRequirements()
+		registry.addRelayInterfaces()
 
 		const scalars = [
 			{ name: 'DateTime', description: 'A date-time string at UTC' },

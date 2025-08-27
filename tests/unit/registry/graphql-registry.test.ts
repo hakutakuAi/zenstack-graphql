@@ -23,6 +23,16 @@ describe('GraphQL Registry', () => {
 			expect(registry.isTypeOfKind('Node', TypeKind.INTERFACE)).toBe(true)
 		})
 
+		it('should create Edge interface on initialization', () => {
+			expect(registry.hasType('Edge')).toBe(true)
+			expect(registry.isTypeOfKind('Edge', TypeKind.INTERFACE)).toBe(true)
+		})
+
+		it('should create Connection interface on initialization', () => {
+			expect(registry.hasType('Connection')).toBe(true)
+			expect(registry.isTypeOfKind('Connection', TypeKind.INTERFACE)).toBe(true)
+		})
+
 		it('should sync existing types from schema composer', () => {
 			const composerWithTypes = new SchemaComposer()
 			composerWithTypes.createObjectTC('ExistingType')
@@ -208,6 +218,17 @@ describe('GraphQL Registry', () => {
 
 	describe('Schema Generation', () => {
 		it('should generate GraphQL SDL schema', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
 			const objectTC = schemaComposer.createObjectTC({
 				name: 'User',
 				fields: { name: 'String', age: 'Int' },
@@ -222,16 +243,76 @@ describe('GraphQL Registry', () => {
 		})
 
 		it('should include Node interface in schema', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
 			const schema = registry.generateSDL()
 
 			expect(schema).toContain('interface Node')
 			expect(schema).toContain('id: ID!')
 		})
 
-		it('should handle empty schema', () => {
-			const emptyComposer = new SchemaComposer()
+		it('should include Edge interface in schema', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
 
 			const schema = registry.generateSDL()
+
+			expect(schema).toContain('interface Edge')
+			expect(schema).toContain('cursor: String!')
+		})
+
+		it('should include Connection interface in schema', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
+			const schema = registry.generateSDL()
+
+			expect(schema).toContain('interface Connection')
+			expect(schema).toContain('pageInfo: PageInfo!')
+			expect(schema).toContain('totalCount: Int!')
+		})
+
+		it('should handle empty schema', () => {
+			const emptyComposer = new SchemaComposer()
+			const emptyRegistry = new GraphQLRegistry(emptyComposer)
+
+			const pageInfoTC = emptyComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			emptyRegistry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
+			const schema = emptyRegistry.generateSDL()
 
 			expect(schema).toBeDefined()
 			expect(typeof schema).toBe('string')
@@ -255,6 +336,109 @@ describe('GraphQL Registry', () => {
 
 			expect(registry.hasType('FakeType')).toBe(true)
 			expect(schemaComposer.has('FakeType')).toBe(false)
+		})
+	})
+
+	describe('Edge and Connection Type Implementation', () => {
+		it('should create edge types that implement Edge interface', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
+			const userTC = schemaComposer.createObjectTC({
+				name: 'User',
+				fields: { name: 'String' },
+			})
+			registry.registerType('User', TypeKind.OBJECT, userTC)
+
+			const edgeTC = schemaComposer.createObjectTC({
+				name: 'UserEdge',
+				interfaces: ['Edge'],
+				fields: {
+					node: 'User!',
+					cursor: 'String!',
+				},
+			})
+
+			registry.registerEdgeType('UserEdge', edgeTC)
+
+			expect(registry.hasEdgeType('UserEdge')).toBe(true)
+			expect(registry.isTypeOfKind('UserEdge', TypeKind.EDGE)).toBe(true)
+
+			const schema = registry.generateSDL()
+			expect(schema).toContain('type UserEdge implements Edge')
+			expect(schema).toContain('node: User!')
+			expect(schema).toContain('cursor: String!')
+		})
+
+		it('should create connection types that implement Connection interface', () => {
+			const pageInfoTC = schemaComposer.createObjectTC({
+				name: 'PageInfo',
+				fields: {
+					hasNextPage: 'Boolean!',
+					hasPreviousPage: 'Boolean!',
+					startCursor: 'String',
+					endCursor: 'String',
+				},
+			})
+			registry.registerType('PageInfo', TypeKind.OBJECT, pageInfoTC)
+
+			const userTC = schemaComposer.createObjectTC({
+				name: 'User',
+				fields: { name: 'String' },
+			})
+			registry.registerType('User', TypeKind.OBJECT, userTC)
+
+			const userEdgeTC = schemaComposer.createObjectTC({
+				name: 'UserEdge',
+				interfaces: ['Edge'],
+				fields: {
+					node: 'User!',
+					cursor: 'String!',
+				},
+			})
+			registry.registerEdgeType('UserEdge', userEdgeTC)
+
+			const connectionTC = schemaComposer.createObjectTC({
+				name: 'UserConnection',
+				interfaces: ['Connection'],
+				fields: {
+					pageInfo: 'PageInfo!',
+					edges: '[UserEdge!]!',
+					totalCount: 'Int!',
+				},
+			})
+
+			registry.registerType('UserConnection', TypeKind.CONNECTION, connectionTC)
+
+			expect(registry.hasType('UserConnection')).toBe(true)
+			expect(registry.isTypeOfKind('UserConnection', TypeKind.CONNECTION)).toBe(true)
+
+			const schema = registry.generateSDL()
+			expect(schema).toContain('type UserConnection implements Connection')
+			expect(schema).toContain('pageInfo: PageInfo!')
+			expect(schema).toContain('edges: [UserEdge!]!')
+			expect(schema).toContain('totalCount: Int!')
+		})
+
+		it('should maintain edge type registry', () => {
+			const edgeTC = schemaComposer.createObjectTC({
+				name: 'BookEdge',
+				interfaces: ['Edge'],
+				fields: { node: 'Book!', cursor: 'String!' },
+			})
+
+			registry.registerEdgeType('BookEdge', edgeTC)
+
+			expect(registry.getEdgeTypes()).toContain('BookEdge')
+			expect(registry.hasEdgeType('BookEdge')).toBe(true)
 		})
 	})
 
@@ -362,7 +546,7 @@ describe('GraphQL Registry', () => {
 			const duration = endTime - startTime
 
 			expect(duration).toBeLessThan(1000)
-			expect(registry.getAllTypes()).toHaveLength(1001)
+			expect(registry.getAllTypes()).toHaveLength(1003)
 		})
 
 		it('should handle many edge type registrations efficiently', () => {

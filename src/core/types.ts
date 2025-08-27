@@ -40,11 +40,13 @@ export enum GenerationType {
 	FILTER = 'filter',
 	SORT = 'sort',
 	RELATION = 'relation',
+	HELPER = 'helper',
 }
 
 export interface UnifiedGenerationResult {
 	sdl?: string
 	code?: string
+	helperCode?: string
 	results: GenerationResult[]
 	stats: UnifiedGenerationStats
 	outputFormat: OutputFormat
@@ -59,6 +61,7 @@ export interface UnifiedGenerationStats {
 	connectionTypes: number
 	sortInputTypes: number
 	filterInputTypes: number
+	helperFiles: number
 	totalTypes: number
 	generationTimeMs: number
 }

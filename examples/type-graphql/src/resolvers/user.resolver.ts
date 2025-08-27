@@ -1,31 +1,25 @@
-import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int } from 'type-graphql'
-import { User, Post, Comment, UserFilterInput, UserSortInput, UserConnection } from '../../schema'
+import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
+import type { GraphQLResolveInfo } from 'graphql'
+import { User, Post, Comment, UserFilterInput, UserSortInput, UserConnection, UserQueryArgs } from '../../schema'
 import { BaseResolver } from './base-resolver'
 import type { Context } from './types'
-import { PRISMA_INCLUDES } from '../utils/resolver-helpers'
+import { ConnectionBuilder, POST_INCLUDES, COMMENT_INCLUDES } from '../../schema-helpers'
 
 @Resolver(() => User)
 export class UserResolver extends BaseResolver {
-	private readonly ALLOWED_FILTER_FIELDS = ['email', 'name', 'createdAt']
-	private readonly ALLOWED_SORT_FIELDS = ['createdAt', 'updatedAt']
-
 	@Query(() => UserConnection)
 	async users(
-		@Arg('filter', () => UserFilterInput, { nullable: true }) filter: UserFilterInput | null,
-		@Arg('sort', () => UserSortInput, { nullable: true }) sort: UserSortInput | null,
-		@Arg('first', () => Int, { nullable: true }) first: number | null,
-		@Arg('after', () => String, { nullable: true }) after: string | null,
-		@Arg('last', () => Int, { nullable: true }) last: number | null,
-		@Arg('before', () => String, { nullable: true }) before: string | null,
+		@Arg('filter', () => UserFilterInput, { nullable: true }) filter: UserFilterInput | undefined,
+		@Arg('sort', () => UserSortInput, { nullable: true }) sort: UserSortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<UserConnection> {
-		return this.buildRelayConnection<User>(
-			prisma,
-			'user',
-			{ filter, sort, first, after, last, before },
-			this.ALLOWED_FILTER_FIELDS,
-			this.ALLOWED_SORT_FIELDS,
-		)
+		const args: UserQueryArgs = { filter, sort, first, after, last, before }
+		return ConnectionBuilder.buildUserConnection(prisma, args, info)
 	}
 
 	@Query(() => User, { nullable: true })
@@ -47,7 +41,7 @@ export class UserResolver extends BaseResolver {
 	async posts(@Root() user: User, @Ctx() { prisma }: Context): Promise<Post[]> {
 		return this.findMany<Post>(prisma, 'post', {
 			where: { authorId: user.id },
-			include: PRISMA_INCLUDES.POST,
+			include: POST_INCLUDES,
 		})
 	}
 
@@ -55,7 +49,7 @@ export class UserResolver extends BaseResolver {
 	async comments(@Root() user: User, @Ctx() { prisma }: Context): Promise<Comment[]> {
 		return this.findMany<Comment>(prisma, 'comment', {
 			where: { authorId: user.id },
-			include: PRISMA_INCLUDES.COMMENT,
+			include: COMMENT_INCLUDES,
 		})
 	}
 }

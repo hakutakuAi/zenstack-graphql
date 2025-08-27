@@ -11,6 +11,7 @@ export class StatsCollector {
 			connectionTypes: 0,
 			sortInputTypes: 0,
 			filterInputTypes: 0,
+			helperFiles: 0,
 			totalTypes: 0,
 			generationTimeMs: 0,
 		}
@@ -42,6 +43,9 @@ export class StatsCollector {
 				case GenerationType.FILTER:
 					stats.filterInputTypes += result.count
 					stats.inputTypes += result.count
+					break
+				case GenerationType.HELPER:
+					stats.helperFiles += result.count
 					break
 			}
 		}

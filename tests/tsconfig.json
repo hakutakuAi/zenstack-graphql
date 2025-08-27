@@ -29,8 +29,12 @@
 			"@generators/*": ["./src/generators/*"],
 			"@orchestrator": ["./src/orchestrator"],
 			"@orchestrator/*": ["./src/orchestrator/*"],
+			"@registry": ["./src/registry"],
+			"@registry/*": ["./src/registry/*"],
 			"@utils": ["./src/utils"],
-			"@utils/*": ["./src/utils/*"]
+			"@utils/*": ["./src/utils/*"],
+			"@tests": ["./tests"],
+			"@tests/*": ["./tests/*"]
 		}
 	},
 	"include": ["./**/*.ts"],

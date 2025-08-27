@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
-import { ConnectionBuilder, FilterBuilder, SortBuilder } from '../utils/resolver-helpers'
-import { PaginationArgs, ConnectionResult } from '../utils/types'
+import type { GraphQLResolveInfo } from 'graphql'
+import { ConnectionBuilder, PaginationArgs, ConnectionResult } from '../../schema-helpers'
 
 export abstract class BaseResolver {
 	protected async findMany<T>(
@@ -43,7 +43,7 @@ export abstract class BaseResolver {
 		})) as T | null
 	}
 
-	protected async buildConnection<T extends { id: string }>(
+	protected async buildConnection<T>(
 		prisma: PrismaClient,
 		model: string,
 		pagination: PaginationArgs,
@@ -51,6 +51,10 @@ export abstract class BaseResolver {
 			where?: any
 			orderBy?: any
 			include?: any
+			info?: GraphQLResolveInfo
+			relationFields?: string[]
+			cursorField?: string
+			hasIdField?: boolean
 		} = {},
 	): Promise<ConnectionResult<T>> {
 		return ConnectionBuilder.build<T>({
@@ -59,101 +63,5 @@ export abstract class BaseResolver {
 			pagination,
 			...options,
 		})
-	}
-
-	protected async buildRelayConnection<T extends { id: string }>(
-		prisma: PrismaClient,
-		model: string,
-		args: {
-			filter?: any
-			sort?: any
-			first?: number | null
-			after?: string | null
-			last?: number | null
-			before?: string | null
-		},
-		allowedFilterFields: string[],
-		allowedSortFields: string[],
-		include?: any,
-	): Promise<ConnectionResult<T>> {
-		const { filter, sort, first, after, last, before } = args
-
-		const pagination: PaginationArgs = {
-			first: first ?? (last ? null : 10),
-			after: after ?? null,
-			last: last ?? null,
-			before: before ?? null,
-		}
-
-		const where = FilterBuilder.buildGeneric(filter, allowedFilterFields)
-		const orderBy = SortBuilder.buildGeneric(sort, allowedSortFields)
-
-		return this.buildConnection<T>(prisma, model, pagination, {
-			where,
-			orderBy,
-			include,
-		})
-	}
-
-	protected async buildCompositeKeyConnection<T>(
-		prisma: PrismaClient,
-		model: string,
-		args: {
-			filter?: any
-			sort?: any
-			first?: number | null
-			after?: string | null
-			last?: number | null
-			before?: string | null
-		},
-		allowedFilterFields: string[],
-		allowedSortFields: string[],
-		getCursor: (item: T) => string,
-		include?: any,
-	): Promise<ConnectionResult<T>> {
-		const { filter, sort, first, after, last, before } = args
-
-		const pagination: PaginationArgs = {
-			first: first ?? (last ? null : 10),
-			after: after ?? null,
-			last: last ?? null,
-			before: before ?? null,
-		}
-
-		const where = FilterBuilder.buildGeneric(filter, allowedFilterFields)
-		const orderBy = SortBuilder.buildGeneric(sort, allowedSortFields)
-
-		const modelDelegate = (prisma as any)[model]
-
-		let take = pagination.first || pagination.last || 10
-		if (pagination.last) take = -take
-
-		const items = await modelDelegate.findMany({
-			take,
-			where,
-			orderBy: orderBy || { assignedAt: 'asc' },
-			include,
-		})
-
-		const totalCount = await modelDelegate.count({ where })
-
-		const edges = items.map((item: T) => ({
-			node: item,
-			cursor: getCursor(item),
-		}))
-
-		const hasNextPage = pagination.first ? items.length === pagination.first : false
-		const hasPreviousPage = pagination.last ? items.length === Math.abs(pagination.last) : false
-
-		return {
-			pageInfo: {
-				hasNextPage,
-				hasPreviousPage,
-				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor,
-			},
-			edges,
-			totalCount,
-		}
 	}
 }

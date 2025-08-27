@@ -26,7 +26,7 @@ export class TypeScriptASTFactory {
 		this.sourceFile.addImportDeclarations([
 			{
 				moduleSpecifier: 'type-graphql',
-				namedImports: ['ObjectType', 'Field', 'ID', 'Int', 'Float', 'registerEnumType', 'InputType', 'ArgsType'],
+				namedImports: ['ObjectType', 'Field', 'ID', 'Int', 'Float', 'registerEnumType', 'InputType', 'ArgsType', 'InterfaceType'],
 			},
 			{
 				moduleSpecifier: 'graphql-scalars',
@@ -475,6 +475,8 @@ registerEnumType(SortDirection, {
 
 	createConnectionType(modelName: string): { edge: ClassDeclaration; connection: ClassDeclaration } {
 		this.createPageInfo()
+		this.createEdgeInterface()
+		this.createConnectionInterface()
 
 		const typeName = this.typeFormatter.formatTypeName(modelName)
 		const edgeName = `${typeName}Edge`
@@ -483,10 +485,11 @@ registerEnumType(SortDirection, {
 		const edgeDeclaration = this.sourceFile.addClass({
 			name: edgeName,
 			isExported: true,
+			implements: ['Edge'],
 			decorators: [
 				{
 					name: 'ObjectType',
-					arguments: [],
+					arguments: [`{ implements: Edge }`],
 				},
 			],
 		})
@@ -518,10 +521,11 @@ registerEnumType(SortDirection, {
 		const connectionDeclaration = this.sourceFile.addClass({
 			name: connectionName,
 			isExported: true,
+			implements: ['Connection'],
 			decorators: [
 				{
 					name: 'ObjectType',
-					arguments: [],
+					arguments: [`{ implements: Connection }`],
 				},
 			],
 		})
@@ -566,6 +570,78 @@ registerEnumType(SortDirection, {
 			edge: edgeDeclaration,
 			connection: connectionDeclaration,
 		}
+	}
+
+	createEdgeInterface(): void {
+		if (this.sourceFile.getClass('Edge')) {
+			return
+		}
+
+		const edgeInterface = this.sourceFile.addClass({
+			name: 'Edge',
+			isExported: true,
+			isAbstract: true,
+			decorators: [
+				{
+					name: 'InterfaceType',
+					arguments: [`{ description: 'Base interface for all edge types in connections', autoRegisterImplementations: false }`],
+				},
+			],
+		})
+
+		edgeInterface.addProperty({
+			name: 'cursor',
+			type: 'string',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: [`() => String, { description: 'A cursor for use in pagination' }`],
+				},
+			],
+		})
+	}
+
+	createConnectionInterface(): void {
+		if (this.sourceFile.getClass('Connection')) {
+			return
+		}
+
+		const connectionInterface = this.sourceFile.addClass({
+			name: 'Connection',
+			isExported: true,
+			isAbstract: true,
+			decorators: [
+				{
+					name: 'InterfaceType',
+					arguments: [`{ description: 'Base interface for all connection types', autoRegisterImplementations: false }`],
+				},
+			],
+		})
+
+		connectionInterface.addProperty({
+			name: 'pageInfo',
+			type: 'PageInfo',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: [`() => PageInfo, { description: 'Information to aid in pagination' }`],
+				},
+			],
+		})
+
+		connectionInterface.addProperty({
+			name: 'totalCount',
+			type: 'number',
+			hasExclamationToken: true,
+			decorators: [
+				{
+					name: 'Field',
+					arguments: [`() => Int, { description: 'The total count of items in the connection' }`],
+				},
+			],
+		})
 	}
 
 	createPaginationInputTypes(): ClassDeclaration[] {

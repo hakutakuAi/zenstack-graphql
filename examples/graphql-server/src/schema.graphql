@@ -4,6 +4,21 @@ interface Node {
   id: ID!
 }
 
+"""Base interface for all edge types in connections"""
+interface Edge {
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Base interface for all connection types"""
+interface Connection {
+  """Information to aid in pagination"""
+  pageInfo: PageInfo!
+
+  """The total count of items in the connection"""
+  totalCount: Int!
+}
+
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
@@ -121,7 +136,7 @@ input PaginationInput {
 }
 
 """An edge in a User connection."""
-type UserEdge {
+type UserEdge implements Edge {
   """The User at the end of the edge."""
   node: User!
 
@@ -130,7 +145,7 @@ type UserEdge {
 }
 
 """A connection to a list of User items."""
-type UserConnection {
+type UserConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -142,7 +157,7 @@ type UserConnection {
 }
 
 """An edge in a Post connection."""
-type PostEdge {
+type PostEdge implements Edge {
   """The Post at the end of the edge."""
   node: Post!
 
@@ -151,7 +166,7 @@ type PostEdge {
 }
 
 """A connection to a list of Post items."""
-type PostConnection {
+type PostConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -163,7 +178,7 @@ type PostConnection {
 }
 
 """An edge in a Category connection."""
-type CategoryEdge {
+type CategoryEdge implements Edge {
   """The Category at the end of the edge."""
   node: Category!
 
@@ -172,7 +187,7 @@ type CategoryEdge {
 }
 
 """A connection to a list of Category items."""
-type CategoryConnection {
+type CategoryConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -184,7 +199,7 @@ type CategoryConnection {
 }
 
 """An edge in a PostCategory connection."""
-type PostCategoryEdge {
+type PostCategoryEdge implements Edge {
   """The PostCategory at the end of the edge."""
   node: PostCategory!
 
@@ -193,7 +208,7 @@ type PostCategoryEdge {
 }
 
 """A connection to a list of PostCategory items."""
-type PostCategoryConnection {
+type PostCategoryConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -205,7 +220,7 @@ type PostCategoryConnection {
 }
 
 """An edge in a Comment connection."""
-type CommentEdge {
+type CommentEdge implements Edge {
   """The Comment at the end of the edge."""
   node: Comment!
 
@@ -214,7 +229,7 @@ type CommentEdge {
 }
 
 """A connection to a list of Comment items."""
-type CommentConnection {
+type CommentConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 

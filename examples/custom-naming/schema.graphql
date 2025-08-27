@@ -4,6 +4,21 @@ interface Node {
   id: ID!
 }
 
+"""Base interface for all edge types in connections"""
+interface Edge {
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Base interface for all connection types"""
+interface Connection {
+  """Information to aid in pagination"""
+  pageInfo: PageInfo!
+
+  """The total count of items in the connection"""
+  totalCount: Int!
+}
+
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
@@ -157,7 +172,7 @@ input PaginationInput {
 }
 
 """An edge in a Customer connection."""
-type CustomerEdge {
+type CustomerEdge implements Edge {
   """The Customer at the end of the edge."""
   node: Customer!
 
@@ -166,7 +181,7 @@ type CustomerEdge {
 }
 
 """A connection to a list of Customer items."""
-type CustomerConnection {
+type CustomerConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -178,7 +193,7 @@ type CustomerConnection {
 }
 
 """An edge in a Product connection."""
-type ProductEdge {
+type ProductEdge implements Edge {
   """The Product at the end of the edge."""
   node: Product!
 
@@ -187,7 +202,7 @@ type ProductEdge {
 }
 
 """A connection to a list of Product items."""
-type ProductConnection {
+type ProductConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -199,7 +214,7 @@ type ProductConnection {
 }
 
 """An edge in a Address connection."""
-type AddressEdge {
+type AddressEdge implements Edge {
   """The Address at the end of the edge."""
   node: Address!
 
@@ -208,7 +223,7 @@ type AddressEdge {
 }
 
 """A connection to a list of Address items."""
-type AddressConnection {
+type AddressConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -220,7 +235,7 @@ type AddressConnection {
 }
 
 """An edge in a Order connection."""
-type OrderEdge {
+type OrderEdge implements Edge {
   """The Order at the end of the edge."""
   node: Order!
 
@@ -229,7 +244,7 @@ type OrderEdge {
 }
 
 """A connection to a list of Order items."""
-type OrderConnection {
+type OrderConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -241,7 +256,7 @@ type OrderConnection {
 }
 
 """An edge in a OrderItem connection."""
-type OrderItemEdge {
+type OrderItemEdge implements Edge {
   """The OrderItem at the end of the edge."""
   node: OrderItem!
 
@@ -250,7 +265,7 @@ type OrderItemEdge {
 }
 
 """A connection to a list of OrderItem items."""
-type OrderItemConnection {
+type OrderItemConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -262,7 +277,7 @@ type OrderItemConnection {
 }
 
 """An edge in a Category connection."""
-type CategoryEdge {
+type CategoryEdge implements Edge {
   """The Category at the end of the edge."""
   node: Category!
 
@@ -271,7 +286,7 @@ type CategoryEdge {
 }
 
 """A connection to a list of Category items."""
-type CategoryConnection {
+type CategoryConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 

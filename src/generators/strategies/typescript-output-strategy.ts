@@ -3,6 +3,8 @@ import { DataModel } from '@zenstackhq/sdk/ast'
 import { OutputStrategy, CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from './output-strategy'
 import { RelationField } from '@generators/unified/unified-relation-generator'
 import { COMMON_FILTER_TYPES, createFilterFields } from '@utils/filter-type-definitions'
+import { ModelHelper, HelperGenerationContext } from '@generators/unified/unified-helper-generator'
+import { TypeScriptHelperStrategy } from './typescript-helper-strategy'
 
 export class TypeScriptOutputStrategy implements OutputStrategy {
 	constructor(private readonly astFactory: TypeScriptASTFactory) {}
@@ -143,5 +145,10 @@ export class TypeScriptOutputStrategy implements OutputStrategy {
 
 	getGeneratedCode(): string {
 		return this.astFactory.getGeneratedCode()
+	}
+
+	generateHelpers(helpers: ModelHelper[], context: HelperGenerationContext): string[] {
+		const helperStrategy = new TypeScriptHelperStrategy()
+		return helperStrategy.generateHelpers(helpers, context)
 	}
 }
