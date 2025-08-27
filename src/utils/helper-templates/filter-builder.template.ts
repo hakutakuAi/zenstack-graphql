@@ -1,8 +1,4 @@
 export const FILTER_BUILDER_TEMPLATE = `export class FilterBuilder {
-	/**
-	 * Build Prisma where clause from GraphQL filter input dynamically
-	 * This approach uses runtime reflection to map filter operations
-	 */
 	static buildFilter(filter: any): any {
 		if (!filter || typeof filter !== 'object') return {}
 
@@ -14,10 +10,8 @@ export const FILTER_BUILDER_TEMPLATE = `export class FilterBuilder {
 			} else if (field === 'OR' && Array.isArray(value)) {
 				where.OR = value.map((f: any) => this.buildFilter(f))
 			} else if (value && typeof value === 'object') {
-				// Map filter operations dynamically
 				const fieldWhere: any = {}
 				
-				// Copy all valid operations from the filter value
 				for (const [operation, operationValue] of Object.entries(value)) {
 					if (operationValue !== undefined && operationValue !== null) {
 						fieldWhere[operation] = operationValue
@@ -41,7 +35,6 @@ export const MODEL_FILTER_METHOD_TEMPLATE = `
 		return this.buildFilter(filter)
 	}`
 
-// Remove deprecated templates
 export const FIELD_FILTER_TEMPLATE = ''
 export const STRING_FILTER_OPERATIONS = ''
 export const NUMERIC_FILTER_OPERATIONS = ''

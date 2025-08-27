@@ -26,20 +26,20 @@ describe('GraphQLHelperStrategy', () => {
 			],
 			relations: [
 				{
-					fromModel: 'User',
-					toModel: 'Post',
+					modelName: 'User',
+					targetModelName: 'Post',
 					fieldName: 'posts',
-					relationName: 'UserPosts',
+					targetFieldName: 'author',
 					isList: true,
-					isOptional: false,
+					isRequired: false,
 				},
 				{
-					fromModel: 'Post',
-					toModel: 'User',
+					modelName: 'Post',
+					targetModelName: 'User',
 					fieldName: 'author',
-					relationName: 'PostAuthor',
+					targetFieldName: 'posts',
 					isList: false,
-					isOptional: false,
+					isRequired: false,
 				},
 			],
 			outputFormat: OutputFormat.GRAPHQL,
@@ -279,7 +279,6 @@ describe('GraphQLHelperStrategy', () => {
 				},
 			]
 
-			// This should throw an error because the code doesn't handle null relations
 			expect(() => {
 				strategy.generateHelpers(helpersWithNullRelations, mockContext)
 			}).toThrow()
@@ -298,7 +297,6 @@ describe('GraphQLHelperStrategy', () => {
 				},
 			]
 
-			// Test with TYPE_GRAPHQL format
 			const typeGraphQLContext: HelperGenerationContext = {
 				...mockContext,
 				outputFormat: OutputFormat.TYPE_GRAPHQL,
@@ -307,7 +305,6 @@ describe('GraphQLHelperStrategy', () => {
 			const result1 = strategy.generateHelpers(helpers, typeGraphQLContext)
 			expect(result1).toBeDefined()
 
-			// Test with GRAPHQL format
 			const graphqlContext: HelperGenerationContext = {
 				...mockContext,
 				outputFormat: OutputFormat.GRAPHQL,
@@ -316,7 +313,6 @@ describe('GraphQLHelperStrategy', () => {
 			const result2 = strategy.generateHelpers(helpers, graphqlContext)
 			expect(result2).toBeDefined()
 
-			// Results should be the same regardless of output format
 			expect(result1).toEqual(result2)
 		})
 	})
@@ -335,7 +331,6 @@ describe('GraphQLHelperStrategy', () => {
 				},
 			]
 
-			// Create spy on parent class method
 			const originalGenerateHelpers = TypeScriptHelperStrategy.prototype.generateHelpers
 			let parentCalled = false
 
@@ -351,19 +346,13 @@ describe('GraphQLHelperStrategy', () => {
 			expect(parentCalled).toBe(true)
 			expect(result).toBeDefined()
 
-			// Restore original method
 			TypeScriptHelperStrategy.prototype.generateHelpers = originalGenerateHelpers
 		})
 
 		it('should have access to all parent class methods', () => {
-			// Verify that GraphQLHelperStrategy has access to all parent methods
-			const parentPrototype = Object.getPrototypeOf(TypeScriptHelperStrategy.prototype)
-			const strategyPrototype = Object.getPrototypeOf(strategy)
 
-			// Check that key methods exist
 			expect(typeof strategy.generateHelpers).toBe('function')
 
-			// Verify inheritance chain
 			expect(strategy instanceof TypeScriptHelperStrategy).toBe(true)
 		})
 
@@ -380,7 +369,6 @@ describe('GraphQLHelperStrategy', () => {
 				},
 			]
 
-			// Verify that the overridden method produces the expected behavior
 			const result = strategy.generateHelpers(helpers, mockContext)
 
 			expect(result).toBeDefined()
@@ -394,7 +382,6 @@ describe('GraphQLHelperStrategy', () => {
 		it('should handle large number of helpers efficiently', () => {
 			const largeHelpersArray: ModelHelper[] = []
 
-			// Create 50 helper objects
 			for (let i = 0; i < 50; i++) {
 				largeHelpersArray.push({
 					modelName: `Model${i}`,

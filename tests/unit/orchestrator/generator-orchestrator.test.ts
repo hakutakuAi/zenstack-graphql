@@ -394,15 +394,12 @@ describe('GeneratorOrchestrator', () => {
 
 			expect(result).toBeDefined()
 			expect(result.outputFormat).toBe(OutputFormat.GRAPHQL)
-			
-			// Helper result should not be present
-			const helperResult = result.results.find(r => r.type === GenerationType.HELPER)
+
+			const helperResult = result.results.find((r) => r.type === GenerationType.HELPER)
 			expect(helperResult).toBeUndefined()
-			
-			// Helper code should not be present
+
 			expect(result.helperCode).toBeUndefined()
-			
-			// SDL should be present for GraphQL
+
 			expect(result.sdl).toBeDefined()
 			expect(typeof result.sdl).toBe('string')
 			expect(result.code).toBeUndefined()
@@ -414,19 +411,16 @@ describe('GeneratorOrchestrator', () => {
 
 			expect(result).toBeDefined()
 			expect(result.outputFormat).toBe(OutputFormat.TYPE_GRAPHQL)
-			
-			// Helper result should be present
-			const helperResult = result.results.find(r => r.type === GenerationType.HELPER)
+
+			const helperResult = result.results.find((r) => r.type === GenerationType.HELPER)
 			expect(helperResult).toBeDefined()
 			expect(helperResult!.items).toBeDefined()
 			expect(helperResult!.items.length).toBeGreaterThan(0)
-			
-			// Helper code should be present in result
+
 			expect(result.helperCode).toBeDefined()
 			expect(typeof result.helperCode).toBe('string')
 			expect(result.helperCode!.length).toBeGreaterThan(0)
-			
-			// TypeScript code should be present
+
 			expect(result.code).toBeDefined()
 			expect(typeof result.code).toBe('string')
 			expect(result.sdl).toBeUndefined()
@@ -443,12 +437,10 @@ describe('GeneratorOrchestrator', () => {
 			const result = await orchestrator.generate()
 
 			expect(result).toBeDefined()
-			
-			// Helper result should not be present even in TypeGraphQL format
-			const helperResult = result.results.find(r => r.type === GenerationType.HELPER)
+
+			const helperResult = result.results.find((r) => r.type === GenerationType.HELPER)
 			expect(helperResult).toBeUndefined()
-			
-			// Helper code should not be present
+
 			expect(result.helperCode).toBeUndefined()
 		})
 
@@ -459,21 +451,16 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.helperCode).toBeDefined()
 			const helperCode = result.helperCode!
 
-			// Check for connection builder content
 			expect(helperCode).toContain('ConnectionBuilder')
 			expect(helperCode).toContain('buildUserConnectionConfig')
 			expect(helperCode).toContain('buildPostConnectionConfig')
-			
-			// Check for filter builder content
+
 			expect(helperCode).toContain('FilterBuilder')
-			
-			// Check for sort builder content
+
 			expect(helperCode).toContain('SortBuilder')
-			
-			// Check for field selection content
+
 			expect(helperCode).toContain('FieldSelection')
-			
-			// Check for includes content
+
 			expect(helperCode).toContain('USER_INCLUDES')
 			expect(helperCode).toContain('POST_INCLUDES')
 		})
@@ -485,14 +472,11 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.helperCode).toBeDefined()
 			const helperCode = result.helperCode!
 
-			// Check for GraphQL imports
-			expect(helperCode).toContain('import type { GraphQLResolveInfo } from \'graphql\'')
-			
-			// Check for schema imports
+			expect(helperCode).toContain("import type { GraphQLResolveInfo } from 'graphql'")
+
 			expect(helperCode).toContain('import {')
-			expect(helperCode).toContain('} from \'./schema\'')
-			
-			// Check for type imports
+			expect(helperCode).toContain("} from './schema'")
+
 			expect(helperCode).toContain('User')
 			expect(helperCode).toContain('UserQueryArgs')
 			expect(helperCode).toContain('UserConnection')
@@ -508,12 +492,10 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.helperCode).toBeDefined()
 			const helperCode = result.helperCode!
 
-			// Check for helper interfaces
 			expect(helperCode).toContain('export interface PaginationArgs')
 			expect(helperCode).toContain('export interface ConnectionResult<T>')
 			expect(helperCode).toContain('export interface ConnectionConfig')
-			
-			// Check pagination args fields
+
 			expect(helperCode).toContain('first?: number')
 			expect(helperCode).toContain('after?: string')
 			expect(helperCode).toContain('last?: number')
@@ -523,12 +505,7 @@ describe('GeneratorOrchestrator', () => {
 		it('should handle models without relations in helpers', async () => {
 			const contextWithoutRelations = TestFixtures.createContext({
 				generateHelpers: true,
-				models: [
-					TestFixtures.createDataModel('SimpleUser', [
-						TestFixtures.createField('id', 'String'),
-						TestFixtures.createField('name', 'String'),
-					]),
-				],
+				models: [TestFixtures.createDataModel('SimpleUser', [TestFixtures.createField('id', 'String'), TestFixtures.createField('name', 'String')])],
 			})
 			orchestrator = new GeneratorOrchestrator(contextWithoutRelations, OutputFormat.TYPE_GRAPHQL)
 
@@ -542,23 +519,19 @@ describe('GeneratorOrchestrator', () => {
 		})
 
 		it('should maintain consistency between GraphQL and TypeGraphQL generations', async () => {
-			// Generate both formats
 			const graphqlOrchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.GRAPHQL)
 			const typeGraphQLOrchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
 
 			const graphqlResult = await graphqlOrchestrator.generate()
 			const typeGraphQLResult = await typeGraphQLOrchestrator.generate()
 
-			// Both should succeed
 			expect(graphqlResult).toBeDefined()
 			expect(typeGraphQLResult).toBeDefined()
 
-			// Both should have similar stats counts (except helpers)
 			expect(graphqlResult.stats.objectTypes).toBe(typeGraphQLResult.stats.objectTypes)
 			expect(graphqlResult.stats.enumTypes).toBe(typeGraphQLResult.stats.enumTypes)
 			expect(graphqlResult.stats.scalarTypes).toBe(typeGraphQLResult.stats.scalarTypes)
 
-			// Only TypeGraphQL should have helpers
 			expect(graphqlResult.helperCode).toBeUndefined()
 			expect(typeGraphQLResult.helperCode).toBeDefined()
 		})

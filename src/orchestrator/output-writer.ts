@@ -10,7 +10,7 @@ export class OutputWriter {
 
 	async write(result: UnifiedGenerationResult, outputPath: string): Promise<string> {
 		const finalOutputPath = this.resolveOutputPath(result.outputFormat, outputPath)
-		
+
 		if (result.outputFormat === OutputFormat.TYPE_GRAPHQL) {
 			if (!result.code) {
 				throw new Error('TypeGraphQL code is required but missing')
@@ -23,7 +23,6 @@ export class OutputWriter {
 			await this.fileWriter.write(result.sdl, finalOutputPath, 'GraphQL schema')
 		}
 
-		// Write helper files if generated
 		if (result.helperCode) {
 			await this.helperFileWriter.writeHelperFiles(result.outputFormat, outputPath, result.helperCode)
 		}
@@ -33,10 +32,7 @@ export class OutputWriter {
 
 	private resolveOutputPath(outputFormat: OutputFormat, basePath: string): string {
 		if (outputFormat === OutputFormat.TYPE_GRAPHQL) {
-			return path.join(
-				path.dirname(basePath),
-				path.basename(basePath, path.extname(basePath)) + '.ts'
-			)
+			return path.join(path.dirname(basePath), path.basename(basePath, path.extname(basePath)) + '.ts')
 		}
 		return basePath
 	}

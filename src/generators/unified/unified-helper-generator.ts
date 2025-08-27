@@ -51,7 +51,6 @@ export class UnifiedHelperGenerator extends UnifiedGeneratorBase {
 		return this.models
 			.filter((model) => !this.shouldSkipModel(model))
 			.map((model) => {
-				// Get the GraphQL name from the attribute processor
 				const graphqlName = this.attributeProcessor.model(model).name()
 				return {
 					modelName: graphqlName,

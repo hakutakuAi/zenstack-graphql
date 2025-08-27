@@ -247,8 +247,6 @@ export interface ConnectionConfig {
 	}
 
 	private getSchemaImportPath(context: HelperGenerationContext): string {
-		// Determine the correct import path based on where the schema.ts file is generated
-		// Default to './schema' but can be customized based on output configuration
 		return './schema'
 	}
 }

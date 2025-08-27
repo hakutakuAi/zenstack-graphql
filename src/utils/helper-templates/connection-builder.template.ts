@@ -1,7 +1,4 @@
 export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
-	/**
-	 * Build connection configuration without executing queries
-	 */
 	static buildConfig(args: {
 		pagination: PaginationArgs
 		where?: any
@@ -24,20 +21,16 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 		} = args
 		const { first, after, last, before } = pagination
 
-		// Calculate pagination parameters
 		let take = first || last || 10
 		if (last) take = -take
 
-		// For composite key models, we skip cursor-based pagination
 		const cursor = (hasIdField && (after || before)) 
 			? { [cursorField]: (after || before)! } 
 			: undefined
 		const skip = cursor ? 1 : 0
 
-		// Build include from GraphQL selection if info is provided
 		const finalInclude = info ? buildPrismaInclude(info, relationFields) : include
 
-		// Prepare query options
 		const findManyOptions: any = {
 			take: Math.abs(take) + 1, // Get one extra to check for next page
 			where,
@@ -45,7 +38,6 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 			include: finalInclude,
 		}
 
-		// Only add cursor and skip for models with ID field
 		if (hasIdField && cursor) {
 			findManyOptions.cursor = cursor
 			findManyOptions.skip = skip
@@ -66,9 +58,6 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 		}
 	}
 
-	/**
-	 * Process query results into connection format
-	 */
 	static processResults<T>(
 		items: T[],
 		totalCount: number,
@@ -76,21 +65,17 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 	): ConnectionResult<T> {
 		const { first, last, cursorField, hasIdField } = paginationInfo
 
-		// Determine pagination info
 		const hasNextPage = first ? items.length > first : false
 		const hasPreviousPage = last ? items.length > Math.abs(last) : false
 
-		// Remove extra item if present
 		const resultItems = hasNextPage || hasPreviousPage ? items.slice(0, -1) : items
 
-		// Build edges - use composite key for cursor if no ID field
 		const edges = resultItems.map((item: any, index: number) => {
 			let cursor: string
 			if (hasIdField && item[cursorField]) {
 				cursor = item[cursorField]
 			} else {
-				// For composite key models, create a cursor from available fields or use index
-				cursor = item.postId && item.categoryId 
+					cursor = item.postId && item.categoryId 
 					? \`\${item.postId}:\${item.categoryId}\`
 					: String(index)
 			}

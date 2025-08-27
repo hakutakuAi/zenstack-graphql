@@ -1,5 +1,4 @@
-export const FIELD_SELECTION_TEMPLATE = `// Simplified field selection utilities (GraphQL-import-free)
-// Uses static includes instead of dynamic GraphQL field parsing
+export const FIELD_SELECTION_TEMPLATE = `
 
 export interface ResolveTree {
 	name: string
@@ -12,10 +11,7 @@ export interface FieldsByTypeName {
 	[str: string]: { [str: string]: ResolveTree }
 }
 
-// Simplified version that doesn't require GraphQL imports
 export function buildPrismaInclude(_resolveInfo: any, relations: string[] = []): any {
-	// For now, return a simple include object based on available relations
-	// This avoids GraphQL module conflicts while maintaining basic functionality
 	const include: any = {}
 	
 	relations.forEach(relation => {
