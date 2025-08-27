@@ -1,0 +1,540 @@
+"""An object with a unique identifier"""
+interface Node {
+  """The unique identifier for this object"""
+  id: ID!
+}
+
+"""Base interface for all edge types in connections"""
+interface Edge {
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Base interface for all connection types"""
+interface Connection {
+  """Information to aid in pagination"""
+  pageInfo: PageInfo!
+
+  """The total count of items in the connection"""
+  totalCount: Int!
+}
+
+"""A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
+scalar DateTime
+
+"""The `JSON` scalar type represents JSON values"""
+scalar JSON
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
+
+"""Product status in the system"""
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+"""Review rating from 1 to 5 stars"""
+enum ReviewRating {
+  ONE
+  TWO
+  THREE
+  FOUR
+  FIVE
+}
+
+"""Product in the e-commerce system"""
+type Product {
+  id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  description: String
+  price: Float!
+  status: ProductStatus!
+
+  """Arbitrary product metadata as JSON"""
+  metadata: JSON
+  reviews: [Review!]!
+  tags: [ProductTag!]!
+}
+
+"""Customer review for a product"""
+type Review {
+  id: String!
+  createdAt: DateTime!
+  title: String!
+  content: String!
+  rating: ReviewRating!
+  verified: Boolean!
+  helpfulCount: Int!
+  product: Product!
+  productId: String!
+}
+
+"""Tag for categorizing products"""
+type Tag {
+  id: String!
+  name: String!
+
+  """Hex color code for the tag"""
+  color: String
+  products: [ProductTag!]!
+}
+
+"""Many-to-many relation between Product and Tag"""
+type ProductTag {
+  product: Product!
+  productId: String!
+  tag: Tag!
+  tagId: String!
+  assignedAt: DateTime!
+}
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+}
+
+"""Pagination input for forward pagination"""
+input ForwardPaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+}
+
+"""Pagination input for backward pagination"""
+input BackwardPaginationInput {
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""Combined pagination input"""
+input PaginationInput {
+  """Returns the first n elements from the list."""
+  first: Int
+
+  """Returns the elements in the list that come after the specified cursor."""
+  after: String
+
+  """Returns the last n elements from the list."""
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor.
+  """
+  before: String
+}
+
+"""An edge in a Product connection."""
+type ProductEdge implements Edge {
+  """The Product at the end of the edge."""
+  node: Product!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Product items."""
+type ProductConnection implements Connection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Product edges."""
+  edges: [ProductEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Review connection."""
+type ReviewEdge implements Edge {
+  """The Review at the end of the edge."""
+  node: Review!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Review items."""
+type ReviewConnection implements Connection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Review edges."""
+  edges: [ReviewEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a Tag connection."""
+type TagEdge implements Edge {
+  """The Tag at the end of the edge."""
+  node: Tag!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of Tag items."""
+type TagConnection implements Connection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of Tag edges."""
+  edges: [TagEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""An edge in a ProductTag connection."""
+type ProductTagEdge implements Edge {
+  """The ProductTag at the end of the edge."""
+  node: ProductTag!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+"""A connection to a list of ProductTag items."""
+type ProductTagConnection implements Connection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of ProductTag edges."""
+  edges: [ProductTagEdge!]!
+
+  """The total count of items in the connection."""
+  totalCount: Int!
+}
+
+"""Sort direction for ordering results"""
+enum SortDirection {
+  """Ascending order"""
+  ASC
+
+  """Descending order"""
+  DESC
+}
+
+"""Sort input for Product connections"""
+input ProductSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by updatedAt"""
+  updatedAt: SortDirection
+
+  """Sort by name"""
+  name: SortDirection
+
+  """Sort by price"""
+  price: SortDirection
+}
+
+"""Sort input for Review connections"""
+input ReviewSortInput {
+  """Sort by createdAt"""
+  createdAt: SortDirection
+
+  """Sort by helpfulCount"""
+  helpfulCount: SortDirection
+}
+
+"""Sort input for Tag connections"""
+input TagSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: SortDirection
+}
+
+"""Sort input for ProductTag connections"""
+input ProductTagSortInput {
+  """Placeholder field when no sortable fields are available"""
+  _placeholder: SortDirection
+}
+
+"""Input type for numeric filtering operations"""
+input NumericFilterInput {
+  """Equal to the given value"""
+  equals: Float
+
+  """Not equal to the given value"""
+  not: Float
+
+  """Greater than the given value"""
+  gt: Float
+
+  """Greater than or equal to the given value"""
+  gte: Float
+
+  """Less than the given value"""
+  lt: Float
+
+  """Less than or equal to the given value"""
+  lte: Float
+}
+
+"""Input type for string filtering operations"""
+input StringFilterInput {
+  """Equal to the given value"""
+  equals: String
+
+  """Not equal to the given value"""
+  not: String
+
+  """In the given list of values"""
+  in: [String!]
+
+  """Not in the given list of values"""
+  notIn: [String!]
+
+  """Contains the given value"""
+  contains: String
+
+  """Starts with the given value"""
+  startsWith: String
+
+  """Ends with the given value"""
+  endsWith: String
+}
+
+"""Input type for boolean filtering operations"""
+input BooleanFilterInput {
+  """Equal to the given value"""
+  equals: Boolean
+
+  """Not equal to the given value"""
+  not: Boolean
+}
+
+"""Input type for datetime filtering operations"""
+input DateTimeFilterInput {
+  """Equal to the given value"""
+  equals: DateTime
+
+  """Not equal to the given value"""
+  not: DateTime
+
+  """Greater than the given value"""
+  gt: DateTime
+
+  """Greater than or equal to the given value"""
+  gte: DateTime
+
+  """Less than the given value"""
+  lt: DateTime
+
+  """Less than or equal to the given value"""
+  lte: DateTime
+}
+
+"""Filter input type for ProductStatus enum"""
+input ProductStatusFilterInput {
+  """Equal to the given ProductStatus value"""
+  equals: ProductStatus
+
+  """Not equal to the given ProductStatus value"""
+  not: ProductStatus
+
+  """In the given list of ProductStatus values"""
+  in: [ProductStatus!]
+
+  """Not in the given list of ProductStatus values"""
+  notIn: [ProductStatus!]
+
+  """Logical AND operation"""
+  AND: [ProductStatusFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ProductStatusFilterInput!]
+}
+
+"""Filter input type for ReviewRating enum"""
+input ReviewRatingFilterInput {
+  """Equal to the given ReviewRating value"""
+  equals: ReviewRating
+
+  """Not equal to the given ReviewRating value"""
+  not: ReviewRating
+
+  """In the given list of ReviewRating values"""
+  in: [ReviewRating!]
+
+  """Not in the given list of ReviewRating values"""
+  notIn: [ReviewRating!]
+
+  """Logical AND operation"""
+  AND: [ReviewRatingFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ReviewRatingFilterInput!]
+}
+
+"""Filter input type for Product"""
+input ProductFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Filter by price"""
+  price: NumericFilterInput
+
+  """Filter by status"""
+  status: ProductStatusFilterInput
+
+  """Logical AND operation"""
+  AND: [ProductFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ProductFilterInput!]
+}
+
+"""Filter input type for Review"""
+input ReviewFilterInput {
+  """Filter by createdAt"""
+  createdAt: DateTimeFilterInput
+
+  """Filter by title"""
+  title: StringFilterInput
+
+  """Filter by rating"""
+  rating: ReviewRatingFilterInput
+
+  """Filter by verified"""
+  verified: BooleanFilterInput
+
+  """Logical AND operation"""
+  AND: [ReviewFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ReviewFilterInput!]
+}
+
+"""Filter input type for Tag"""
+input TagFilterInput {
+  """Filter by name"""
+  name: StringFilterInput
+
+  """Logical AND operation"""
+  AND: [TagFilterInput!]
+
+  """Logical OR operation"""
+  OR: [TagFilterInput!]
+}
+
+"""Filter input type for ProductTag (empty - no filterable fields)"""
+input ProductTagFilterInput {
+  """Logical AND operation"""
+  AND: [ProductTagFilterInput!]
+
+  """Logical OR operation"""
+  OR: [ProductTagFilterInput!]
+}
+
+"""Query arguments for Product with optional filter, sort, and pagination"""
+input ProductQueryArgs {
+  """Filter conditions for Product"""
+  filter: ProductFilterInput
+
+  """Sort options for Product"""
+  sort: ProductSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+}
+
+"""Query arguments for Review with optional filter, sort, and pagination"""
+input ReviewQueryArgs {
+  """Filter conditions for Review"""
+  filter: ReviewFilterInput
+
+  """Sort options for Review"""
+  sort: ReviewSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+}
+
+"""Query arguments for Tag with optional filter, sort, and pagination"""
+input TagQueryArgs {
+  """Filter conditions for Tag"""
+  filter: TagFilterInput
+
+  """Sort options for Tag"""
+  sort: TagSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+}
+
+"""
+Query arguments for ProductTag with optional filter, sort, and pagination
+"""
+input ProductTagQueryArgs {
+  """Filter conditions for ProductTag"""
+  filter: ProductTagFilterInput
+
+  """Sort options for ProductTag"""
+  sort: ProductTagSortInput
+
+  """Number of items to return from the beginning"""
+  first: Int
+
+  """Cursor for pagination after this item"""
+  after: String
+
+  """Number of items to return from the end"""
+  last: Int
+
+  """Cursor for pagination before this item"""
+  before: String
+}

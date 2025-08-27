@@ -1,12 +1,11 @@
 import { Resolver, Query, FieldResolver, Root, Ctx, Arg, Int, Info } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
 import { PostCategory, Post, Category, PostCategoryConnection, PostCategoryQueryArgs } from '../../schema'
-import { BaseResolver } from './base-resolver'
 import type { Context } from './types'
 import { ConnectionBuilder, POST_INCLUDES, CATEGORY_INCLUDES } from '../../schema-helpers'
 
 @Resolver(() => PostCategory)
-export class PostCategoryResolver extends BaseResolver {
+export class PostCategoryResolver {
 	@Query(() => PostCategoryConnection)
 	async postCategories(
 		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
@@ -17,16 +16,21 @@ export class PostCategoryResolver extends BaseResolver {
 		@Ctx() { prisma }: Context,
 	): Promise<PostCategoryConnection> {
 		const args: PostCategoryQueryArgs = { first, after, last, before }
-		return ConnectionBuilder.buildPostCategoryConnection(prisma, args, info)
+		const config = ConnectionBuilder.buildPostCategoryConnectionConfig(args, info)
+
+		const items = await prisma.categoryOnPost.findMany(config.findManyOptions)
+		const totalCount = await prisma.categoryOnPost.count(config.countOptions)
+
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as PostCategoryConnection
 	}
 
 	@FieldResolver(() => Post)
 	async post(@Root() postCategory: PostCategory, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return this.findUnique<Post>(prisma, 'post', { id: postCategory.postId }, POST_INCLUDES)
+		return await prisma.post.findUnique({ where: { id: postCategory.postId }, include: POST_INCLUDES }) as Post | null
 	}
 
 	@FieldResolver(() => Category)
 	async category(@Root() postCategory: PostCategory, @Ctx() { prisma }: Context): Promise<Category | null> {
-		return this.findUnique<Category>(prisma, 'category', { id: postCategory.categoryId }, CATEGORY_INCLUDES)
+		return await prisma.category.findUnique({ where: { id: postCategory.categoryId }, include: CATEGORY_INCLUDES }) as Category | null
 	}
 }

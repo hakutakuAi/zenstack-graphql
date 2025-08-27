@@ -27,7 +27,6 @@ export class UnifiedGeneratorFactory {
 			enumGenerator: new UnifiedEnumGenerator(unifiedContext, OutputFormat.GRAPHQL),
 			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
-			helperGenerator: new UnifiedHelperGenerator(unifiedContext),
 		}
 	}
 

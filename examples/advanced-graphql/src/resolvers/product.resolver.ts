@@ -1,85 +1,49 @@
-import { Resolver, Query, Mutation, Arg, Ctx, ID } from 'type-graphql'
-import { Product, ProductCreateInput, ProductUpdateInput, ProductQueryArgs, ProductConnection } from '../../schema'
+import { Resolver, Query, Mutation, Arg, Ctx, ID, Info, Int, FieldResolver, Root } from 'type-graphql'
+import type { GraphQLResolveInfo } from 'graphql'
+import {
+	Product,
+	ProductCreateInput,
+	ProductUpdateInput,
+	ProductQueryArgs,
+	ProductConnection,
+	ProductFilterInput,
+	ProductSortInput,
+	ProductTag,
+	Review,
+} from '../../schema'
+import { ConnectionBuilder } from '../../schema-helpers'
 import type { Context } from './types'
 
 @Resolver(() => Product)
 export class ProductResolver {
 	@Query(() => Product, { nullable: true })
 	async product(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Product | null> {
-		const result = await ctx.prisma.product.findUnique({
-			where: { id },
-			include: {
-				reviews: true,
-				tags: {
-					include: {
-						tag: true,
-					},
-				},
-			},
-		})
-
-		return result as Product | null
+		return (await ctx.prisma.product.findUnique({ where: { id } })) as Product | null
 	}
 
 	@Query(() => ProductConnection)
-	async products(@Arg('args', () => ProductQueryArgs, { nullable: true }) args: ProductQueryArgs, @Ctx() ctx: Context): Promise<ProductConnection> {
-		const take = args?.first || 20
-		const skip = args?.after ? 1 : 0
-		const cursor = args?.after ? { id: args.after } : undefined
+	async products(
+		@Arg('filter', () => ProductFilterInput, { nullable: true }) filter: ProductFilterInput | undefined,
+		@Arg('sort', () => ProductSortInput, { nullable: true }) sort: ProductSortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
+		@Ctx() ctx: Context,
+	): Promise<ProductConnection> {
+		const args: ProductQueryArgs = { filter, sort, first, after, last, before }
+		const config = ConnectionBuilder.buildProductConnectionConfig(args, info)
 
-		const products = await ctx.prisma.product.findMany({
-			take: take + 1,
-			skip,
-			cursor,
-			where: this.buildWhereCondition(args?.filter),
-			orderBy: this.buildOrderBy(args?.sort),
-			include: {
-				reviews: true,
-				tags: {
-					include: {
-						tag: true,
-					},
-				},
-			},
-		})
+		const items = await ctx.prisma.product.findMany(config.findManyOptions)
+		const totalCount = await ctx.prisma.product.count(config.countOptions)
 
-		const hasNextPage = products.length > take
-		const nodes = hasNextPage ? products.slice(0, -1) : products
-
-		const edges = nodes.map((product, index) => ({
-			node: product as Product,
-			cursor: product.id,
-		}))
-
-		return {
-			edges,
-			pageInfo: {
-				hasNextPage,
-				hasPreviousPage: false,
-				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor,
-			},
-			totalCount: await ctx.prisma.product.count({
-				where: this.buildWhereCondition(args?.filter),
-			}),
-		}
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as ProductConnection
 	}
 
 	@Mutation(() => Product)
 	async createProduct(@Arg('input', () => ProductCreateInput) input: ProductCreateInput, @Ctx() ctx: Context): Promise<Product> {
-		const result = await ctx.prisma.product.create({
-			data: input,
-			include: {
-				reviews: true,
-				tags: {
-					include: {
-						tag: true,
-					},
-				},
-			},
-		})
-
-		return result as Product
+		return (await ctx.prisma.product.create({ data: input })) as Product
 	}
 
 	@Mutation(() => Product)
@@ -88,76 +52,22 @@ export class ProductResolver {
 		@Arg('input', () => ProductUpdateInput) input: ProductUpdateInput,
 		@Ctx() ctx: Context,
 	): Promise<Product> {
-		const result = await ctx.prisma.product.update({
-			where: { id },
-			data: input,
-			include: {
-				reviews: true,
-				tags: {
-					include: {
-						tag: true,
-					},
-				},
-			},
-		})
-
-		return result as Product
+		return (await ctx.prisma.product.update({ where: { id }, data: input })) as Product
 	}
 
 	@Mutation(() => Boolean)
 	async deleteProduct(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<boolean> {
-		await ctx.prisma.product.delete({
-			where: { id },
-		})
+		await ctx.prisma.product.delete({ where: { id } })
 		return true
 	}
 
-	private buildWhereCondition(filter: any) {
-		if (!filter) return undefined
-
-		const where: any = {}
-
-		if (filter.name) {
-			where.name = { contains: filter.name.contains || filter.name.equals }
-		}
-
-		if (filter.price) {
-			where.price = {}
-			if (filter.price.gte !== undefined) where.price.gte = filter.price.gte
-			if (filter.price.lte !== undefined) where.price.lte = filter.price.lte
-			if (filter.price.equals !== undefined) where.price.equals = filter.price.equals
-		}
-
-		if (filter.status) {
-			where.status = filter.status.equals || filter.status
-		}
-
-		if (filter.createdAt) {
-			where.createdAt = {}
-			if (filter.createdAt.gte) where.createdAt.gte = filter.createdAt.gte
-			if (filter.createdAt.lte) where.createdAt.lte = filter.createdAt.lte
-		}
-
-		if (filter.AND) {
-			where.AND = filter.AND.map((f: any) => this.buildWhereCondition(f))
-		}
-
-		if (filter.OR) {
-			where.OR = filter.OR.map((f: any) => this.buildWhereCondition(f))
-		}
-
-		return where
+	@FieldResolver(() => [ProductTag])
+	async tags(@Root() product: Product, @Ctx() ctx: Context): Promise<ProductTag[]> {
+		return (await ctx.prisma.productTag.findMany({ where: { productId: product.id } })) as ProductTag[]
 	}
 
-	private buildOrderBy(sort: any) {
-		if (!sort) return { createdAt: 'desc' }
-
-		const orderBy: any = {}
-
-		if (sort.name) orderBy.name = sort.name.toLowerCase()
-		if (sort.price) orderBy.price = sort.price.toLowerCase()
-		if (sort.createdAt) orderBy.createdAt = sort.createdAt.toLowerCase()
-
-		return orderBy
+	@FieldResolver(() => [Review])
+	async reviews(@Root() product: Product, @Ctx() ctx: Context): Promise<Review[]> {
+		return (await ctx.prisma.review.findMany({ where: { productId: product.id } })) as Review[]
 	}
 }

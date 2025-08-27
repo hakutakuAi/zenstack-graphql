@@ -158,7 +158,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query GetProducts($first: Int, $after: String) {
-							products(args: { first: $first, after: $after }) {
+							products(first: $first, after: $after) {
 								edges {
 									node {
 										id
@@ -212,7 +212,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query GetProducts($first: Int) {
-							products(args: { first: $first }) {
+							products(first: $first) {
 								edges {
 									node { name }
 									cursor
@@ -239,7 +239,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query GetProducts($first: Int, $after: String) {
-							products(args: { first: $first, after: $after }) {
+							products(first: $first, after: $after) {
 								edges {
 									node { name }
 								}
@@ -273,11 +273,9 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterProducts {
-							products(args: {
-								filter: {
-									status: { equals: PUBLISHED }
-									price: { gte: 50.0 }
-								}
+							products(filter: {
+								status: { equals: PUBLISHED }
+								price: { gte: 50.0 }
 							}) {
 								edges {
 									node {
@@ -312,18 +310,16 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query FilterProductsWithOR {
-							products(args: {
-								filter: {
-									OR: [
-										{ price: { gte: 150.0 } }
-										{ 
-											AND: [
-												{ status: { equals: PUBLISHED } }
-												{ price: { lte: 60.0 } }
-											]
-										}
-									]
-								}
+							products(filter: {
+								OR: [
+									{ price: { gte: 150.0 } }
+									{ 
+										AND: [
+											{ status: { equals: PUBLISHED } }
+											{ price: { lte: 60.0 } }
+										]
+									}
+								]
 							}) {
 								edges {
 									node {
@@ -359,9 +355,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query SortProducts {
-							products(args: {
-								sort: { name: ASC }
-							}) {
+							products(sort: { name: ASC }) {
 								edges {
 									node {
 										name
@@ -396,9 +390,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query GetArchivedProducts {
-							products(args: {
-								filter: { status: { equals: ARCHIVED } }
-							}) {
+							products(filter: { status: { equals: ARCHIVED } }) {
 								edges {
 									node {
 										name
@@ -438,9 +430,7 @@ describe('Advanced GraphQL Features Tests', () => {
 				body: JSON.stringify({
 					query: `
 						query GetFiveStarReviews {
-							reviews(args: {
-								filter: { rating: { equals: FIVE } }
-							}) {
+							reviews(filter: { rating: { equals: FIVE } }) {
 								edges {
 									node {
 										title

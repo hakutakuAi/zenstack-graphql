@@ -1,12 +1,11 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
 import { Post, User, Comment, PostCategory, PostFilterInput, PostSortInput, PostConnection, PostQueryArgs } from '../../schema'
-import { BaseResolver } from './base-resolver'
 import type { Context } from './types'
 import { ConnectionBuilder, USER_INCLUDES, COMMENT_INCLUDES, POSTCATEGORY_INCLUDES, POST_INCLUDES } from '../../schema-helpers'
 
 @Resolver(() => Post)
-export class PostResolver extends BaseResolver {
+export class PostResolver {
 	@Query(() => PostConnection)
 	async posts(
 		@Arg('filter', () => PostFilterInput, { nullable: true }) filter: PostFilterInput | undefined,
@@ -19,12 +18,17 @@ export class PostResolver extends BaseResolver {
 		@Ctx() { prisma }: Context,
 	): Promise<PostConnection> {
 		const args: PostQueryArgs = { filter, sort, first, after, last, before }
-		return ConnectionBuilder.buildPostConnection(prisma, args, info)
+		const config = ConnectionBuilder.buildPostConnectionConfig(args, info)
+
+		const items = await prisma.post.findMany(config.findManyOptions)
+		const totalCount = await prisma.post.count(config.countOptions)
+
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as PostConnection
 	}
 
 	@Query(() => Post, { nullable: true })
 	async post(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return this.findUnique<Post>(prisma, 'post', { id }, POST_INCLUDES)
+		return await prisma.post.findUnique({ where: { id }, include: POST_INCLUDES }) as Post | null
 	}
 
 	@Mutation(() => Post)
@@ -35,29 +39,29 @@ export class PostResolver extends BaseResolver {
 		@Arg('published', () => Boolean, { defaultValue: false }) published: boolean = false,
 		@Ctx() { prisma }: Context,
 	): Promise<Post> {
-		return this.create<Post>(prisma, 'post', { title, content, published, authorId }, POST_INCLUDES)
+		return await prisma.post.create({ data: { title, content, published, authorId }, include: POST_INCLUDES }) as Post
 	}
 
 	@Mutation(() => Post, { nullable: true })
 	async publishPost(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return this.update<Post>(prisma, 'post', { id }, { published: true }, POST_INCLUDES)
+		return await prisma.post.update({ where: { id }, data: { published: true }, include: POST_INCLUDES }) as Post | null
 	}
 
 	@FieldResolver(() => User)
 	async author(@Root() post: Post, @Ctx() { prisma }: Context): Promise<User | null> {
-		return this.findUnique<User>(prisma, 'user', { id: post.authorId }, USER_INCLUDES)
+		return await prisma.user.findUnique({ where: { id: post.authorId }, include: USER_INCLUDES }) as User | null
 	}
 
 	@FieldResolver(() => [PostCategory])
 	async categories(@Root() post: Post, @Ctx() { prisma }: Context): Promise<PostCategory[]> {
-		return this.findMany<PostCategory>(prisma, 'categoryOnPost', { where: { postId: post.id }, include: POSTCATEGORY_INCLUDES })
+		return await prisma.categoryOnPost.findMany({ where: { postId: post.id }, include: POSTCATEGORY_INCLUDES }) as PostCategory[]
 	}
 
 	@FieldResolver(() => [Comment])
 	async comments(@Root() post: Post, @Ctx() { prisma }: Context): Promise<Comment[]> {
-		return this.findMany<Comment>(prisma, 'comment', {
+		return await prisma.comment.findMany({
 			where: { postId: post.id },
 			include: COMMENT_INCLUDES,
-		})
+		}) as Comment[]
 	}
 }

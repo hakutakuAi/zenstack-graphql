@@ -1,5 +1,4 @@
 import type { GraphQLResolveInfo } from 'graphql'
-import type { PrismaClient } from '@prisma/client'
 import { User, UserQueryArgs, UserConnection, UserFilterInput, UserSortInput, Post, PostQueryArgs, PostConnection, PostFilterInput, PostSortInput, Category, CategoryQueryArgs, CategoryConnection, CategoryFilterInput, PostCategory, PostCategoryQueryArgs, PostCategoryConnection, PostCategoryFilterInput, Comment, CommentQueryArgs, CommentConnection, CommentFilterInput, CommentSortInput } from './schema'
 
 export interface PaginationArgs {
@@ -23,25 +22,44 @@ export interface ConnectionResult<T> {
 	totalCount: number
 }
 
+export interface ConnectionConfig {
+	findManyOptions: {
+		take: number
+		where?: any
+		orderBy?: any
+		include?: any
+		cursor?: any
+		skip?: number
+	}
+	countOptions: {
+		where?: any
+	}
+	paginationInfo: {
+		first?: number
+		last?: number
+		after?: string
+		before?: string
+		cursorField: string
+		hasIdField: boolean
+		relationFields: string[]
+	}
+}
+
 export class ConnectionBuilder {
 	/**
-	 * Generic connection builder that handles both regular models and composite key models
+	 * Build connection configuration without executing queries
 	 */
-	static async build<T>(args: {
-		prisma: PrismaClient
-		model: string
+	static buildConfig(args: {
 		pagination: PaginationArgs
 		where?: any
 		orderBy?: any
 		include?: any
-		info?: GraphQLResolveInfo
+		info?: any
 		relationFields?: string[]
 		cursorField?: string
 		hasIdField?: boolean
-	}): Promise<ConnectionResult<T>> {
+	}): ConnectionConfig {
 		const { 
-			prisma, 
-			model, 
 			pagination, 
 			where, 
 			orderBy, 
@@ -66,11 +84,8 @@ export class ConnectionBuilder {
 		// Build include from GraphQL selection if info is provided
 		const finalInclude = info ? buildPrismaInclude(info, relationFields) : include
 
-		// Get model delegate
-		const modelDelegate = (prisma as any)[model.toLowerCase()]
-
 		// Prepare query options
-		const queryOptions: any = {
+		const findManyOptions: any = {
 			take: Math.abs(take) + 1, // Get one extra to check for next page
 			where,
 			orderBy,
@@ -79,15 +94,34 @@ export class ConnectionBuilder {
 
 		// Only add cursor and skip for models with ID field
 		if (hasIdField && cursor) {
-			queryOptions.cursor = cursor
-			queryOptions.skip = skip
+			findManyOptions.cursor = cursor
+			findManyOptions.skip = skip
 		}
 
-		// Fetch items
-		const items = await modelDelegate.findMany(queryOptions)
+		return {
+			findManyOptions,
+			countOptions: { where },
+			paginationInfo: {
+				first,
+				last,
+				after,
+				before,
+				cursorField,
+				hasIdField,
+				relationFields
+			}
+		}
+	}
 
-		// Calculate totalCount
-		const totalCount = await modelDelegate.count({ where })
+	/**
+	 * Process query results into connection format
+	 */
+	static processResults<T>(
+		items: T[],
+		totalCount: number,
+		paginationInfo: ConnectionConfig['paginationInfo']
+	): ConnectionResult<T> {
+		const { first, last, cursorField, hasIdField } = paginationInfo
 
 		// Determine pagination info
 		const hasNextPage = first ? items.length > first : false
@@ -126,19 +160,17 @@ export class ConnectionBuilder {
 		}
 	}
 
+
 	
-	static async buildUserConnection(
-		prisma: PrismaClient,
+	static buildUserConnectionConfig(
 		args: UserQueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<UserConnection> {
+		info?: any
+	): ConnectionConfig {
 		const where = 'filter' in args ? FilterBuilder.buildUserFilter((args as any).filter) : {}
 		const orderBy = 'sort' in args ? SortBuilder.buildUserSort((args as any).sort) : undefined
 		const include = info ? FieldSelection.buildUserInclude(info) : USER_INCLUDES
 		
-		return this.build<User>({
-			prisma,
-			model: 'user',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,
@@ -155,18 +187,15 @@ export class ConnectionBuilder {
 		})
 	}
 
-	static async buildPostConnection(
-		prisma: PrismaClient,
+	static buildPostConnectionConfig(
 		args: PostQueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<PostConnection> {
+		info?: any
+	): ConnectionConfig {
 		const where = 'filter' in args ? FilterBuilder.buildPostFilter((args as any).filter) : {}
 		const orderBy = 'sort' in args ? SortBuilder.buildPostSort((args as any).sort) : undefined
 		const include = info ? FieldSelection.buildPostInclude(info) : POST_INCLUDES
 		
-		return this.build<Post>({
-			prisma,
-			model: 'post',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,
@@ -183,18 +212,15 @@ export class ConnectionBuilder {
 		})
 	}
 
-	static async buildCategoryConnection(
-		prisma: PrismaClient,
+	static buildCategoryConnectionConfig(
 		args: CategoryQueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<CategoryConnection> {
+		info?: any
+	): ConnectionConfig {
 		const where = 'filter' in args ? FilterBuilder.buildCategoryFilter((args as any).filter) : {}
 		const orderBy = undefined
 		const include = info ? FieldSelection.buildCategoryInclude(info) : CATEGORY_INCLUDES
 		
-		return this.build<Category>({
-			prisma,
-			model: 'category',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,
@@ -211,18 +237,15 @@ export class ConnectionBuilder {
 		})
 	}
 
-	static async buildPostCategoryConnection(
-		prisma: PrismaClient,
+	static buildPostCategoryConnectionConfig(
 		args: PostCategoryQueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<PostCategoryConnection> {
+		info?: any
+	): ConnectionConfig {
 		const where = 'filter' in args ? FilterBuilder.buildPostCategoryFilter((args as any).filter) : {}
 		const orderBy = undefined
 		const include = info ? FieldSelection.buildPostCategoryInclude(info) : POSTCATEGORY_INCLUDES
 		
-		return this.build<PostCategory>({
-			prisma,
-			model: 'categoryonpost',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,
@@ -239,18 +262,15 @@ export class ConnectionBuilder {
 		})
 	}
 
-	static async buildCommentConnection(
-		prisma: PrismaClient,
+	static buildCommentConnectionConfig(
 		args: CommentQueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<CommentConnection> {
+		info?: any
+	): ConnectionConfig {
 		const where = 'filter' in args ? FilterBuilder.buildCommentFilter((args as any).filter) : {}
 		const orderBy = 'sort' in args ? SortBuilder.buildCommentSort((args as any).sort) : undefined
 		const include = info ? FieldSelection.buildCommentInclude(info) : COMMENT_INCLUDES
 		
-		return this.build<Comment>({
-			prisma,
-			model: 'comment',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,

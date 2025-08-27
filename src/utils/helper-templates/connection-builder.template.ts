@@ -1,22 +1,18 @@
 export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 	/**
-	 * Generic connection builder that handles both regular models and composite key models
+	 * Build connection configuration without executing queries
 	 */
-	static async build<T>(args: {
-		prisma: PrismaClient
-		model: string
+	static buildConfig(args: {
 		pagination: PaginationArgs
 		where?: any
 		orderBy?: any
 		include?: any
-		info?: GraphQLResolveInfo
+		info?: any
 		relationFields?: string[]
 		cursorField?: string
 		hasIdField?: boolean
-	}): Promise<ConnectionResult<T>> {
+	}): ConnectionConfig {
 		const { 
-			prisma, 
-			model, 
 			pagination, 
 			where, 
 			orderBy, 
@@ -41,11 +37,8 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 		// Build include from GraphQL selection if info is provided
 		const finalInclude = info ? buildPrismaInclude(info, relationFields) : include
 
-		// Get model delegate
-		const modelDelegate = (prisma as any)[model.toLowerCase()]
-
 		// Prepare query options
-		const queryOptions: any = {
+		const findManyOptions: any = {
 			take: Math.abs(take) + 1, // Get one extra to check for next page
 			where,
 			orderBy,
@@ -54,15 +47,34 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 
 		// Only add cursor and skip for models with ID field
 		if (hasIdField && cursor) {
-			queryOptions.cursor = cursor
-			queryOptions.skip = skip
+			findManyOptions.cursor = cursor
+			findManyOptions.skip = skip
 		}
 
-		// Fetch items
-		const items = await modelDelegate.findMany(queryOptions)
+		return {
+			findManyOptions,
+			countOptions: { where },
+			paginationInfo: {
+				first,
+				last,
+				after,
+				before,
+				cursorField,
+				hasIdField,
+				relationFields
+			}
+		}
+	}
 
-		// Calculate totalCount
-		const totalCount = await modelDelegate.count({ where })
+	/**
+	 * Process query results into connection format
+	 */
+	static processResults<T>(
+		items: T[],
+		totalCount: number,
+		paginationInfo: ConnectionConfig['paginationInfo']
+	): ConnectionResult<T> {
+		const { first, last, cursorField, hasIdField } = paginationInfo
 
 		// Determine pagination info
 		const hasNextPage = first ? items.length > first : false
@@ -101,21 +113,19 @@ export const CONNECTION_BUILDER_TEMPLATE = `export class ConnectionBuilder {
 		}
 	}
 
+
 	{{MODEL_SPECIFIC_METHODS}}
 }`
 
 export const MODEL_CONNECTION_METHOD_TEMPLATE = `
-	static async build{{MODEL_NAME}}Connection(
-		prisma: PrismaClient,
+	static build{{MODEL_NAME}}ConnectionConfig(
 		args: {{MODEL_NAME}}QueryArgs,
-		info?: GraphQLResolveInfo
-	): Promise<{{MODEL_NAME}}Connection> {
+		info?: any
+	): ConnectionConfig {
 		{{FILTER_SORT_LOGIC}}
 		const include = info ? FieldSelection.build{{MODEL_NAME}}Include(info) : {{MODEL_NAME_UPPER}}_INCLUDES
 		
-		return this.build<{{MODEL_NAME}}>({
-			prisma,
-			model: '{{PRISMA_MODEL_NAME}}',
+		return this.buildConfig({
 			pagination: {
 				first: args.first,
 				after: args.after,
