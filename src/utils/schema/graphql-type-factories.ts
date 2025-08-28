@@ -199,6 +199,7 @@ export class GraphQLTypeFactories {
 			const connectionTC = this.schemaComposer.createObjectTC({
 				name: connectionName,
 				description: description || `A connection to a list of ${modelType} items.`,
+				interfaces: ['Connection'],
 				fields: {
 					pageInfo: {
 						type: 'PageInfo!',
@@ -243,6 +244,7 @@ export class GraphQLTypeFactories {
 			const edgeTC = this.schemaComposer.createObjectTC({
 				name: edgeName,
 				description: `An edge in a ${modelType} connection.`,
+				interfaces: ['Edge'],
 				fields: {
 					node: {
 						type: `${modelType}!`,

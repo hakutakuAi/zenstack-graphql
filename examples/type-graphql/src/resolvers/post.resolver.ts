@@ -1,37 +1,34 @@
-import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int } from 'type-graphql'
-import { Post, User, Comment, PostCategory, PostFilterInput, PostSortInput, PostConnection } from '../../schema'
-import { BaseResolver } from './base-resolver'
+import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
+import type { GraphQLResolveInfo } from 'graphql'
+import { Post, User, Comment, PostCategory, PostFilterInput, PostSortInput, PostConnection, PostQueryArgs } from '../../schema'
 import type { Context } from './types'
-import { PRISMA_INCLUDES } from '../utils/resolver-helpers'
+import { ConnectionBuilder, USER_INCLUDES, COMMENT_INCLUDES, POSTCATEGORY_INCLUDES, POST_INCLUDES } from '../../schema-helpers'
 
 @Resolver(() => Post)
-export class PostResolver extends BaseResolver {
-	private readonly ALLOWED_FILTER_FIELDS = ['title', 'published', 'createdAt']
-	private readonly ALLOWED_SORT_FIELDS = ['createdAt', 'updatedAt', 'viewCount']
-
+export class PostResolver {
 	@Query(() => PostConnection)
 	async posts(
-		@Arg('filter', () => PostFilterInput, { nullable: true }) filter: PostFilterInput | null,
-		@Arg('sort', () => PostSortInput, { nullable: true }) sort: PostSortInput | null,
-		@Arg('first', () => Int, { nullable: true }) first: number | null,
-		@Arg('after', () => String, { nullable: true }) after: string | null,
-		@Arg('last', () => Int, { nullable: true }) last: number | null,
-		@Arg('before', () => String, { nullable: true }) before: string | null,
+		@Arg('filter', () => PostFilterInput, { nullable: true }) filter: PostFilterInput | undefined,
+		@Arg('sort', () => PostSortInput, { nullable: true }) sort: PostSortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<PostConnection> {
-		return this.buildRelayConnection<Post>(
-			prisma,
-			'post',
-			{ filter, sort, first, after, last, before },
-			this.ALLOWED_FILTER_FIELDS,
-			this.ALLOWED_SORT_FIELDS,
-			PRISMA_INCLUDES.POST,
-		)
+		const args: PostQueryArgs = { filter, sort, first, after, last, before }
+		const config = ConnectionBuilder.buildPostConnectionConfig(args, info)
+
+		const items = await prisma.post.findMany(config.findManyOptions)
+		const totalCount = await prisma.post.count(config.countOptions)
+
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as PostConnection
 	}
 
 	@Query(() => Post, { nullable: true })
 	async post(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return this.findUnique<Post>(prisma, 'post', { id }, PRISMA_INCLUDES.POST)
+		return await prisma.post.findUnique({ where: { id }, include: POST_INCLUDES }) as Post | null
 	}
 
 	@Mutation(() => Post)
@@ -42,29 +39,29 @@ export class PostResolver extends BaseResolver {
 		@Arg('published', () => Boolean, { defaultValue: false }) published: boolean = false,
 		@Ctx() { prisma }: Context,
 	): Promise<Post> {
-		return this.create<Post>(prisma, 'post', { title, content, published, authorId }, PRISMA_INCLUDES.POST)
+		return await prisma.post.create({ data: { title, content, published, authorId }, include: POST_INCLUDES }) as Post
 	}
 
 	@Mutation(() => Post, { nullable: true })
 	async publishPost(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return this.update<Post>(prisma, 'post', { id }, { published: true }, PRISMA_INCLUDES.POST)
+		return await prisma.post.update({ where: { id }, data: { published: true }, include: POST_INCLUDES }) as Post | null
 	}
 
 	@FieldResolver(() => User)
 	async author(@Root() post: Post, @Ctx() { prisma }: Context): Promise<User | null> {
-		return this.findUnique<User>(prisma, 'user', { id: post.authorId })
+		return await prisma.user.findUnique({ where: { id: post.authorId }, include: USER_INCLUDES }) as User | null
 	}
 
 	@FieldResolver(() => [PostCategory])
 	async categories(@Root() post: Post, @Ctx() { prisma }: Context): Promise<PostCategory[]> {
-		return this.findMany<PostCategory>(prisma, 'categoryOnPost', { where: { postId: post.id } })
+		return await prisma.categoryOnPost.findMany({ where: { postId: post.id }, include: POSTCATEGORY_INCLUDES }) as PostCategory[]
 	}
 
 	@FieldResolver(() => [Comment])
 	async comments(@Root() post: Post, @Ctx() { prisma }: Context): Promise<Comment[]> {
-		return this.findMany<Comment>(prisma, 'comment', {
+		return await prisma.comment.findMany({
 			where: { postId: post.id },
-			include: PRISMA_INCLUDES.COMMENT,
-		})
+			include: COMMENT_INCLUDES,
+		}) as Comment[]
 	}
 }

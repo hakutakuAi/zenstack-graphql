@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { ProductResolver, ReviewResolver, TagResolver } from './resolvers'
+import { ProductResolver, ReviewResolver, TagResolver, ProductTagResolver } from './resolvers'
 import { buildSchema } from 'type-graphql'
 import { createYoga } from 'graphql-yoga'
 import { createServer } from 'node:http'
@@ -9,7 +9,7 @@ import type { Context } from './resolvers/types'
 const prisma = new PrismaClient()
 
 const schema = buildSchema({
-	resolvers: [ProductResolver, ReviewResolver, TagResolver],
+	resolvers: [ProductResolver, ReviewResolver, TagResolver, ProductTagResolver],
 	emitSchemaFile: false,
 })
 

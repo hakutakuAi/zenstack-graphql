@@ -37,7 +37,7 @@ export class GraphQLRegistry extends BaseRegistry<any, GraphQLTypeInfo> {
 		super()
 		this._schemaComposer = schemaComposer
 		this.syncFromSchemaComposer()
-		this.addRelayRequirements()
+		this.addRelayInterfaces()
 	}
 
 	protected createTypeInfo(name: string, kind: TypeKind, composer: any, isGenerated: boolean): GraphQLTypeInfo {
@@ -154,21 +154,52 @@ export class GraphQLRegistry extends BaseRegistry<any, GraphQLTypeInfo> {
 		return printSchema(schema)
 	}
 
-	addRelayRequirements(): void {
-		if (this._schemaComposer.has(COMMON_TYPES.NODE)) {
-			return
-		}
-		const nodeInterface = this._schemaComposer.createInterfaceTC({
-			name: COMMON_TYPES.NODE,
-			description: 'An object with a unique identifier',
-			fields: {
-				id: {
-					type: 'ID!',
-					description: 'The unique identifier for this object',
+	addRelayInterfaces(): void {
+		if (!this._schemaComposer.has(COMMON_TYPES.NODE)) {
+			const nodeInterface = this._schemaComposer.createInterfaceTC({
+				name: COMMON_TYPES.NODE,
+				description: 'An object with a unique identifier',
+				fields: {
+					id: {
+						type: 'ID!',
+						description: 'The unique identifier for this object',
+					},
 				},
-			},
-		})
-		this.registerType(COMMON_TYPES.NODE, TypeKind.INTERFACE, nodeInterface, true)
+			})
+			this.registerType(COMMON_TYPES.NODE, TypeKind.INTERFACE, nodeInterface, true)
+		}
+
+		if (!this._schemaComposer.has(COMMON_TYPES.EDGE)) {
+			const edgeInterface = this._schemaComposer.createInterfaceTC({
+				name: COMMON_TYPES.EDGE,
+				description: 'Base interface for all edge types in connections',
+				fields: {
+					cursor: {
+						type: 'String!',
+						description: 'A cursor for use in pagination',
+					},
+				},
+			})
+			this.registerType(COMMON_TYPES.EDGE, TypeKind.INTERFACE, edgeInterface, true)
+		}
+
+		if (!this._schemaComposer.has(COMMON_TYPES.CONNECTION)) {
+			const connectionInterface = this._schemaComposer.createInterfaceTC({
+				name: COMMON_TYPES.CONNECTION,
+				description: 'Base interface for all connection types',
+				fields: {
+					pageInfo: {
+						type: 'PageInfo!',
+						description: 'Information to aid in pagination',
+					},
+					totalCount: {
+						type: 'Int!',
+						description: 'The total count of items in the connection',
+					},
+				},
+			})
+			this.registerType(COMMON_TYPES.CONNECTION, TypeKind.INTERFACE, connectionInterface, true)
+		}
 	}
 
 	private syncFromSchemaComposer(): void {

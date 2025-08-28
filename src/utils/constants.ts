@@ -20,6 +20,8 @@ export const INPUT_TYPE_SUFFIXES = {
 
 export const COMMON_TYPES = {
 	NODE: 'Node',
+	EDGE: 'Edge',
+	CONNECTION: 'Connection',
 	PAGE_INFO: 'PageInfo',
 	SORT_DIRECTION: 'SortDirection',
 } as const

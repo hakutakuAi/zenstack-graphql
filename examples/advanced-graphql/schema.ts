@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType } from "type-graphql";
+import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType, InterfaceType } from "type-graphql";
 import { GraphQLJSON } from "graphql-scalars";
 import "reflect-metadata";
 
@@ -136,16 +136,30 @@ export class PageInfo {
     endCursor?: string | undefined;
 }
 
-@ObjectType()
-export class ProductEdge {
+@InterfaceType({ description: 'Base interface for all edge types in connections', autoRegisterImplementations: false })
+export abstract class Edge {
+    @Field(() => String, { description: 'A cursor for use in pagination' })
+    cursor!: string;
+}
+
+@InterfaceType({ description: 'Base interface for all connection types', autoRegisterImplementations: false })
+export abstract class Connection {
+    @Field(() => PageInfo, { description: 'Information to aid in pagination' })
+    pageInfo!: PageInfo;
+    @Field(() => Int, { description: 'The total count of items in the connection' })
+    totalCount!: number;
+}
+
+@ObjectType({ implements: Edge })
+export class ProductEdge implements Edge {
     @Field(() => Product)
     node!: Product;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class ProductConnection {
+@ObjectType({ implements: Connection })
+export class ProductConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [ProductEdge])
@@ -154,16 +168,16 @@ export class ProductConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class ReviewEdge {
+@ObjectType({ implements: Edge })
+export class ReviewEdge implements Edge {
     @Field(() => Review)
     node!: Review;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class ReviewConnection {
+@ObjectType({ implements: Connection })
+export class ReviewConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [ReviewEdge])
@@ -172,16 +186,16 @@ export class ReviewConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class TagEdge {
+@ObjectType({ implements: Edge })
+export class TagEdge implements Edge {
     @Field(() => Tag)
     node!: Tag;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class TagConnection {
+@ObjectType({ implements: Connection })
+export class TagConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [TagEdge])
@@ -190,16 +204,16 @@ export class TagConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class ProductTagEdge {
+@ObjectType({ implements: Edge })
+export class ProductTagEdge implements Edge {
     @Field(() => ProductTag)
     node!: ProductTag;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class ProductTagConnection {
+@ObjectType({ implements: Connection })
+export class ProductTagConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [ProductTagEdge])
@@ -512,8 +526,6 @@ export class ProductQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -530,8 +542,6 @@ export class ReviewQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -548,8 +558,6 @@ export class TagQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -566,6 +574,4 @@ export class ProductTagQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }

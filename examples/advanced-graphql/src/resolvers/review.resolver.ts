@@ -1,137 +1,54 @@
-import { Resolver, Query, Mutation, Arg, Ctx, ID } from 'type-graphql'
-import { Review, ReviewCreateInput, ReviewUpdateInput, ReviewQueryArgs, ReviewConnection } from '../../schema'
+import { Resolver, Query, Mutation, Arg, Ctx, ID, Info, Int, FieldResolver, Root } from 'type-graphql'
+import type { GraphQLResolveInfo } from 'graphql'
+import { Review, ReviewCreateInput, ReviewUpdateInput, ReviewQueryArgs, ReviewConnection, ReviewFilterInput, ReviewSortInput, Product } from '../../schema'
+import { ConnectionBuilder } from '../../schema-helpers'
 import type { Context } from './types'
 
 @Resolver(() => Review)
 export class ReviewResolver {
 	@Query(() => Review, { nullable: true })
 	async review(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Review | null> {
-		const result = await ctx.prisma.review.findUnique({
-			where: { id },
-			include: {
-				product: true,
-			},
-		})
-
-		return result as Review | null
+		return (await ctx.prisma.review.findUnique({ where: { id } })) as Review | null
 	}
 
 	@Query(() => ReviewConnection)
-	async reviews(@Arg('args', () => ReviewQueryArgs, { nullable: true }) args: ReviewQueryArgs, @Ctx() ctx: Context): Promise<ReviewConnection> {
-		const take = args?.first || 10
-		const skip = args?.after ? 1 : 0
-		const cursor = args?.after ? { id: args.after } : undefined
+	async reviews(
+		@Arg('filter', () => ReviewFilterInput, { nullable: true }) filter: ReviewFilterInput | undefined,
+		@Arg('sort', () => ReviewSortInput, { nullable: true }) sort: ReviewSortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
+		@Ctx() ctx: Context,
+	): Promise<ReviewConnection> {
+		const args: ReviewQueryArgs = { filter, sort, first, after, last, before }
+		const config = ConnectionBuilder.buildReviewConnectionConfig(args, info)
 
-		const reviews = await ctx.prisma.review.findMany({
-			take: take + 1,
-			skip,
-			cursor,
-			where: this.buildWhereCondition(args?.filter),
-			orderBy: this.buildOrderBy(args?.sort),
-			include: {
-				product: true,
-			},
-		})
+		const items = await ctx.prisma.review.findMany(config.findManyOptions)
+		const totalCount = await ctx.prisma.review.count(config.countOptions)
 
-		const hasNextPage = reviews.length > take
-		const nodes = hasNextPage ? reviews.slice(0, -1) : reviews
-
-		const edges = nodes.map((review) => ({
-			node: review as Review,
-			cursor: review.id,
-		}))
-
-		return {
-			edges,
-			pageInfo: {
-				hasNextPage,
-				hasPreviousPage: false,
-				startCursor: edges[0]?.cursor,
-				endCursor: edges[edges.length - 1]?.cursor,
-			},
-			totalCount: await ctx.prisma.review.count({
-				where: this.buildWhereCondition(args?.filter),
-			}),
-		}
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as ReviewConnection
 	}
 
 	@Mutation(() => Review)
 	async createReview(@Arg('input', () => ReviewCreateInput) input: ReviewCreateInput, @Ctx() ctx: Context): Promise<Review> {
-		const result = await ctx.prisma.review.create({
-			data: input,
-			include: {
-				product: true,
-			},
-		})
-
-		return result as Review
+		return (await ctx.prisma.review.create({ data: input })) as Review
 	}
 
 	@Mutation(() => Review)
 	async updateReview(@Arg('id', () => ID) id: string, @Arg('input', () => ReviewUpdateInput) input: ReviewUpdateInput, @Ctx() ctx: Context): Promise<Review> {
-		const result = await ctx.prisma.review.update({
-			where: { id },
-			data: input,
-			include: {
-				product: true,
-			},
-		})
-
-		return result as Review
+		return (await ctx.prisma.review.update({ where: { id }, data: input })) as Review
 	}
 
 	@Mutation(() => Boolean)
 	async deleteReview(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<boolean> {
-		await ctx.prisma.review.delete({
-			where: { id },
-		})
+		await ctx.prisma.review.delete({ where: { id } })
 		return true
 	}
 
-	private buildWhereCondition(filter: any) {
-		if (!filter) return undefined
-
-		const where: any = {}
-
-		if (filter.title) {
-			where.title = { contains: filter.title.contains || filter.title.equals }
-		}
-
-		if (filter.rating) {
-			where.rating = filter.rating.equals || filter.rating
-		}
-
-		if (filter.verified !== undefined) {
-			where.verified = filter.verified.equals !== undefined ? filter.verified.equals : filter.verified
-		}
-
-		if (filter.createdAt) {
-			where.createdAt = {}
-			if (filter.createdAt.gte) where.createdAt.gte = filter.createdAt.gte
-			if (filter.createdAt.lte) where.createdAt.lte = filter.createdAt.lte
-		}
-
-		if (filter.AND) {
-			where.AND = filter.AND.map((f: any) => this.buildWhereCondition(f))
-		}
-
-		if (filter.OR) {
-			where.OR = filter.OR.map((f: any) => this.buildWhereCondition(f))
-		}
-
-		return where
-	}
-
-	private buildOrderBy(sort: any) {
-		if (!sort) return { createdAt: 'desc' }
-
-		const orderBy: any = {}
-
-		if (sort.title) orderBy.title = sort.title.toLowerCase()
-		if (sort.rating) orderBy.rating = sort.rating.toLowerCase()
-		if (sort.createdAt) orderBy.createdAt = sort.createdAt.toLowerCase()
-		if (sort.helpfulCount) orderBy.helpfulCount = sort.helpfulCount.toLowerCase()
-
-		return orderBy
+	@FieldResolver(() => Product, { nullable: true })
+	async product(@Root() review: Review, @Ctx() ctx: Context): Promise<Product | null> {
+		return (await ctx.prisma.product.findUnique({ where: { id: review.productId } })) as Product | null
 	}
 }

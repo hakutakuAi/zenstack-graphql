@@ -73,6 +73,10 @@ const optionDefinitions = {
 		schema: z.boolean(),
 		default: true,
 	},
+	generateHelpers: {
+		schema: z.boolean(),
+		default: true,
+	},
 	fieldNaming: {
 		schema: z.enum(['camelCase', 'snake_case', 'preserve']),
 		default: 'camelCase' as FieldNaming,

@@ -4,6 +4,21 @@ interface Node {
   id: ID!
 }
 
+"""Base interface for all edge types in connections"""
+interface Edge {
+  """A cursor for use in pagination"""
+  cursor: String!
+}
+
+"""Base interface for all connection types"""
+interface Connection {
+  """Information to aid in pagination"""
+  pageInfo: PageInfo!
+
+  """The total count of items in the connection"""
+  totalCount: Int!
+}
+
 """A date-time string at UTC, such as 2007-12-03T10:15:30Z"""
 scalar DateTime
 
@@ -198,7 +213,7 @@ input PaginationInput {
 }
 
 """An edge in a Member connection."""
-type MemberEdge {
+type MemberEdge implements Edge {
   """The Member at the end of the edge."""
   node: Member!
 
@@ -207,7 +222,7 @@ type MemberEdge {
 }
 
 """A connection to a list of Member items."""
-type MemberConnection {
+type MemberConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -219,7 +234,7 @@ type MemberConnection {
 }
 
 """An edge in a UserProfile connection."""
-type UserProfileEdge {
+type UserProfileEdge implements Edge {
   """The UserProfile at the end of the edge."""
   node: UserProfile!
 
@@ -228,7 +243,7 @@ type UserProfileEdge {
 }
 
 """A connection to a list of UserProfile items."""
-type UserProfileConnection {
+type UserProfileConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -240,7 +255,7 @@ type UserProfileConnection {
 }
 
 """An edge in a Post connection."""
-type PostEdge {
+type PostEdge implements Edge {
   """The Post at the end of the edge."""
   node: Post!
 
@@ -249,7 +264,7 @@ type PostEdge {
 }
 
 """A connection to a list of Post items."""
-type PostConnection {
+type PostConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -261,7 +276,7 @@ type PostConnection {
 }
 
 """An edge in a Comment connection."""
-type CommentEdge {
+type CommentEdge implements Edge {
   """The Comment at the end of the edge."""
   node: Comment!
 
@@ -270,7 +285,7 @@ type CommentEdge {
 }
 
 """A connection to a list of Comment items."""
-type CommentConnection {
+type CommentConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -282,7 +297,7 @@ type CommentConnection {
 }
 
 """An edge in a Reaction connection."""
-type ReactionEdge {
+type ReactionEdge implements Edge {
   """The Reaction at the end of the edge."""
   node: Reaction!
 
@@ -291,7 +306,7 @@ type ReactionEdge {
 }
 
 """A connection to a list of Reaction items."""
-type ReactionConnection {
+type ReactionConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -303,7 +318,7 @@ type ReactionConnection {
 }
 
 """An edge in a Follow connection."""
-type FollowEdge {
+type FollowEdge implements Edge {
   """The Follow at the end of the edge."""
   node: Follow!
 
@@ -312,7 +327,7 @@ type FollowEdge {
 }
 
 """A connection to a list of Follow items."""
-type FollowConnection {
+type FollowConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -324,7 +339,7 @@ type FollowConnection {
 }
 
 """An edge in a Tag connection."""
-type TagEdge {
+type TagEdge implements Edge {
   """The Tag at the end of the edge."""
   node: Tag!
 
@@ -333,7 +348,7 @@ type TagEdge {
 }
 
 """A connection to a list of Tag items."""
-type TagConnection {
+type TagConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -345,7 +360,7 @@ type TagConnection {
 }
 
 """An edge in a TagsOnPosts connection."""
-type TagsOnPostsEdge {
+type TagsOnPostsEdge implements Edge {
   """The TagsOnPosts at the end of the edge."""
   node: TagsOnPosts!
 
@@ -354,7 +369,7 @@ type TagsOnPostsEdge {
 }
 
 """A connection to a list of TagsOnPosts items."""
-type TagsOnPostsConnection {
+type TagsOnPostsConnection implements Connection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
@@ -621,9 +636,6 @@ input MemberQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -647,9 +659,6 @@ input UserProfileQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Post with optional filter, sort, and pagination"""
@@ -671,9 +680,6 @@ input PostQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Comment with optional filter, sort, and pagination"""
@@ -695,9 +701,6 @@ input CommentQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -715,9 +718,6 @@ input ReactionQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Follow with optional filter, sort, and pagination"""
@@ -739,9 +739,6 @@ input FollowQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """Query arguments for Tag with optional filter, sort, and pagination"""
@@ -763,9 +760,6 @@ input TagQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }
 
 """
@@ -789,7 +783,4 @@ input TagsOnPostsQueryArgs {
 
   """Cursor for pagination before this item"""
   before: String
-
-  """Return connection format with edges and pageInfo"""
-  connection: Boolean
 }

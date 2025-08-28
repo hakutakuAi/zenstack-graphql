@@ -7,6 +7,8 @@ import { DataModel } from '@zenstackhq/sdk/ast'
 import { OutputStrategy, CommonTypeDefinition, SortFieldDefinition, FilterFieldDefinition } from './output-strategy'
 import { RelationField } from '@generators/unified/unified-relation-generator'
 import { COMMON_FILTER_TYPES, createGraphQLFilterFields } from '@utils/filter-type-definitions'
+import { ModelHelper, HelperGenerationContext } from '@generators/unified/unified-helper-generator'
+import { GraphQLHelperStrategy } from './graphql-helper-strategy'
 
 export class GraphQLOutputStrategy implements OutputStrategy {
 	constructor(
@@ -335,10 +337,6 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 			type: 'String',
 			description: 'Cursor for pagination before this item',
 		}
-		fields.connection = {
-			type: 'Boolean',
-			description: 'Return connection format with edges and pageInfo',
-		}
 
 		try {
 			const queryArgsInputTC = this.schemaComposer.createInputTC({
@@ -370,5 +368,10 @@ export class GraphQLOutputStrategy implements OutputStrategy {
 		const generatedTypes = this.registry.getGeneratedTypes()
 		const typeNames = generatedTypes.map((type) => type.name)
 		return filter ? typeNames.filter(filter) : typeNames
+	}
+
+	generateHelpers(helpers: ModelHelper[], context: HelperGenerationContext): string[] {
+		const helperStrategy = new GraphQLHelperStrategy()
+		return helperStrategy.generateHelpers(helpers, context)
 	}
 }

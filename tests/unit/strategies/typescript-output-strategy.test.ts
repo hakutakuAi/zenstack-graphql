@@ -549,7 +549,6 @@ describe('TypeScript Output Strategy', () => {
 				{ name: 'after', type: 'String', nullable: true },
 				{ name: 'last', type: 'Int', nullable: true },
 				{ name: 'before', type: 'String', nullable: true },
-				{ name: 'connection', type: 'Boolean', nullable: true },
 			])
 		})
 
@@ -577,7 +576,6 @@ describe('TypeScript Output Strategy', () => {
 				{ name: 'after', type: 'String', nullable: true },
 				{ name: 'last', type: 'Int', nullable: true },
 				{ name: 'before', type: 'String', nullable: true },
-				{ name: 'connection', type: 'Boolean', nullable: true },
 			])
 		})
 

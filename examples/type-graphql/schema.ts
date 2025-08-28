@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType } from "type-graphql";
+import { ObjectType, Field, ID, Int, Float, registerEnumType, InputType, ArgsType, InterfaceType } from "type-graphql";
 import { GraphQLJSON } from "graphql-scalars";
 import "reflect-metadata";
 
@@ -132,16 +132,30 @@ export class PageInfo {
     endCursor?: string | undefined;
 }
 
-@ObjectType()
-export class UserEdge {
+@InterfaceType({ description: 'Base interface for all edge types in connections', autoRegisterImplementations: false })
+export abstract class Edge {
+    @Field(() => String, { description: 'A cursor for use in pagination' })
+    cursor!: string;
+}
+
+@InterfaceType({ description: 'Base interface for all connection types', autoRegisterImplementations: false })
+export abstract class Connection {
+    @Field(() => PageInfo, { description: 'Information to aid in pagination' })
+    pageInfo!: PageInfo;
+    @Field(() => Int, { description: 'The total count of items in the connection' })
+    totalCount!: number;
+}
+
+@ObjectType({ implements: Edge })
+export class UserEdge implements Edge {
     @Field(() => User)
     node!: User;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class UserConnection {
+@ObjectType({ implements: Connection })
+export class UserConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [UserEdge])
@@ -150,16 +164,16 @@ export class UserConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class PostEdge {
+@ObjectType({ implements: Edge })
+export class PostEdge implements Edge {
     @Field(() => Post)
     node!: Post;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class PostConnection {
+@ObjectType({ implements: Connection })
+export class PostConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [PostEdge])
@@ -168,16 +182,16 @@ export class PostConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class CategoryEdge {
+@ObjectType({ implements: Edge })
+export class CategoryEdge implements Edge {
     @Field(() => Category)
     node!: Category;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class CategoryConnection {
+@ObjectType({ implements: Connection })
+export class CategoryConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [CategoryEdge])
@@ -186,16 +200,16 @@ export class CategoryConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class PostCategoryEdge {
+@ObjectType({ implements: Edge })
+export class PostCategoryEdge implements Edge {
     @Field(() => PostCategory)
     node!: PostCategory;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class PostCategoryConnection {
+@ObjectType({ implements: Connection })
+export class PostCategoryConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [PostCategoryEdge])
@@ -204,16 +218,16 @@ export class PostCategoryConnection {
     totalCount!: number;
 }
 
-@ObjectType()
-export class CommentEdge {
+@ObjectType({ implements: Edge })
+export class CommentEdge implements Edge {
     @Field(() => Comment)
     node!: Comment;
     @Field(() => String)
     cursor!: string;
 }
 
-@ObjectType()
-export class CommentConnection {
+@ObjectType({ implements: Connection })
+export class CommentConnection implements Connection {
     @Field(() => PageInfo)
     pageInfo!: PageInfo;
     @Field(() => [CommentEdge])
@@ -522,8 +536,6 @@ export class UserQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -540,8 +552,6 @@ export class PostQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -558,8 +568,6 @@ export class CategoryQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -572,8 +580,6 @@ export class PostCategoryQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }
 
 @InputType()
@@ -590,6 +596,4 @@ export class CommentQueryArgs {
     last?: number | undefined;
     @Field(() => String, { nullable: true })
     before?: string | undefined;
-    @Field(() => Boolean, { nullable: true })
-    connection?: boolean | undefined;
 }

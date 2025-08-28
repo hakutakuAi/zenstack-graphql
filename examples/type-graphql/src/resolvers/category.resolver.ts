@@ -1,35 +1,34 @@
-import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int } from 'type-graphql'
-import { Category, PostCategory, CategoryFilterInput, CategorySortInput, CategoryConnection } from '../../schema'
-import { BaseResolver } from './base-resolver'
+import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
+import type { GraphQLResolveInfo } from 'graphql'
+import { Category, PostCategory, CategoryFilterInput, CategorySortInput, CategoryConnection, CategoryQueryArgs } from '../../schema'
 import type { Context } from './types'
+import { ConnectionBuilder, POSTCATEGORY_INCLUDES } from '../../schema-helpers'
 
 @Resolver(() => Category)
-export class CategoryResolver extends BaseResolver {
-	private readonly ALLOWED_FILTER_FIELDS = ['name']
-	private readonly ALLOWED_SORT_FIELDS: string[] = []
-
+export class CategoryResolver {
 	@Query(() => CategoryConnection)
 	async categories(
-		@Arg('filter', () => CategoryFilterInput, { nullable: true }) filter: CategoryFilterInput | null,
-		@Arg('sort', () => CategorySortInput, { nullable: true }) sort: CategorySortInput | null,
-		@Arg('first', () => Int, { nullable: true }) first: number | null,
-		@Arg('after', () => String, { nullable: true }) after: string | null,
-		@Arg('last', () => Int, { nullable: true }) last: number | null,
-		@Arg('before', () => String, { nullable: true }) before: string | null,
+		@Arg('filter', () => CategoryFilterInput, { nullable: true }) filter: CategoryFilterInput | undefined,
+		@Arg('sort', () => CategorySortInput, { nullable: true }) sort: CategorySortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<CategoryConnection> {
-		return this.buildRelayConnection<Category>(
-			prisma,
-			'category',
-			{ filter, sort, first, after, last, before },
-			this.ALLOWED_FILTER_FIELDS,
-			this.ALLOWED_SORT_FIELDS,
-		)
+		const args: CategoryQueryArgs = { filter, sort, first, after, last, before }
+		const config = ConnectionBuilder.buildCategoryConnectionConfig(args, info)
+
+		const items = await prisma.category.findMany(config.findManyOptions)
+		const totalCount = await prisma.category.count(config.countOptions)
+
+		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as CategoryConnection
 	}
 
 	@Query(() => Category, { nullable: true })
 	async category(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Category | null> {
-		return this.findUnique<Category>(prisma, 'category', { id })
+		return await prisma.category.findUnique({ where: { id } }) as Category | null
 	}
 
 	@Mutation(() => Category)
@@ -38,11 +37,11 @@ export class CategoryResolver extends BaseResolver {
 		@Arg('description', () => String, { nullable: true }) description: string | undefined,
 		@Ctx() { prisma }: Context,
 	): Promise<Category> {
-		return this.create<Category>(prisma, 'category', { name, description })
+		return await prisma.category.create({ data: { name, description } }) as Category
 	}
 
 	@FieldResolver(() => [PostCategory])
 	async posts(@Root() category: Category, @Ctx() { prisma }: Context): Promise<PostCategory[]> {
-		return this.findMany<PostCategory>(prisma, 'categoryOnPost', { where: { categoryId: category.id } })
+		return await prisma.categoryOnPost.findMany({ where: { categoryId: category.id }, include: POSTCATEGORY_INCLUDES }) as PostCategory[]
 	}
 }
