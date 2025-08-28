@@ -350,7 +350,6 @@ describe('GraphQLHelperStrategy', () => {
 		})
 
 		it('should have access to all parent class methods', () => {
-
 			expect(typeof strategy.generateHelpers).toBe('function')
 
 			expect(strategy instanceof TypeScriptHelperStrategy).toBe(true)
