@@ -13,7 +13,6 @@ import {
 	UnifiedRelationGenerator,
 	UnifiedEnumGenerator,
 	UnifiedScalarGenerator,
-	UnifiedHelperGenerator,
 } from '@generators/unified'
 import { UnifiedGeneratorContext } from '@generators/strategies'
 import { SchemaComposer } from 'graphql-compose'
@@ -34,7 +33,6 @@ interface TypeScriptGenerators {
 	relationGenerator: UnifiedRelationGenerator
 	inputGenerator: UnifiedInputGenerator
 	queryArgsGenerator?: UnifiedQueryArgsGenerator
-	helperGenerator?: UnifiedHelperGenerator
 }
 
 interface GraphQLGenerators {
@@ -47,7 +45,6 @@ interface GraphQLGenerators {
 	relationGenerator?: UnifiedRelationGenerator
 	inputGenerator?: UnifiedInputGenerator
 	queryArgsGenerator?: UnifiedQueryArgsGenerator
-	helperGenerator?: UnifiedHelperGenerator
 }
 
 export class GeneratorOrchestrator {
@@ -70,12 +67,8 @@ export class GeneratorOrchestrator {
 		const generators = this.createTypeScriptGeneratorsWithContext(unifiedContext)
 		const results = await this.executeGenerators(generators)
 
-		const helperResult = results.find((r) => r.type === GenerationType.HELPER)
-		const helperCode = helperResult && helperResult.items.length > 0 ? helperResult.items[0] : undefined
-
 		return {
 			code: unifiedContext.outputStrategy.getGeneratedCode?.() || '',
-			helperCode,
 			results,
 			stats: StatsCollector.collect(results, startTime),
 			outputFormat: this.outputFormat,
@@ -93,7 +86,6 @@ export class GeneratorOrchestrator {
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
 			queryArgsGenerator: new UnifiedQueryArgsGenerator(unifiedContext),
-			helperGenerator: new UnifiedHelperGenerator(unifiedContext),
 		}
 	}
 
@@ -112,12 +104,8 @@ export class GeneratorOrchestrator {
 			console.warn('Schema validation warnings:', warnings)
 		}
 
-		const helperResult = results.find((r) => r.type === GenerationType.HELPER)
-		const helperCode = helperResult && helperResult.items.length > 0 ? helperResult.items[0] : undefined
-
 		return {
 			sdl: graphqlContext.registry.generateSDL(),
-			helperCode,
 			results,
 			stats: StatsCollector.collect(results, startTime),
 			outputFormat: this.outputFormat,
@@ -259,14 +247,6 @@ export class GeneratorOrchestrator {
 			})
 		}
 
-		if (generators.helperGenerator && this.context.options.generateHelpers) {
-			const helperResult = generators.helperGenerator.generate()
-			results.push({
-				items: helperResult,
-				count: helperResult.length,
-				type: GenerationType.HELPER,
-			})
-		}
 
 		return results
 	}

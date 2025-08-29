@@ -4,7 +4,6 @@ import { NormalizedOptions } from '@utils/config'
 import { TypeFormatter } from '@utils/schema/type-formatter'
 import { SchemaProcessor } from '@utils/schema/schema-processor'
 import { UnifiedTypeMapper } from '@utils/type-mapping/unified-type-mapper'
-import type { ModelHelper, HelperGenerationContext } from '@generators/unified/unified-helper-generator'
 
 export interface OutputStrategy {
 	createCommonTypes?(types: CommonTypeDefinition[]): void
@@ -45,7 +44,6 @@ export interface OutputStrategy {
 
 	getGeneratedCode?(): string
 
-	generateHelpers?(helpers: ModelHelper[], context: HelperGenerationContext): string[]
 }
 
 export interface CommonTypeDefinition {

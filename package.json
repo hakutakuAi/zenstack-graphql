@@ -4,6 +4,18 @@
 	"description": "ZenStack plugin for generating GraphQL schemas",
 	"main": "dist/index.js",
 	"module": "index.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js",
+			"require": "./index.js"
+		},
+		"./helpers": {
+			"types": "./helpers/index.d.ts",
+			"import": "./helpers/index.js",
+			"require": "./helpers/index.js"
+		}
+	},
 	"homepage": "https://github.com/hakutakuAi/zenstack-graphql",
 	"repository": {
 		"type": "git",

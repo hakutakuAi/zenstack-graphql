@@ -1,11 +1,10 @@
 {
 	"compilerOptions": {
 		"lib": ["ESNext"],
-		"target": "es2021",
+		"target": "esnext",
 		"module": "CommonJS",
 		"moduleDetection": "force",
 		"allowJs": true,
-		"moduleResolution": "node",
 		"allowImportingTsExtensions": false,
 		"verbatimModuleSyntax": false,
 		"noEmit": true,

@@ -1,8 +1,14 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import { Post, User, Comment, PostCategory, PostFilterInput, PostSortInput, PostConnection, PostQueryArgs } from '../../schema'
+import { Post, User, Comment, PostCategory, PostFilterInput, PostSortInput, PostConnection } from '../../schema'
 import type { Context } from './types'
-import { ConnectionBuilder, USER_INCLUDES, COMMENT_INCLUDES, POSTCATEGORY_INCLUDES, POST_INCLUDES } from '../../schema-helpers'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
+import {
+	POST_WITH_ALL_RELATIONS_SELECT,
+	USER_WITH_ALL_RELATIONS_SELECT,
+	COMMENT_WITH_RELATIONS_SELECT,
+	POST_CATEGORY_WITH_RELATIONS_SELECT,
+} from '../select-definitions'
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -17,18 +23,28 @@ export class PostResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<PostConnection> {
-		const args: PostQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildPostConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(POST_WITH_ALL_RELATIONS_SELECT, info)
 
-		const items = await prisma.post.findMany(config.findManyOptions)
-		const totalCount = await prisma.post.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as PostConnection
+		const [items, totalCount] = await Promise.all([prisma.post.findMany(config.findMany), prisma.post.count(config.count)])
+
+		return config.toConnection(items, totalCount) as PostConnection
 	}
 
 	@Query(() => Post, { nullable: true })
 	async post(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return await prisma.post.findUnique({ where: { id }, include: POST_INCLUDES }) as Post | null
+		return (await prisma.post.findUnique({ where: { id }, select: POST_WITH_ALL_RELATIONS_SELECT })) as Post | null
 	}
 
 	@Mutation(() => Post)
@@ -39,29 +55,29 @@ export class PostResolver {
 		@Arg('published', () => Boolean, { defaultValue: false }) published: boolean = false,
 		@Ctx() { prisma }: Context,
 	): Promise<Post> {
-		return await prisma.post.create({ data: { title, content, published, authorId }, include: POST_INCLUDES }) as Post
+		return (await prisma.post.create({ data: { title, content, published, authorId }, select: POST_WITH_ALL_RELATIONS_SELECT })) as Post
 	}
 
 	@Mutation(() => Post, { nullable: true })
 	async publishPost(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return await prisma.post.update({ where: { id }, data: { published: true }, include: POST_INCLUDES }) as Post | null
+		return (await prisma.post.update({ where: { id }, data: { published: true }, select: POST_WITH_ALL_RELATIONS_SELECT })) as Post | null
 	}
 
 	@FieldResolver(() => User)
 	async author(@Root() post: Post, @Ctx() { prisma }: Context): Promise<User | null> {
-		return await prisma.user.findUnique({ where: { id: post.authorId }, include: USER_INCLUDES }) as User | null
+		return (await prisma.user.findUnique({ where: { id: post.authorId }, select: USER_WITH_ALL_RELATIONS_SELECT })) as User | null
 	}
 
 	@FieldResolver(() => [PostCategory])
 	async categories(@Root() post: Post, @Ctx() { prisma }: Context): Promise<PostCategory[]> {
-		return await prisma.categoryOnPost.findMany({ where: { postId: post.id }, include: POSTCATEGORY_INCLUDES }) as PostCategory[]
+		return (await prisma.categoryOnPost.findMany({ where: { postId: post.id }, select: POST_CATEGORY_WITH_RELATIONS_SELECT })) as PostCategory[]
 	}
 
 	@FieldResolver(() => [Comment])
 	async comments(@Root() post: Post, @Ctx() { prisma }: Context): Promise<Comment[]> {
-		return await prisma.comment.findMany({
+		return (await prisma.comment.findMany({
 			where: { postId: post.id },
-			include: COMMENT_INCLUDES,
-		}) as Comment[]
+			select: COMMENT_WITH_RELATIONS_SELECT,
+		})) as Comment[]
 	}
 }

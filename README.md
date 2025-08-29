@@ -163,6 +163,101 @@ Default scalar mappings:
 
 > You can see a example on [custom-naming](examples/custom-naming)
 
+## Helper Utilities
+
+The plugin provides powerful helper utilities to make your resolver implementation easier and more efficient:
+
+### Available Helpers
+
+```typescript
+import {
+	buildConnection, // Create Relay-compatible connections
+	buildFilter, // Process filter input arguments
+	buildSort, // Process sort input arguments
+	buildSelect, // Create Prisma select objects based on GraphQL fields
+	QueryBuilder, // Comprehensive query builder
+} from '@hakutakuai/zenstack-graphql/helpers'
+```
+
+### Select Definitions Pattern
+
+For efficient and type-safe resolvers, you can define reusable select objects:
+
+```typescript
+// src/select-definitions.ts
+import type { Prisma } from '@prisma/client'
+
+// Base select objects for each model
+export const USER_BASE_SELECT = {
+	id: true,
+	name: true,
+	email: true,
+} satisfies Prisma.UserSelect
+
+// Select objects with relations
+export const USER_WITH_POSTS_SELECT = {
+	...USER_BASE_SELECT,
+	posts: {
+		select: POST_BASE_SELECT,
+	},
+} satisfies Prisma.UserSelect
+
+// Type definitions for select return types
+export type UserWithPosts = Prisma.UserGetPayload<{
+	select: typeof USER_WITH_POSTS_SELECT
+}>
+```
+
+### Complete Example Flow
+
+Here's how to use the helpers in your resolver:
+
+```typescript
+import { Resolver, Query, Arg, Info } from 'type-graphql'
+import { GraphQLResolveInfo } from 'graphql'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
+import { USER_WITH_POSTS_SELECT } from '../select-definitions'
+
+@Resolver()
+export class UserResolver {
+	@Query(() => UserConnection)
+	async users(
+		// Pagination arguments
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		// Filter and sort arguments
+		@Arg('filter', () => UserFilterInput, { nullable: true }) filter: UserFilterInput | undefined,
+		@Arg('sort', () => UserSortInput, { nullable: true }) sort: UserSortInput | undefined,
+		// GraphQL info for field selection
+		@Info() info: GraphQLResolveInfo,
+		@Ctx() { prisma }: Context,
+	): Promise<UserConnection> {
+		// Build Prisma arguments
+		const where = buildFilter(filter)
+		const orderBy = buildSort(sort)
+		const select = buildSelect(USER_WITH_POSTS_SELECT, info)
+
+		// Create connection config
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
+
+		// Execute query and build connection response
+		const [items, totalCount] = await Promise.all([prisma.user.findMany(config.findMany), prisma.user.count(config.count)])
+
+		return config.toConnection(items, totalCount) as UserConnection
+	}
+}
+```
+
 ## How It Works
 
 The plugin transforms your ZModel schema into a GraphQL schema through these steps:
@@ -173,6 +268,7 @@ The plugin transforms your ZModel schema into a GraphQL schema through these ste
 4. **Connection Generation**: Builds Relay-compatible pagination support
 5. **Schema Assembly**: Puts everything together into a complete GraphQL schema
 6. **Output**: Writes the final schema to your specified location
+7. **Helper Generation**: Provides utility functions for working with the generated schema
 
 > All this happens automatically when you run `zenstack generate`, you can see more about on [Zenstack Plugin System](https://zenstack.dev/docs/the-complete-guide/part2/)!
 
@@ -397,6 +493,257 @@ export class Post {
 ```
 
 These classes are ready to use with TypeGraphQL resolvers and provide full type safety for your GraphQL API.
+
+### Resolver Implementation with Helpers
+
+With the generated classes, you can create efficient resolvers using the provided helper utilities:
+
+```typescript
+import { Resolver, Query, Mutation, Arg, ID, Info, Ctx } from 'type-graphql'
+import { GraphQLResolveInfo } from 'graphql'
+import { User, UserConnection, UserFilterInput, UserSortInput } from '../schema'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
+import { USER_WITH_POSTS_SELECT } from '../select-definitions'
+
+@Resolver(() => User)
+export class UserResolver {
+	// Query with pagination, filtering, and sorting
+	@Query(() => UserConnection)
+	async users(
+		@Arg('filter', () => UserFilterInput, { nullable: true }) filter: UserFilterInput | undefined,
+		@Arg('sort', () => UserSortInput, { nullable: true }) sort: UserSortInput | undefined,
+		@Arg('first', () => Int, { nullable: true }) first: number | undefined,
+		@Arg('after', () => String, { nullable: true }) after: string | undefined,
+		@Arg('last', () => Int, { nullable: true }) last: number | undefined,
+		@Arg('before', () => String, { nullable: true }) before: string | undefined,
+		@Info() info: GraphQLResolveInfo,
+		@Ctx() { prisma }: Context,
+	): Promise<UserConnection> {
+		// Convert GraphQL filter to Prisma where
+		const where = buildFilter(filter as any)
+
+		// Convert GraphQL sort to Prisma orderBy
+		const orderBy = buildSort(sort as any)
+
+		// Get Prisma select based on requested GraphQL fields
+		const select = buildSelect(USER_WITH_POSTS_SELECT, info)
+
+		// Build connection config for pagination
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
+
+		// Execute the query with pagination
+		const [items, totalCount] = await Promise.all([prisma.user.findMany(config.findMany), prisma.user.count(config.count)])
+
+		// Convert results to a Connection format
+		return config.toConnection(items, totalCount) as UserConnection
+	}
+}
+```
+
+## Helper Utilities Reference
+
+Here's a comprehensive reference of the helper functions:
+
+### `buildConnection`
+
+Creates a Relay-compatible connection for pagination with cursor support.
+
+```typescript
+const config = buildConnection({
+  // Pagination params
+  first?: number;          // Number of items to fetch
+  after?: string;          // Cursor to start after
+  last?: number;           // Number of items from the end
+  before?: string;         // Cursor to end before
+
+  // Optional Prisma params
+  where?: any;             // Prisma where condition
+  orderBy?: any;           // Prisma ordering
+  select?: any;            // Prisma field selection
+  include?: any;           // Prisma include relations
+
+  // Options
+  defaultPageSize?: number;  // Default page size
+  maxPageSize?: number;      // Maximum allowed page size
+})
+
+// Returns an object with:
+// - findMany: Prisma args for fetching items
+// - count: Prisma args for counting total items
+// - toConnection: Function to convert results to a Connection
+```
+
+### `buildFilter`
+
+Converts GraphQL filter input to Prisma where conditions.
+
+```typescript
+const where = buildFilter(filterInput)
+```
+
+### `buildSort`
+
+Converts GraphQL sort input to Prisma orderBy.
+
+```typescript
+const orderBy = buildSort(sortInput)
+```
+
+### `buildSelect`
+
+Creates a Prisma select object based on requested GraphQL fields.
+
+```typescript
+const select = buildSelect(baseSelect, graphqlInfo)
+```
+
+### `QueryBuilder`
+
+A comprehensive builder for constructing complex Prisma queries.
+
+```typescript
+import { QueryBuilder } from '@hakutakuai/zenstack-graphql/helpers'
+
+const query = new QueryBuilder().filter(filterInput).sort(sortInput).paginate({ first, after, last, before }).select(baseSelect, graphqlInfo).build()
+
+const results = await prisma.model.findMany(query)
+```
+
+## Complete Server Setup Example
+
+Below is a complete example of setting up a GraphQL server using the generated TypeGraphQL classes and helpers:
+
+```typescript
+// src/server.ts
+import 'reflect-metadata'
+import { createYoga } from 'graphql-yoga'
+import { buildSchema } from 'type-graphql'
+import { createServer } from 'node:http'
+import { PrismaClient } from '@prisma/client'
+import { resolvers } from './resolvers'
+
+async function main() {
+	// Create Prisma client
+	const prisma = new PrismaClient()
+
+	// Create TypeGraphQL schema
+	const schema = await buildSchema({
+		resolvers,
+		validate: false,
+		emitSchemaFile: './generated-schema.graphql',
+	})
+
+	// Create Yoga server
+	const yoga = createYoga({
+		schema,
+		context: { prisma }, // Make Prisma available in resolvers
+	})
+
+	// Create HTTP server
+	const server = createServer(yoga)
+
+	// Start server
+	server.listen(4000, () => {
+		console.log('Server is running on http://localhost:4000/graphql')
+	})
+}
+
+main().catch(console.error)
+```
+
+```typescript
+// src/resolvers/index.ts
+import { UserResolver } from './user.resolver'
+import { PostResolver } from './post.resolver'
+// Import other resolvers...
+
+// Export all resolvers for TypeGraphQL schema building
+export const resolvers = [
+	UserResolver,
+	PostResolver,
+	// Add other resolvers...
+] as const
+```
+
+## Best Practices
+
+Here are some best practices for using the ZenStack GraphQL plugin:
+
+### 1. Organize Select Definitions
+
+Keep your select definitions in a separate file and organize them by model. This makes it easier to reuse select objects across resolvers.
+
+```typescript
+// src/select-definitions.ts
+import type { Prisma } from '@prisma/client'
+
+// Group by model
+export const USER_BASE_SELECT = {...}
+export const USER_WITH_POSTS_SELECT = {...}
+
+export const POST_BASE_SELECT = {...}
+export const POST_WITH_COMMENTS_SELECT = {...}
+```
+
+### 2. Use TypedPayloads for Return Types
+
+Define types for your select objects to ensure type safety in your resolvers:
+
+```typescript
+export type UserWithPosts = Prisma.UserGetPayload<{
+  select: typeof USER_WITH_POSTS_SELECT
+}>
+
+// In your resolver:
+async function getUser(): Promise<UserWithPosts> {
+  return prisma.user.findUnique({...}) as UserWithPosts
+}
+```
+
+### 3. Combine Helpers for Maximum Efficiency
+
+Combine multiple helpers to handle complex query requirements:
+
+```typescript
+const where = buildFilter(filter)
+const orderBy = buildSort(sort)
+const select = buildSelect(baseSelect, info)
+const config = buildConnection({ where, orderBy, select, first, after })
+```
+
+### 4. Use QueryBuilder for Complex Queries
+
+For more complex queries, use the QueryBuilder to construct your Prisma arguments:
+
+```typescript
+const query = new QueryBuilder().filter(filter).sort(sort).paginate({ first, after }).select(baseSelect, info).build()
+
+const results = await prisma.model.findMany(query)
+```
+
+### 5. Handle Errors Gracefully
+
+Add error handling to your resolvers to provide meaningful feedback:
+
+```typescript
+@Query(() => UserConnection)
+async users(@Ctx() ctx: Context): Promise<UserConnection> {
+  try {
+    // Your implementation
+  } catch (error) {
+    console.error('Failed to fetch users:', error)
+    throw new Error('Failed to fetch users. Please try again later.')
+  }
+}
+```
 
 > Check the [examples](./examples/) directory for more sample use cases!
 

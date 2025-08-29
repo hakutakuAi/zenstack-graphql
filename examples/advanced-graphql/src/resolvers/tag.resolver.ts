@@ -1,14 +1,18 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID, Info, Int, FieldResolver, Root } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import { Tag, TagCreateInput, TagUpdateInput, TagQueryArgs, TagConnection, TagFilterInput, TagSortInput, ProductTag } from '../../schema'
-import { ConnectionBuilder } from '../../schema-helpers'
+import { Tag, TagCreateInput, TagUpdateInput, TagConnection, TagFilterInput, TagSortInput, ProductTag } from '../../schema'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
 import type { Context } from './types'
+import { TAG_WITH_PRODUCTS_SELECT, PRODUCT_TAG_WITH_RELATIONS_SELECT } from '../select-definitions'
 
 @Resolver(() => Tag)
 export class TagResolver {
 	@Query(() => Tag, { nullable: true })
 	async tag(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Tag | null> {
-		return (await ctx.prisma.tag.findUnique({ where: { id } })) as Tag | null
+		return (await ctx.prisma.tag.findUnique({
+			where: { id },
+			select: TAG_WITH_PRODUCTS_SELECT,
+		})) as Tag | null
 	}
 
 	@Query(() => TagConnection)
@@ -22,23 +26,40 @@ export class TagResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() ctx: Context,
 	): Promise<TagConnection> {
-		const args: TagQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildTagConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(TAG_WITH_PRODUCTS_SELECT, info)
 
-		const items = await ctx.prisma.tag.findMany(config.findManyOptions)
-		const totalCount = await ctx.prisma.tag.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as TagConnection
+		const [items, totalCount] = await Promise.all([ctx.prisma.tag.findMany(config.findMany), ctx.prisma.tag.count(config.count)])
+
+		return config.toConnection(items, totalCount) as TagConnection
 	}
 
 	@Mutation(() => Tag)
 	async createTag(@Arg('input', () => TagCreateInput) input: TagCreateInput, @Ctx() ctx: Context): Promise<Tag> {
-		return (await ctx.prisma.tag.create({ data: input })) as Tag
+		return (await ctx.prisma.tag.create({
+			data: input,
+			select: TAG_WITH_PRODUCTS_SELECT,
+		})) as Tag
 	}
 
 	@Mutation(() => Tag)
 	async updateTag(@Arg('id', () => ID) id: string, @Arg('input', () => TagUpdateInput) input: TagUpdateInput, @Ctx() ctx: Context): Promise<Tag> {
-		return (await ctx.prisma.tag.update({ where: { id }, data: input })) as Tag
+		return (await ctx.prisma.tag.update({
+			where: { id },
+			data: input,
+			select: TAG_WITH_PRODUCTS_SELECT,
+		})) as Tag
 	}
 
 	@Mutation(() => Boolean)
@@ -61,6 +82,9 @@ export class TagResolver {
 
 	@FieldResolver(() => [ProductTag])
 	async products(@Root() tag: Tag, @Ctx() ctx: Context): Promise<ProductTag[]> {
-		return (await ctx.prisma.productTag.findMany({ where: { tagId: tag.id } })) as ProductTag[]
+		return (await ctx.prisma.productTag.findMany({
+			where: { tagId: tag.id },
+			select: PRODUCT_TAG_WITH_RELATIONS_SELECT,
+		})) as ProductTag[]
 	}
 }

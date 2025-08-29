@@ -11,6 +11,7 @@
 		"setup": "bun install && bun run generate && bun run db:migrate"
 	},
 	"dependencies": {
+		"@hakutakuai/zenstack-graphql": "file:../../dist",
 		"@prisma/client": "^6.14.0",
 		"@zenstackhq/runtime": "^2.18.1",
 		"graphql": "^16.11.0",

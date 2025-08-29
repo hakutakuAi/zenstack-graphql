@@ -363,10 +363,10 @@ describe('GeneratorOrchestrator', () => {
 		})
 	})
 
-	describe('Helper Generation Tests', () => {
+	describe('Helper Generation Tests - Helpers Now External Utilities', () => {
 		beforeEach(() => {
 			baseContext = TestFixtures.createContext({
-				generateHelpers: true,
+				generateHelpers: false,
 				generateFilters: true,
 				generateSorts: true,
 				connectionTypes: true,
@@ -405,117 +405,22 @@ describe('GeneratorOrchestrator', () => {
 			expect(result.code).toBeUndefined()
 		})
 
-		it('should generate helpers for TypeGraphQL output format', async () => {
+		it('should NOT generate helpers for TypeGraphQL output format anymore', async () => {
 			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
 			const result = await orchestrator.generate()
 
 			expect(result).toBeDefined()
 			expect(result.outputFormat).toBe(OutputFormat.TYPE_GRAPHQL)
 
-			const helperResult = result.results.find((r) => r.type === GenerationType.HELPER)
-			expect(helperResult).toBeDefined()
-			expect(helperResult!.items).toBeDefined()
-			expect(helperResult!.items.length).toBeGreaterThan(0)
-
-			expect(result.helperCode).toBeDefined()
-			expect(typeof result.helperCode).toBe('string')
-			expect(result.helperCode!.length).toBeGreaterThan(0)
-
-			expect(result.code).toBeDefined()
-			expect(typeof result.code).toBe('string')
-			expect(result.sdl).toBeUndefined()
-		})
-
-		it('should respect generateHelpers flag when false', async () => {
-			const contextWithoutHelpers = TestFixtures.createContext({
-				...baseContext.options,
-				generateHelpers: false,
-				models: baseContext.models,
-			})
-			orchestrator = new GeneratorOrchestrator(contextWithoutHelpers, OutputFormat.TYPE_GRAPHQL)
-
-			const result = await orchestrator.generate()
-
-			expect(result).toBeDefined()
-
+			// Helpers are no longer generated - they are now external utilities
 			const helperResult = result.results.find((r) => r.type === GenerationType.HELPER)
 			expect(helperResult).toBeUndefined()
 
 			expect(result.helperCode).toBeUndefined()
-		})
 
-		it('should generate helper content with connection builders', async () => {
-			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
-			const result = await orchestrator.generate()
-
-			expect(result.helperCode).toBeDefined()
-			const helperCode = result.helperCode!
-
-			expect(helperCode).toContain('ConnectionBuilder')
-			expect(helperCode).toContain('buildUserConnectionConfig')
-			expect(helperCode).toContain('buildPostConnectionConfig')
-
-			expect(helperCode).toContain('FilterBuilder')
-
-			expect(helperCode).toContain('SortBuilder')
-
-			expect(helperCode).toContain('FieldSelection')
-
-			expect(helperCode).toContain('USER_INCLUDES')
-			expect(helperCode).toContain('POST_INCLUDES')
-		})
-
-		it('should generate helper content with correct imports', async () => {
-			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
-			const result = await orchestrator.generate()
-
-			expect(result.helperCode).toBeDefined()
-			const helperCode = result.helperCode!
-
-			expect(helperCode).toContain("import type { GraphQLResolveInfo } from 'graphql'")
-
-			expect(helperCode).toContain('import {')
-			expect(helperCode).toContain("} from './schema'")
-
-			expect(helperCode).toContain('User')
-			expect(helperCode).toContain('UserQueryArgs')
-			expect(helperCode).toContain('UserConnection')
-			expect(helperCode).toContain('Post')
-			expect(helperCode).toContain('PostQueryArgs')
-			expect(helperCode).toContain('PostConnection')
-		})
-
-		it('should include helper interfaces in generated code', async () => {
-			orchestrator = new GeneratorOrchestrator(baseContext, OutputFormat.TYPE_GRAPHQL)
-			const result = await orchestrator.generate()
-
-			expect(result.helperCode).toBeDefined()
-			const helperCode = result.helperCode!
-
-			expect(helperCode).toContain('export interface PaginationArgs')
-			expect(helperCode).toContain('export interface ConnectionResult<T>')
-			expect(helperCode).toContain('export interface ConnectionConfig')
-
-			expect(helperCode).toContain('first?: number')
-			expect(helperCode).toContain('after?: string')
-			expect(helperCode).toContain('last?: number')
-			expect(helperCode).toContain('before?: string')
-		})
-
-		it('should handle models without relations in helpers', async () => {
-			const contextWithoutRelations = TestFixtures.createContext({
-				generateHelpers: true,
-				models: [TestFixtures.createDataModel('SimpleUser', [TestFixtures.createField('id', 'String'), TestFixtures.createField('name', 'String')])],
-			})
-			orchestrator = new GeneratorOrchestrator(contextWithoutRelations, OutputFormat.TYPE_GRAPHQL)
-
-			const result = await orchestrator.generate()
-
-			expect(result.helperCode).toBeDefined()
-			const helperCode = result.helperCode!
-
-			expect(helperCode).toContain('buildSimpleUserConnectionConfig')
-			expect(helperCode).toContain('SIMPLEUSER_INCLUDES')
+			expect(result.code).toBeDefined()
+			expect(typeof result.code).toBe('string')
+			expect(result.sdl).toBeUndefined()
 		})
 
 		it('should maintain consistency between GraphQL and TypeGraphQL generations', async () => {
@@ -532,8 +437,9 @@ describe('GeneratorOrchestrator', () => {
 			expect(graphqlResult.stats.enumTypes).toBe(typeGraphQLResult.stats.enumTypes)
 			expect(graphqlResult.stats.scalarTypes).toBe(typeGraphQLResult.stats.scalarTypes)
 
+			// Both should NOT generate helpers anymore
 			expect(graphqlResult.helperCode).toBeUndefined()
-			expect(typeGraphQLResult.helperCode).toBeDefined()
+			expect(typeGraphQLResult.helperCode).toBeUndefined()
 		})
 	})
 })

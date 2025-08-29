@@ -1,8 +1,9 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import { User, Post, Comment, UserFilterInput, UserSortInput, UserConnection, UserQueryArgs } from '../../schema'
+import { User, Post, Comment, UserFilterInput, UserSortInput, UserConnection } from '../../schema'
 import type { Context } from './types'
-import { ConnectionBuilder, POST_INCLUDES, COMMENT_INCLUDES } from '../../schema-helpers'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
+import { USER_WITH_ALL_RELATIONS_SELECT, POST_WITH_ALL_RELATIONS_SELECT, COMMENT_WITH_RELATIONS_SELECT } from '../select-definitions'
 
 @Resolver(() => User)
 export class UserResolver {
@@ -17,18 +18,32 @@ export class UserResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<UserConnection> {
-		const args: UserQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildUserConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(USER_WITH_ALL_RELATIONS_SELECT, info)
 
-		const items = await prisma.user.findMany(config.findManyOptions)
-		const totalCount = await prisma.user.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as UserConnection
+		const [items, totalCount] = await Promise.all([prisma.user.findMany(config.findMany), prisma.user.count(config.count)])
+
+		return config.toConnection(items, totalCount) as UserConnection
 	}
 
 	@Query(() => User, { nullable: true })
 	async user(@Arg('id', () => String) id: string, @Ctx() { prisma }: Context): Promise<User | null> {
-		return await prisma.user.findUnique({ where: { id } }) as User | null
+		const user = await prisma.user.findUnique({
+			where: { id },
+			select: USER_WITH_ALL_RELATIONS_SELECT,
+		})
+		return user as User | null
 	}
 
 	@Mutation(() => User)
@@ -38,22 +53,28 @@ export class UserResolver {
 		@Arg('bio', () => String, { nullable: true }) bio: string | undefined,
 		@Ctx() { prisma }: Context,
 	): Promise<User> {
-		return await prisma.user.create({ data: { name, email, bio } }) as User
+		const user = await prisma.user.create({
+			data: { name, email, bio },
+			select: USER_WITH_ALL_RELATIONS_SELECT,
+		})
+		return user as User
 	}
 
 	@FieldResolver(() => [Post])
 	async posts(@Root() user: User, @Ctx() { prisma }: Context): Promise<Post[]> {
-		return await prisma.post.findMany({
+		const posts = await prisma.post.findMany({
 			where: { authorId: user.id },
-			include: POST_INCLUDES,
-		}) as Post[]
+			select: POST_WITH_ALL_RELATIONS_SELECT,
+		})
+		return posts as Post[]
 	}
 
 	@FieldResolver(() => [Comment])
 	async comments(@Root() user: User, @Ctx() { prisma }: Context): Promise<Comment[]> {
-		return await prisma.comment.findMany({
+		const comments = await prisma.comment.findMany({
 			where: { authorId: user.id },
-			include: COMMENT_INCLUDES,
-		}) as Comment[]
+			select: COMMENT_WITH_RELATIONS_SELECT,
+		})
+		return comments as Comment[]
 	}
 }

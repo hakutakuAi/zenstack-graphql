@@ -1,14 +1,18 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID, Info, Int, FieldResolver, Root } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import { Review, ReviewCreateInput, ReviewUpdateInput, ReviewQueryArgs, ReviewConnection, ReviewFilterInput, ReviewSortInput, Product } from '../../schema'
-import { ConnectionBuilder } from '../../schema-helpers'
+import { Review, ReviewCreateInput, ReviewUpdateInput, ReviewConnection, ReviewFilterInput, ReviewSortInput, Product } from '../../schema'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
 import type { Context } from './types'
+import { REVIEW_WITH_PRODUCT_SELECT, PRODUCT_WITH_ALL_RELATIONS_SELECT } from '../select-definitions'
 
 @Resolver(() => Review)
 export class ReviewResolver {
 	@Query(() => Review, { nullable: true })
 	async review(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Review | null> {
-		return (await ctx.prisma.review.findUnique({ where: { id } })) as Review | null
+		return (await ctx.prisma.review.findUnique({
+			where: { id },
+			select: REVIEW_WITH_PRODUCT_SELECT,
+		})) as Review | null
 	}
 
 	@Query(() => ReviewConnection)
@@ -22,23 +26,40 @@ export class ReviewResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() ctx: Context,
 	): Promise<ReviewConnection> {
-		const args: ReviewQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildReviewConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(REVIEW_WITH_PRODUCT_SELECT, info)
 
-		const items = await ctx.prisma.review.findMany(config.findManyOptions)
-		const totalCount = await ctx.prisma.review.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as ReviewConnection
+		const [items, totalCount] = await Promise.all([ctx.prisma.review.findMany(config.findMany), ctx.prisma.review.count(config.count)])
+
+		return config.toConnection(items, totalCount) as ReviewConnection
 	}
 
 	@Mutation(() => Review)
 	async createReview(@Arg('input', () => ReviewCreateInput) input: ReviewCreateInput, @Ctx() ctx: Context): Promise<Review> {
-		return (await ctx.prisma.review.create({ data: input })) as Review
+		return (await ctx.prisma.review.create({
+			data: input,
+			select: REVIEW_WITH_PRODUCT_SELECT,
+		})) as Review
 	}
 
 	@Mutation(() => Review)
 	async updateReview(@Arg('id', () => ID) id: string, @Arg('input', () => ReviewUpdateInput) input: ReviewUpdateInput, @Ctx() ctx: Context): Promise<Review> {
-		return (await ctx.prisma.review.update({ where: { id }, data: input })) as Review
+		return (await ctx.prisma.review.update({
+			where: { id },
+			data: input,
+			select: REVIEW_WITH_PRODUCT_SELECT,
+		})) as Review
 	}
 
 	@Mutation(() => Boolean)
@@ -49,6 +70,9 @@ export class ReviewResolver {
 
 	@FieldResolver(() => Product, { nullable: true })
 	async product(@Root() review: Review, @Ctx() ctx: Context): Promise<Product | null> {
-		return (await ctx.prisma.product.findUnique({ where: { id: review.productId } })) as Product | null
+		return (await ctx.prisma.product.findUnique({
+			where: { id: review.productId },
+			select: PRODUCT_WITH_ALL_RELATIONS_SELECT,
+		})) as Product | null
 	}
 }

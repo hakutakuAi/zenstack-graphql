@@ -1,24 +1,18 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ID, Info, Int, FieldResolver, Root } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import {
-	Product,
-	ProductCreateInput,
-	ProductUpdateInput,
-	ProductQueryArgs,
-	ProductConnection,
-	ProductFilterInput,
-	ProductSortInput,
-	ProductTag,
-	Review,
-} from '../../schema'
-import { ConnectionBuilder } from '../../schema-helpers'
+import { Product, ProductCreateInput, ProductUpdateInput, ProductConnection, ProductFilterInput, ProductSortInput, ProductTag, Review } from '../../schema'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
 import type { Context } from './types'
+import { PRODUCT_WITH_ALL_RELATIONS_SELECT, PRODUCT_TAG_WITH_RELATIONS_SELECT, REVIEW_WITH_PRODUCT_SELECT } from '../select-definitions'
 
 @Resolver(() => Product)
 export class ProductResolver {
 	@Query(() => Product, { nullable: true })
 	async product(@Arg('id', () => ID) id: string, @Ctx() ctx: Context): Promise<Product | null> {
-		return (await ctx.prisma.product.findUnique({ where: { id } })) as Product | null
+		return (await ctx.prisma.product.findUnique({
+			where: { id },
+			select: PRODUCT_WITH_ALL_RELATIONS_SELECT,
+		})) as Product | null
 	}
 
 	@Query(() => ProductConnection)
@@ -32,18 +26,31 @@ export class ProductResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() ctx: Context,
 	): Promise<ProductConnection> {
-		const args: ProductQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildProductConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(PRODUCT_WITH_ALL_RELATIONS_SELECT, info)
 
-		const items = await ctx.prisma.product.findMany(config.findManyOptions)
-		const totalCount = await ctx.prisma.product.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as ProductConnection
+		const [items, totalCount] = await Promise.all([ctx.prisma.product.findMany(config.findMany), ctx.prisma.product.count(config.count)])
+
+		return config.toConnection(items, totalCount) as ProductConnection
 	}
 
 	@Mutation(() => Product)
 	async createProduct(@Arg('input', () => ProductCreateInput) input: ProductCreateInput, @Ctx() ctx: Context): Promise<Product> {
-		return (await ctx.prisma.product.create({ data: input })) as Product
+		return (await ctx.prisma.product.create({
+			data: input,
+			select: PRODUCT_WITH_ALL_RELATIONS_SELECT,
+		})) as Product
 	}
 
 	@Mutation(() => Product)
@@ -52,7 +59,11 @@ export class ProductResolver {
 		@Arg('input', () => ProductUpdateInput) input: ProductUpdateInput,
 		@Ctx() ctx: Context,
 	): Promise<Product> {
-		return (await ctx.prisma.product.update({ where: { id }, data: input })) as Product
+		return (await ctx.prisma.product.update({
+			where: { id },
+			data: input,
+			select: PRODUCT_WITH_ALL_RELATIONS_SELECT,
+		})) as Product
 	}
 
 	@Mutation(() => Boolean)
@@ -63,11 +74,17 @@ export class ProductResolver {
 
 	@FieldResolver(() => [ProductTag])
 	async tags(@Root() product: Product, @Ctx() ctx: Context): Promise<ProductTag[]> {
-		return (await ctx.prisma.productTag.findMany({ where: { productId: product.id } })) as ProductTag[]
+		return (await ctx.prisma.productTag.findMany({
+			where: { productId: product.id },
+			select: PRODUCT_TAG_WITH_RELATIONS_SELECT,
+		})) as ProductTag[]
 	}
 
 	@FieldResolver(() => [Review])
 	async reviews(@Root() product: Product, @Ctx() ctx: Context): Promise<Review[]> {
-		return (await ctx.prisma.review.findMany({ where: { productId: product.id } })) as Review[]
+		return (await ctx.prisma.review.findMany({
+			where: { productId: product.id },
+			select: REVIEW_WITH_PRODUCT_SELECT,
+		})) as Review[]
 	}
 }

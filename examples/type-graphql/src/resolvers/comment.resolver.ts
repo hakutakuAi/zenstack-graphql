@@ -1,8 +1,9 @@
 import { Resolver, Query, Mutation, Arg, Ctx, FieldResolver, Root, Int, Info } from 'type-graphql'
 import type { GraphQLResolveInfo } from 'graphql'
-import { Comment, User, Post, CommentFilterInput, CommentSortInput, CommentConnection, CommentQueryArgs } from '../../schema'
+import { Comment, User, Post, CommentFilterInput, CommentSortInput, CommentConnection } from '../../schema'
 import type { Context } from './types'
-import { ConnectionBuilder, POST_INCLUDES, USER_INCLUDES, COMMENT_INCLUDES } from '../../schema-helpers'
+import { buildConnection, buildFilter, buildSort, buildSelect } from '@hakutakuai/zenstack-graphql/helpers'
+import { COMMENT_WITH_RELATIONS_SELECT, USER_WITH_ALL_RELATIONS_SELECT, POST_WITH_ALL_RELATIONS_SELECT } from '../select-definitions'
 
 @Resolver(() => Comment)
 export class CommentResolver {
@@ -17,13 +18,23 @@ export class CommentResolver {
 		@Info() info: GraphQLResolveInfo,
 		@Ctx() { prisma }: Context,
 	): Promise<CommentConnection> {
-		const args: CommentQueryArgs = { filter, sort, first, after, last, before }
-		const config = ConnectionBuilder.buildCommentConnectionConfig(args, info)
+		const where = buildFilter(filter as any)
+		const orderBy = buildSort(sort as any)
+		const select = buildSelect(COMMENT_WITH_RELATIONS_SELECT, info)
 
-		const items = await prisma.comment.findMany(config.findManyOptions)
-		const totalCount = await prisma.comment.count(config.countOptions)
+		const config = buildConnection({
+			first,
+			after,
+			last,
+			before,
+			where,
+			orderBy,
+			select,
+		})
 
-		return ConnectionBuilder.processResults(items, totalCount, config.paginationInfo) as CommentConnection
+		const [items, totalCount] = await Promise.all([prisma.comment.findMany(config.findMany), prisma.comment.count(config.count)])
+
+		return config.toConnection(items, totalCount) as CommentConnection
 	}
 
 	@Mutation(() => Comment)
@@ -33,16 +44,16 @@ export class CommentResolver {
 		@Arg('authorId', () => String) authorId: string,
 		@Ctx() { prisma }: Context,
 	): Promise<Comment> {
-		return (await prisma.comment.create({ data: { content, postId, authorId }, include: COMMENT_INCLUDES })) as Comment
+		return (await prisma.comment.create({ data: { content, postId, authorId }, select: COMMENT_WITH_RELATIONS_SELECT })) as Comment
 	}
 
 	@FieldResolver(() => User)
 	async author(@Root() comment: Comment, @Ctx() { prisma }: Context): Promise<User | null> {
-		return (await prisma.user.findUnique({ where: { id: comment.authorId }, include: USER_INCLUDES })) as User | null
+		return (await prisma.user.findUnique({ where: { id: comment.authorId }, select: USER_WITH_ALL_RELATIONS_SELECT })) as User | null
 	}
 
 	@FieldResolver(() => Post)
 	async post(@Root() comment: Comment, @Ctx() { prisma }: Context): Promise<Post | null> {
-		return (await prisma.post.findUnique({ where: { id: comment.postId }, include: POST_INCLUDES })) as Post | null
+		return (await prisma.post.findUnique({ where: { id: comment.postId }, select: POST_WITH_ALL_RELATIONS_SELECT })) as Post | null
 	}
 }

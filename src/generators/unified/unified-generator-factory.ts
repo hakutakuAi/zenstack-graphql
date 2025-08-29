@@ -11,7 +11,6 @@ import {
 	UnifiedEnumGenerator,
 	UnifiedScalarGenerator,
 	UnifiedContextFactory,
-	UnifiedHelperGenerator,
 } from '@generators/unified'
 
 export class UnifiedGeneratorFactory {
@@ -43,7 +42,6 @@ export class UnifiedGeneratorFactory {
 			scalarGenerator: new UnifiedScalarGenerator(context),
 			relationGenerator: new UnifiedRelationGenerator(unifiedContext),
 			inputGenerator: new UnifiedInputGenerator(unifiedContext),
-			helperGenerator: new UnifiedHelperGenerator(unifiedContext),
 		}
 	}
 
