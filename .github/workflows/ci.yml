@@ -69,6 +69,7 @@ jobs:
             - name: 📦 Install example dependencies
               if: steps.cache-deps.outputs.cache-hit != 'true'
               run: |
+                  bun run build
                   cd examples/graphql-server && bun install --frozen-lockfile
                   cd ../type-graphql && bun install --frozen-lockfile
                   cd ../advanced-graphql && bun install --frozen-lockfile

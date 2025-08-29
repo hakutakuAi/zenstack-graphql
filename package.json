@@ -1,6 +1,6 @@
 {
 	"name": "@hakutakuai/zenstack-graphql",
-	"version": "1.5.0",
+	"version": "1.6.0",
 	"description": "ZenStack plugin for generating GraphQL schemas",
 	"main": "dist/index.js",
 	"module": "index.ts",
